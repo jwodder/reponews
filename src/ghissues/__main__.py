@@ -1,8 +1,9 @@
-from email.message import EmailMessage
 import json
 from pathlib import Path
-import subprocess
 import time
+from eletter import compose
+from mailbits import parse_address
+from outgoing import from_config_file
 from .client import GitHub
 from .types import RepoRemovedEvent
 
@@ -76,11 +77,13 @@ def main():
 
 def report_events(events):
     # print('\n\n'.join(map(str, events)))
-    msg = EmailMessage()
-    msg["Subject"] = SUBJECT
-    msg["To"] = RECIPIENT
-    msg.set_content("\n\n".join(map(str, events)))
-    subprocess.run(["sendmail", "-i", "-t"], input=bytes(msg), check=True)
+    msg = compose(
+        to=[parse_address(RECIPIENT)],
+        subject=SUBJECT,
+        text="\n\n".join(map(str, events)),
+    )
+    with from_config_file() as sender:
+        sender.send(msg)
 
 
 def nowstamp():
