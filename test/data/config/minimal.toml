@@ -1,0 +1,3 @@
+[ghissues]
+recipient = "me@here.there"
+github-token-file = "~/.github"

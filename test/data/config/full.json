@@ -1,0 +1,32 @@
+{
+    "recipient": {
+        "name": "Myself",
+        "address": "me@here.there"
+    },
+    "sender": {
+        "name": "GHIssues",
+        "address": "ghissues@cron.job"
+    },
+    "subject": "GitHub Activity!",
+    "github_token": "ghp_1234567890123456789",
+    "github_token_file": null,
+    "state_file": "~/.varlib/ghissues.json",
+    "graphql_api_url": "https://api.myservice.nil/graphql",
+    "activity": {
+        "new_issues": false,
+        "new_prs": false,
+        "new_discussions": true,
+        "my_activity": true
+    },
+    "repos": {
+        "affiliations": ["OWNER"],
+        "include": [
+            {"owner": "python", "name": null},
+            {"owner": "pypa", "name": "pip"}
+        ],
+        "exclude": [
+            {"owner": "python", "name": "planet"},
+            {"owner": "pypa", "name": null}
+        ]
+    }
+}

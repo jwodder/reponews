@@ -1,0 +1,21 @@
+[ghissues]
+recipient = "Myself <me@here.there>"
+sender = "GHIssues <ghissues@cron.job>"
+subject = "GitHub Activity!"
+github-token = "ghp_1234567890123456789"
+state-file = "~/.varlib/ghissues.json"
+graphql-api-url = "https://api.myservice.nil/graphql"
+
+[ghissues.activity]
+new-issues = false
+new-prs = false
+new-discussions = true
+my-activity = true
+
+[ghissues.repos]
+affiliations = ["OWNER"]
+include = [
+    "python/*",
+    "pypa/pip",
+]
+exclude = ["python/planet", "pypa/*"]

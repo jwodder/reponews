@@ -1,0 +1,23 @@
+{
+    "recipient": {
+        "name": null,
+        "address": "me@here.there"
+    },
+    "sender": null,
+    "subject": "New issues on your GitHub repositories",
+    "github_token": null,
+    "github_token_file": "~/.github",
+    "state_file": null,
+    "graphql_api_url": "https://api.github.com/graphql",
+    "activity": {
+        "new_issues": true,
+        "new_prs": true,
+        "new_discussions": true,
+        "my_activity": false
+    },
+    "repos": {
+        "affiliations": ["OWNER", "ORGANIZATION_MEMBER", "COLLABORATOR"],
+        "include": [],
+        "exclude": []
+    }
+}
