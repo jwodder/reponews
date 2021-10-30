@@ -5,6 +5,7 @@ from operator import attrgetter
 from pathlib import Path
 import sys
 from typing import TYPE_CHECKING, Dict, List, Optional, cast
+import click
 from eletter import compose
 from mailbits import parse_address
 from outgoing import from_config_file
@@ -32,7 +33,18 @@ if TYPE_CHECKING:
         discussions: Optional[str]
 
 
-def main() -> None:
+@click.command()
+@click.option(
+    "--print", "mode", flag_value="print", help="Output e-mail instead of sending"
+)
+@click.option(
+    "--print-body",
+    "mode",
+    flag_value="body",
+    help="Output e-mail body instead of sending",
+)
+@click.option("--save/--no-save", default=True, help="Whether to update the state file")
+def main(mode: Optional[str], save: bool) -> None:
     gh = GitHub(TOKEN_FILE)
     try:
         with STATE_FILE.open() as fp:
@@ -86,20 +98,23 @@ def main() -> None:
         )
     events.sort(key=attrgetter("timestamp"))
     if events:
-        report_events(events)
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(new_state))
-
-
-def report_events(events: List[Event]) -> None:
-    # print('\n\n'.join(map(str, events)))
-    msg = compose(
-        to=[parse_address(RECIPIENT)],
-        subject=SUBJECT,
-        text="\n\n".join(map(str, events)),
-    )
-    with from_config_file() as sender:
-        sender.send(msg)
+        body = "\n\n".join(map(str, events))
+        if mode == "body":
+            print(body)
+        else:
+            msg = compose(
+                to=[parse_address(RECIPIENT)],
+                subject=SUBJECT,
+                text=body,
+            )
+            if mode == "print":
+                print(msg)
+            else:
+                with from_config_file() as sender:
+                    sender.send(msg)
+    if save:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        STATE_FILE.write_text(json.dumps(new_state))
 
 
 if __name__ == "__main__":
