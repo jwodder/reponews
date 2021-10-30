@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Type
@@ -85,7 +86,7 @@ class GitHub:
                 gh=self,
                 id=node["id"],
                 fullname=node["nameWithOwner"],
-                timestamp=node["createdAt"],
+                timestamp=parse_timestamp(node["createdAt"]),
                 url=node["url"],
             )
 
@@ -95,7 +96,7 @@ class Repository:
     gh: GitHub
     id: str
     fullname: str
-    timestamp: str
+    timestamp: datetime
     url: str
     issues: IssueoidManager = field(init=False)
     prs: IssueoidManager = field(init=False)
@@ -163,7 +164,7 @@ class IssueoidManager:
             events.append(
                 self.event_class(
                     repo_fullname=self.repo.fullname,
-                    timestamp=node["createdAt"],
+                    timestamp=parse_timestamp(node["createdAt"]),
                     number=node["number"],
                     title=node["title"],
                     author=node["author"]["login"],
@@ -219,3 +220,7 @@ class APIException(Exception):
         else:
             msg += json.dumps(resp, sort_keys=True, indent=4)
         return msg
+
+
+def parse_timestamp(s: str) -> datetime:
+    return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S%z")

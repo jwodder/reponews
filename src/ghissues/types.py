@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import ClassVar
 
 
 @dataclass
 class Event:
-    timestamp: str  # Used for sorting
+    timestamp: datetime  # Used for sorting
     repo_fullname: str
 
 

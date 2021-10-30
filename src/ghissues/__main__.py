@@ -1,9 +1,9 @@
 from __future__ import annotations
+from datetime import datetime, timezone
 import json
 from operator import attrgetter
 from pathlib import Path
 import sys
-import time
 from typing import TYPE_CHECKING, Dict, List, Optional, cast
 from eletter import compose
 from mailbits import parse_address
@@ -80,7 +80,7 @@ def main() -> None:
     for repo_state in state.values():
         events.append(
             RepoRemovedEvent(
-                timestamp=nowstamp(),
+                timestamp=datetime.now(timezone.utc),
                 repo_fullname=repo_state["fullname"],
             )
         )
@@ -100,10 +100,6 @@ def report_events(events: List[Event]) -> None:
     )
     with from_config_file() as sender:
         sender.send(msg)
-
-
-def nowstamp() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 if __name__ == "__main__":
