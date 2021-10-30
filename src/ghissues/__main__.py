@@ -1,11 +1,15 @@
+from __future__ import annotations
 import json
+from operator import attrgetter
 from pathlib import Path
+import sys
 import time
+from typing import TYPE_CHECKING, Dict, List, Optional, cast
 from eletter import compose
 from mailbits import parse_address
 from outgoing import from_config_file
 from .client import GitHub
-from .types import RepoRemovedEvent
+from .types import Event, RepoRemovedEvent
 
 USER = "jwodder"
 RECIPIENT = "REDACTED"
@@ -15,19 +19,31 @@ SKIP_SELF_REPORTED = True
 TOKEN_FILE = Path.home() / ".github"
 STATE_FILE = Path.home() / ".varlib" / "ghissues.json"
 
+if TYPE_CHECKING:
+    if sys.version_info[:2] >= (3, 8):
+        from typing import TypedDict
+    else:
+        from typing_extensions import TypedDict
 
-def main():
+    class RepoState(TypedDict, total=False):
+        fullname: str
+        issues: Optional[str]
+        prs: Optional[str]
+        discussions: Optional[str]
+
+
+def main() -> None:
     gh = GitHub(TOKEN_FILE)
     try:
         with STATE_FILE.open() as fp:
             state = json.load(fp)
     except FileNotFoundError:
         state = {}
-    events = []
-    new_state = {}
+    events: List[Event] = []
+    new_state: Dict[str, RepoState] = {}
     for repo in gh.get_user_repos(USER):
         try:
-            repo_state = state.pop(repo.id)
+            repo_state = cast(RepoState, state.pop(repo.id))
         except KeyError:
             repo_state = {
                 "issues": repo.issues.get_latest_cursor(),
@@ -68,14 +84,14 @@ def main():
                 repo_fullname=repo_state["fullname"],
             )
         )
-    events.sort()
+    events.sort(key=attrgetter("timestamp"))
     if events:
         report_events(events)
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     STATE_FILE.write_text(json.dumps(new_state))
 
 
-def report_events(events):
+def report_events(events: List[Event]) -> None:
     # print('\n\n'.join(map(str, events)))
     msg = compose(
         to=[parse_address(RECIPIENT)],
@@ -86,7 +102,7 @@ def report_events(events):
         sender.send(msg)
 
 
-def nowstamp():
+def nowstamp() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 

@@ -1,21 +1,23 @@
-from collections import namedtuple
 from dataclasses import dataclass
 from typing import ClassVar
 
-# The `timestamp` attributes of the following classes are used for sorting:
+
+@dataclass
+class Event:
+    timestamp: str  # Used for sorting
+    repo_fullname: str
 
 
 @dataclass
-class NewIssueoidEvent:
+class NewIssueoidEvent(Event):
     type_name: ClassVar[str]
-    timestamp: str
     repo_fullname: str
     number: int
     title: str
     author: str
     url: str
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"[{self.repo_fullname}] {self.type_name} #{self.number}:"
             f" {self.title} (@{self.author})\n<{self.url}>"
@@ -34,11 +36,14 @@ class NewDiscussEvent(NewIssueoidEvent):
     type_name = "DISCUSSION"
 
 
-class NewRepoEvent(namedtuple("NewRepoEvent", "timestamp repo_fullname url")):
-    def __str__(self):
-        return f"Now tracking repository {self.repo_fullname}\n" f"<{self.url}>"
+@dataclass
+class NewRepoEvent(Event):
+    url: str
+
+    def __str__(self) -> str:
+        return f"Now tracking repository {self.repo_fullname}\n<{self.url}>"
 
 
-class RepoRemovedEvent(namedtuple("RepoRemovedEvent", "timestamp repo_fullname")):
-    def __str__(self):
+class RepoRemovedEvent(Event):
+    def __str__(self) -> str:
         return f"Repository {self.repo_fullname} not found; no longer tracking"

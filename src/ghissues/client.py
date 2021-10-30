@@ -1,7 +1,16 @@
+from __future__ import annotations
+from dataclasses import dataclass, field
 import json
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Type
 import requests
-from .types import NewDiscussEvent, NewIssueEvent, NewPREvent, NewRepoEvent
+from .types import (
+    NewDiscussEvent,
+    NewIssueEvent,
+    NewIssueoidEvent,
+    NewPREvent,
+    NewRepoEvent,
+)
 
 PAGE_SIZE = 50
 
@@ -9,12 +18,12 @@ GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
 
 
 class GitHub:
-    def __init__(self, token_file: Path):
+    def __init__(self, token_file: Path) -> None:
         token = token_file.read_text().strip()
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"bearer {token}"
 
-    def query(self, query, variables=None):
+    def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
         r = self.s.post(
             GITHUB_GRAPHQL_URL,
             json={
@@ -26,8 +35,10 @@ class GitHub:
             raise APIException(r)
         return r.json()
 
-    def paginate(self, query, variables, conn_path):
-        nodes = []
+    def paginate(
+        self, query: str, variables: Dict[str, Any], conn_path: Sequence[str]
+    ) -> Tuple[list, str]:
+        nodes: list = []
         while True:
             data = self.query(query, variables)
             conn = data
@@ -40,7 +51,7 @@ class GitHub:
             else:
                 return nodes, new_cursor
 
-    def get_user_repos(self, user):
+    def get_user_repos(self, user: str) -> Iterator[Repository]:
         q = """
             query($user: String!, $page_size: Int!, $cursor: String) {
                 user(login: $user) {
@@ -79,30 +90,37 @@ class GitHub:
             )
 
 
+@dataclass
 class Repository:
-    def __init__(self, gh, id, fullname, timestamp, url):
-        self.gh = gh
-        self.id = id
-        self.fullname = fullname
-        self.timestamp = timestamp
-        self.url = url
+    gh: GitHub
+    id: str
+    fullname: str
+    timestamp: str
+    url: str
+    issues: IssueoidManager = field(init=False)
+    prs: IssueoidManager = field(init=False)
+    discussions: IssueoidManager = field(init=False)
+    new_event: NewRepoEvent = field(init=False)
+
+    def __post_init__(self) -> None:
         self.issues = IssueoidManager(self, "issues", NewIssueEvent)
         self.prs = IssueoidManager(self, "pullRequests", NewPREvent)
         self.discussions = IssueoidManager(self, "discussions", NewDiscussEvent)
+        # TODO: Make this a property?
         self.new_event = NewRepoEvent(
-            timestamp=timestamp,
-            repo_fullname=fullname,
-            url=url,
+            timestamp=self.timestamp,
+            repo_fullname=self.fullname,
+            url=self.url,
         )
 
 
+@dataclass
 class IssueoidManager:
-    def __init__(self, repo, typename, event_class):
-        self.repo = repo
-        self.typename = typename
-        self.event_class = event_class
+    repo: Repository
+    typename: str
+    event_class: Type[NewIssueoidEvent]
 
-    def get_new(self, cursor):
+    def get_new(self, cursor: Optional[str]) -> Tuple[List[NewIssueoidEvent], str]:
         q = """
             query($repo_id: ID!, $page_size: Int!, $cursor: String) {
                 node(id: $repo_id) {
@@ -135,7 +153,7 @@ class IssueoidManager:
             "page_size": PAGE_SIZE,
             "cursor": cursor,
         }
-        events = []
+        events: List[NewIssueoidEvent] = []
         nodes, new_cursor = self.repo.gh.paginate(
             q,
             variables,
@@ -154,7 +172,7 @@ class IssueoidManager:
             )
         return events, new_cursor
 
-    def get_latest_cursor(self):
+    def get_latest_cursor(self) -> Optional[str]:
         q = """
             query($repo_id: ID!) {
                 node(id: $repo_id) {
@@ -173,16 +191,18 @@ class IssueoidManager:
         """ % (
             self.typename,
         )
-        return self.repo.gh.query(q, {"repo_id": self.repo.id})["data"]["node"][
+        cursor = self.repo.gh.query(q, {"repo_id": self.repo.id})["data"]["node"][
             self.typename
         ]["pageInfo"]["endCursor"]
+        assert cursor is None or isinstance(cursor, str)
+        return cursor
 
 
 class APIException(Exception):
-    def __init__(self, response):
+    def __init__(self, response: requests.Response):
         self.response = response
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.response.ok:
             msg = "GraphQL API error for URL: {0.url}\n"
         elif 400 <= self.response.status_code < 500:
