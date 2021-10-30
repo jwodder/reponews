@@ -4,7 +4,7 @@ import json
 from operator import attrgetter
 from pathlib import Path
 import sys
-from typing import TYPE_CHECKING, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Dict, List, Optional
 import click
 from eletter import compose
 from mailbits import parse_address
@@ -54,8 +54,9 @@ def main(mode: Optional[str], save: bool) -> None:
     events: List[Event] = []
     new_state: Dict[str, RepoState] = {}
     for repo in gh.get_user_repos(USER):
+        repo_state: RepoState
         try:
-            repo_state = cast(RepoState, state.pop(repo.id))
+            repo_state = state.pop(repo.id)
         except KeyError:
             repo_state = {
                 "issues": repo.issues.get_latest_cursor(),
