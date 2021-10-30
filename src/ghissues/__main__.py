@@ -9,7 +9,7 @@ from eletter import compose
 from mailbits import parse_address
 from outgoing import from_config_file
 from .client import GitHub
-from .types import Event, RepoRemovedEvent
+from .events import Event, RepoRemovedEvent
 
 USER = "jwodder"
 RECIPIENT = "REDACTED"

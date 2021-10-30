@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Type
 import requests
-from .types import (
+from .events import (
     NewDiscussEvent,
     NewIssueEvent,
     NewIssueoidEvent,
