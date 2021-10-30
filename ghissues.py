@@ -1,12 +1,14 @@
 #!/usr/bin/python3
-__python_requires__ = '~= 3.6'
+__python_requires__ = '~= 3.7'
 __requires__ = ['requests ~= 2.20']
 from   collections   import namedtuple
+from   dataclasses   import dataclass
 from   email.message import EmailMessage
 import json
 from   pathlib       import Path
 import subprocess
 import time
+from   typing        import ClassVar
 import requests
 
 USER = 'jwodder'
@@ -269,37 +271,33 @@ class APIException(Exception):
 
 # The `timestamp` attributes of the following classes are used for sorting:
 
-### TODO: Cut down on code duplication of the NewIssuoidEvents using
-### inheritance:
+@dataclass
+class NewIssueoidEvent:
+    type_name: ClassVar[str]
+    timestamp: str
+    repo_fullname: str
+    number: int
+    title: str
+    author: str
+    url: str
 
-class NewIssueEvent(
-    namedtuple('NewIssueEvent', 'timestamp repo_fullname number title author url')
-):
     def __str__(self):
         return (
-            f'[{self.repo_fullname}] ISSUE #{self.number}: {self.title}'
-            f' (@{self.author})\n<{self.url}>'
+            f'[{self.repo_fullname}] {self.type_name} #{self.number}:'
+            f' {self.title} (@{self.author})\n<{self.url}>'
         )
 
 
-class NewPREvent(
-    namedtuple('NewPREvent', 'timestamp repo_fullname number title author url')
-):
-    def __str__(self):
-        return (
-            f'[{self.repo_fullname}] PR #{self.number}: {self.title}'
-            f' (@{self.author})\n<{self.url}>'
-        )
+class NewIssueEvent(NewIssueoidEvent):
+    type_name = "ISSUE"
 
 
-class NewDiscussEvent(
-    namedtuple('NewDiscussEvent', 'timestamp repo_fullname number title author url')
-):
-    def __str__(self):
-        return (
-            f'[{self.repo_fullname}] DISCUSSION #{self.number}: {self.title}'
-            f' (@{self.author})\n<{self.url}>'
-        )
+class NewPREvent(NewIssueoidEvent):
+    type_name = "PR"
+
+
+class NewDiscussEvent(NewIssueoidEvent):
+    type_name = "DISCUSSION"
 
 
 class NewRepoEvent(namedtuple('NewRepoEvent', 'timestamp repo_fullname url')):
