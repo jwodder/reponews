@@ -23,10 +23,7 @@ class Client:
     def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
         r = self.s.post(
             self.api_url,
-            json={
-                "query": query,
-                "variables": variables or {},
-            },
+            json={"query": query, "variables": variables or {}},
         )
         if not r.ok or r.json().get("errors"):
             raise APIException(r)

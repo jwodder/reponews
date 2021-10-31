@@ -52,19 +52,6 @@ class Address(BaseModel):
         return PyAddress(self.name or "", addr_spec=self.address)
 
 
-class AliasedBase(BaseModel):
-    class Config:
-        alias_generator = mkalias
-        extra = "forbid"
-
-
-class ActivityConfig(AliasedBase):
-    new_issues: bool = True
-    new_prs: bool = True
-    new_discussions: bool = True
-    my_activity: bool = False
-
-
 class RepoSpec(BaseModel):
     owner: str
     name: Optional[str]
@@ -85,13 +72,26 @@ class RepoSpec(BaseModel):
             raise ValueError(f"Invalid repo spec: {value!r}")
 
 
-class ReposConfig(AliasedBase):
+class BaseConfig(BaseModel):
+    class Config:
+        alias_generator = mkalias
+        extra = "forbid"
+
+
+class ActivityConfig(BaseConfig):
+    new_issues: bool = True
+    new_prs: bool = True
+    new_discussions: bool = True
+    my_activity: bool = False
+
+
+class ReposConfig(BaseConfig):
     affiliations: List[Affiliation] = Field(default_factory=lambda: list(Affiliation))
     include: List[RepoSpec] = Field(default_factory=list)
     exclude: List[RepoSpec] = Field(default_factory=list)
 
 
-class Configuration(AliasedBase):
+class Configuration(BaseConfig):
     recipient: Address
     sender: Optional[Address] = None
     subject: str = "New issues on your GitHub repositories"

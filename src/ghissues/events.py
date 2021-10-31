@@ -50,7 +50,4 @@ class NewRepoEvent(Event):
 
 class RepoRemovedEvent(Event):
     def __str__(self) -> str:
-        ### TODO: Distinguish between the case when a repository has been
-        ### deleted and when the user's config no longer indicates it should be
-        ### tracked
         return f"Repository {self.repo.fullname} not found; no longer tracking"

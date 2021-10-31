@@ -16,6 +16,7 @@ DEFAULT_CONFIG_FILE = user_config_path("ghissues", "jwodder") / "config.toml"
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=DEFAULT_CONFIG_FILE,
     show_default=True,
+    help="Path to configuration file",
 )
 @click.option(
     "--print", "mode", flag_value="print", help="Output e-mail instead of sending"
@@ -26,8 +27,12 @@ DEFAULT_CONFIG_FILE = user_config_path("ghissues", "jwodder") / "config.toml"
     flag_value="body",
     help="Output e-mail body instead of sending",
 )
-@click.option("--save/--no-save", default=True, help="Whether to update the state file")
-def main(mode: Optional[str], save: bool, config: Path) -> None:
+@click.option(
+    "--save/--no-save",
+    default=True,
+    help="Whether to update the state file  [default: --save]",
+)
+def main(config: Path, mode: Optional[str], save: bool) -> None:
     ghissues = GHIssues.from_config_file(config)
     events = ghissues.get_new_events()
     if events:

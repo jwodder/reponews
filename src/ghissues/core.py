@@ -9,7 +9,7 @@ from eletter import compose
 from pydantic import BaseModel, Field
 from .client import Client
 from .config import Configuration
-from .events import Event, RepoRemovedEvent
+from .events import Event, RepoRemovedEvent, Repository
 from .util import IssueoidType
 
 
@@ -56,12 +56,15 @@ class State(BaseModel):
             state = {}
         return cls(path=path, old_state=state)
 
-    def get_repo_state(self, repo_id: str) -> Optional[RepoState]:
-        return self.old_state.get(repo_id)
+    def get_repo_state(self, repo: Repository) -> Optional[RepoState]:
+        return self.old_state.get(repo.id)
 
-    def set_repo_state(self, repo_id: str, state: RepoState) -> None:
-        self.old_state.pop(repo_id, None)
-        self.new_state[repo_id] = state
+    def set_repo_state(self, repo: Repository, state: RepoState) -> None:
+        ### TODO: Make the registration of a new ID here be what causes a
+        ### NewRepoEvent
+        self.old_state.pop(repo.id, None)
+        state.fullname = repo.fullname
+        self.new_state[repo.id] = state
 
     def get_removal_events(self) -> Iterator[RepoRemovedEvent]:
         now = datetime.now().astimezone()
@@ -93,13 +96,14 @@ class GHIssues(BaseModel):
     def get_new_events(self) -> List[Event]:
         events: List[Event] = []
         with Client(
-            api_url=self.config.api_url, token=self.config.get_github_token()
+            api_url=self.config.api_url,
+            token=self.config.get_github_token(),
         ) as gh:
             user = gh.get_user()
             for repo in gh.get_user_repos(
                 user, affiliations=self.config.repos.affiliations
             ):
-                repo_state = self.state.get_repo_state(repo.id)
+                repo_state = self.state.get_repo_state(repo)
                 if repo_state is None:
                     repo_state = RepoState(fullname=repo.fullname)
                     events.append(repo.new_event)
@@ -112,8 +116,7 @@ class GHIssues(BaseModel):
                     if not self.config.activity.my_activity:
                         new_events = [ev for ev in new_events if ev.author != user]
                     events.extend(new_events)
-                repo_state.fullname = repo.fullname
-                self.state.set_repo_state(repo.id, repo_state)
+                self.state.set_repo_state(repo, repo_state)
             ### TODO: Honor "include" and "exclude"
         events.extend(self.state.get_removal_events())
         events.sort(key=attrgetter("timestamp"))
