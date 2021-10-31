@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict
 from pydantic import BaseModel
 
 
@@ -31,6 +32,32 @@ class Repository(BaseModel):
     fullname: str
     url: str
 
+    @classmethod
+    def from_node(cls, node: Dict[str, Any]) -> Repository:
+        return cls(
+            id=node["id"],
+            owner=node["owner"]["login"],
+            name=node["name"],
+            fullname=node["nameWithOwner"],
+            url=node["url"],
+        )
+
+
+class User(BaseModel):
+    name: str
+    login: str
+    url: str
+    is_me: bool
+
+    @classmethod
+    def from_node(cls, node: Dict[str, Any]) -> User:
+        return cls(
+            name=node.get("name", node["login"]),  # Bots don't have names
+            login=node["login"],
+            url=node["url"],
+            is_me=node.get("isViewer", False),
+        )
+
 
 class Event(BaseModel):
     timestamp: datetime  # Used for sorting
@@ -41,13 +68,27 @@ class NewIssueoidEvent(Event):
     repo: Repository
     number: int
     title: str
-    author: str
+    author: User
     url: str
+
+    @classmethod
+    def from_node(
+        cls, type: IssueoidType, repo: Repository, node: Dict[str, Any]
+    ) -> NewIssueoidEvent:
+        return cls(
+            type=type,
+            repo=repo,
+            timestamp=node["createdAt"],
+            number=node["number"],
+            title=node["title"],
+            author=User.from_node(node["author"]),
+            url=node["url"],
+        )
 
     def __str__(self) -> str:
         return (
             f"[{self.repo.fullname}] {self.type.value.upper()} #{self.number}:"
-            f" {self.title} (@{self.author})\n<{self.url}>"
+            f" {self.title} (@{self.author.login})\n<{self.url}>"
         )
 
 

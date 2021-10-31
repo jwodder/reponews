@@ -87,18 +87,8 @@ class Client:
             "page_size": PAGE_SIZE,
             "affiliations": [aff.value for aff in affiliations],
         }
-        for node in self.paginate(
-            q,
-            variables,
-            ("data", "user", "repositories"),
-        )[0]:
-            yield Repository(
-                id=node["id"],
-                owner=node["owner"]["login"],
-                name=node["name"],
-                fullname=node["nameWithOwner"],
-                url=node["url"],
-            )
+        for node in self.paginate(q, variables, ("data", "user", "repositories"))[0]:
+            yield Repository.from_node(node)
 
     def get_new_issueoid_events(
         self, repo: Repository, it: IssueoidType, cursor: Optional[str]
@@ -116,7 +106,14 @@ class Client:
                             after: $cursor
                         ) {
                             nodes {
-                                author { login }
+                                author {
+                                    login
+                                    url
+                                    ... on User {
+                                        name
+                                        isViewer
+                                    }
+                                }
                                 createdAt
                                 number
                                 title
@@ -141,17 +138,7 @@ class Client:
         events: List[NewIssueoidEvent] = []
         nodes, new_cursor = self.paginate(q, variables, ("data", "node", it.api_name))
         for node in nodes:
-            events.append(
-                NewIssueoidEvent(
-                    type=it,
-                    repo=repo,
-                    timestamp=node["createdAt"],
-                    number=node["number"],
-                    title=node["title"],
-                    author=node["author"]["login"],
-                    url=node["url"],
-                )
-            )
+            events.append(NewIssueoidEvent.from_node(type=it, repo=repo, node=node))
         if new_cursor is None:
             new_cursor = cursor
         return events, new_cursor
