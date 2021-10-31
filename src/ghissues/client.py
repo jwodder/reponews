@@ -157,21 +157,21 @@ class Client:
     def get_new_issueoid_events(
         self, repo: Repository, it: IssueoidType, cursor: Optional[str]
     ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
+        log.info("Fetching new %s events for %s", it.value, repo.fullname)
         if cursor is None:
-            log.info(
+            log.debug(
                 "No %s cursor set for %s; setting cursor to latest state",
                 it.value,
                 repo.fullname,
             )
             new_cursor = self.get_latest_issueoid_cursor(repo, it)
             if new_cursor is None:
-                log.info(
+                log.debug(
                     "No %s events have yet occurred for %s; cursor will remain unset",
                     it.value,
                     repo.fullname,
                 )
             return ([], new_cursor)
-        log.info("Fetching new %s events for %s", it.value, repo.fullname)
         q = """
             query($repo_id: ID!, $page_size: Int!, $cursor: String) {
                 node(id: $repo_id) {
