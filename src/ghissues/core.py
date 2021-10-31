@@ -68,7 +68,7 @@ class State(BaseModel):
 
     def get_repo_state(self, repo: Repository) -> RepoState:
         try:
-            state = self.old_state[repo.id]
+            state = self.old_state.pop(repo.id)
         except KeyError:
             log.info("Now tracking %s", repo.fullname)
             state = RepoState(fullname=repo.fullname)
