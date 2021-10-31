@@ -154,7 +154,7 @@ class Client:
         for node in nodes:
             ev = NewIssueoidEvent.from_node(type=it, repo=repo, node=node)
             log.info(
-                "Found new %s for %s: %r (%d)",
+                "Found new %s for %s: %r (#%d)",
                 it.value,
                 repo.fullname,
                 ev.title,
