@@ -125,10 +125,7 @@ class GHIssues(BaseModel):
                 token=self.config.get_github_token(),
             )
         ) as gh:
-            user = gh.get_user()
-            for repo in gh.get_user_repos(
-                user, affiliations=self.config.repos.affiliations
-            ):
+            for repo in gh.get_affiliated_repos(self.config.repos.affiliations):
                 repo_state = self.state.get_repo_state(repo)
                 for it in self.config.active_issueoid_types():
                     cursor = repo_state.get_cursor(it)
@@ -137,7 +134,7 @@ class GHIssues(BaseModel):
                     )
                     repo_state.set_cursor(it, new_cursor)
                     if not self.config.activity.my_activity:
-                        new_events = [ev for ev in new_events if ev.author != user]
+                        new_events = [ev for ev in new_events if not ev.author.is_me]
                     events.extend(new_events)
                 self.state.set_repo_state(repo, repo_state)
             ### TODO: Honor "include" and "exclude"

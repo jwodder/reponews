@@ -42,25 +42,18 @@ class Client:
             else:
                 return nodes, new_cursor
 
-    def get_user(self) -> str:
-        data = self.query("query { viewer { login } }", {})
-        user = data["data"]["viewer"]["login"]
-        assert isinstance(user, str)
-        return user
-
-    def get_user_repos(
-        self, user: str, affiliations: List[Affiliation]
+    def get_affiliated_repos(
+        self, affiliations: List[Affiliation]
     ) -> Iterator[Repository]:
         if not affiliations:
             return
         q = """
             query(
-                $user: String!,
                 $page_size: Int!,
                 $affiliations: [RepositoryAffiliation!],
                 $cursor: String
             ) {
-                user(login: $user) {
+                viewer {
                     repositories(
                         ownerAffiliations: $affiliations,
                         orderBy: {field: NAME, direction: ASC},
@@ -83,11 +76,10 @@ class Client:
             }
         """
         variables = {
-            "user": user,
             "page_size": PAGE_SIZE,
             "affiliations": [aff.value for aff in affiliations],
         }
-        for node in self.paginate(q, variables, ("data", "user", "repositories"))[0]:
+        for node in self.paginate(q, variables, ("data", "viewer", "repositories"))[0]:
             yield Repository.from_node(node)
 
     def get_new_issueoid_events(
