@@ -96,8 +96,8 @@ class Configuration(BaseConfig):
     recipient: Address
     sender: Optional[Address] = None
     subject: str = "New issues on your GitHub repositories"
-    github_token: Optional[str] = None
-    github_token_file: Optional[ExpandedFilePath] = None
+    auth_token: Optional[str] = None
+    auth_token_file: Optional[ExpandedFilePath] = None
     # The default is implemented as a factory in order to make it easy to test
     # with a fake $HOME:
     state_file: ExpandedPath = Field(default_factory=get_default_state_file)
@@ -111,11 +111,11 @@ class Configuration(BaseConfig):
             data = tomli.load(fp).get("ghissues", {})
         return cls.parse_obj(data)
 
-    def get_github_token(self) -> str:
-        if self.github_token is not None:
-            return self.github_token
-        elif self.github_token_file is not None:
-            return self.github_token_file.read_text().strip()
+    def get_auth_token(self) -> str:
+        if self.auth_token is not None:
+            return self.auth_token
+        elif self.auth_token_file is not None:
+            return self.auth_token_file.read_text().strip()
         elif os.environ.get("GITHUB_TOKEN"):
             return os.environ["GITHUB_TOKEN"]
         elif os.environ.get("GH_TOKEN"):

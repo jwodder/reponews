@@ -13,7 +13,7 @@ def test_parse_config(tmp_home: Path, tomlfile: Path, expected: Any) -> None:
     config = Configuration.from_toml_file(tomlfile)
     if expected["state_file"] is None:
         expected["state_file"] = get_default_state_file()
-    for key in ("github_token_file", "state_file"):
+    for key in ("auth_token_file", "state_file"):
         if expected[key] is not None:
             expected[key] = expanduser(expected[key])
     assert config.for_json() == expected

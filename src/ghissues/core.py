@@ -129,7 +129,7 @@ class GHIssues(BaseModel):
         with closing(
             Client(
                 api_url=self.config.api_url,
-                token=self.config.get_github_token(),
+                token=self.config.get_auth_token(),
             )
         ) as gh:
             for repo in gh.get_affiliated_repos(self.config.repos.affiliations):

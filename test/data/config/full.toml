@@ -2,7 +2,7 @@
 recipient = "Myself <me@here.there>"
 sender = "GHIssues <ghissues@cron.job>"
 subject = "GitHub Activity!"
-github-token = "ghp_1234567890123456789"
+auth-token = "ghp_1234567890123456789"
 state-file = "~/.varlib/ghissues.json"
 api-url = "https://api.myservice.nil/graphql"
 

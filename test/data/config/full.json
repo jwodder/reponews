@@ -8,8 +8,8 @@
         "address": "ghissues@cron.job"
     },
     "subject": "GitHub Activity!",
-    "github_token": "ghp_1234567890123456789",
-    "github_token_file": null,
+    "auth_token": "ghp_1234567890123456789",
+    "auth_token_file": null,
     "state_file": "~/.varlib/ghissues.json",
     "api_url": "https://api.myservice.nil/graphql",
     "activity": {

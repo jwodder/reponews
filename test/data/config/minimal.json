@@ -5,8 +5,8 @@
     },
     "sender": null,
     "subject": "New issues on your GitHub repositories",
-    "github_token": null,
-    "github_token_file": "~/.github",
+    "auth_token": null,
+    "auth_token_file": "~/.github",
     "state_file": null,
     "api_url": "https://api.github.com/graphql",
     "activity": {
