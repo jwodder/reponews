@@ -31,14 +31,6 @@ class Repository(BaseModel):
     fullname: str
     url: str
 
-    @property
-    def new_event(self) -> RepoTrackedEvent:
-        return RepoTrackedEvent(
-            timestamp=datetime.now().astimezone(),
-            repo=self,
-            url=self.url,
-        )
-
 
 class Event(BaseModel):
     timestamp: datetime  # Used for sorting
@@ -61,10 +53,9 @@ class NewIssueoidEvent(Event):
 
 class RepoTrackedEvent(Event):
     repo: Repository
-    url: str
 
     def __str__(self) -> str:
-        return f"Now tracking repository {self.repo.fullname}\n<{self.url}>"
+        return f"Now tracking repository {self.repo.fullname}\n<{self.repo.url}>"
 
 
 class RepoUntrackedEvent(Event):
@@ -72,3 +63,11 @@ class RepoUntrackedEvent(Event):
 
     def __str__(self) -> str:
         return f"No longer tracking repository {self.repo_fullname}"
+
+
+class RepoRenamedEvent(Event):
+    repo: Repository
+    old_fullname: str
+
+    def __str__(self) -> str:
+        return f"Repository renamed: {self.old_fullname} → {self.repo.fullname}"

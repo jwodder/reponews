@@ -10,7 +10,14 @@ from eletter import compose
 from pydantic import BaseModel, Field
 from .client import Client
 from .config import Configuration
-from .types import Event, IssueoidType, Repository, RepoUntrackedEvent
+from .types import (
+    Event,
+    IssueoidType,
+    RepoRenamedEvent,
+    Repository,
+    RepoTrackedEvent,
+    RepoUntrackedEvent,
+)
 
 
 class RepoState(BaseModel):
@@ -46,6 +53,7 @@ class State(BaseModel):
     path: Path
     old_state: Dict[str, RepoState]
     new_state: Dict[str, RepoState] = Field(default_factory=dict)
+    state_events: List[Event] = Field(default_factory=list)
 
     @classmethod
     def from_file(cls, path: Path) -> State:
@@ -56,17 +64,33 @@ class State(BaseModel):
             state = {}
         return cls(path=path, old_state=state)
 
-    def get_repo_state(self, repo: Repository) -> Optional[RepoState]:
-        return self.old_state.get(repo.id)
+    def get_repo_state(self, repo: Repository) -> RepoState:
+        return self.old_state.get(repo.id, RepoState(fullname=repo.fullname))
 
     def set_repo_state(self, repo: Repository, state: RepoState) -> None:
-        ### TODO: Make the registration of a new ID here be what causes a
-        ### RepoTrackedEvent
-        self.old_state.pop(repo.id, None)
+        try:
+            old = self.old_state.pop(repo.id)
+        except KeyError:
+            self.state_events.append(
+                RepoTrackedEvent(
+                    timestamp=datetime.now().astimezone(),
+                    repo=repo,
+                )
+            )
+        else:
+            if old.fullname != repo.fullname:
+                self.state_events.append(
+                    RepoRenamedEvent(
+                        timestamp=datetime.now().astimezone(),
+                        repo=repo,
+                        old_fullname=old.fullname,
+                    )
+                )
         state.fullname = repo.fullname
         self.new_state[repo.id] = state
 
-    def get_removal_events(self) -> Iterator[RepoUntrackedEvent]:
+    def get_state_events(self) -> Iterator[Event]:
+        yield from self.state_events
         now = datetime.now().astimezone()
         for repo_state in self.old_state.values():
             yield RepoUntrackedEvent(
@@ -106,9 +130,6 @@ class GHIssues(BaseModel):
                 user, affiliations=self.config.repos.affiliations
             ):
                 repo_state = self.state.get_repo_state(repo)
-                if repo_state is None:
-                    repo_state = RepoState(fullname=repo.fullname)
-                    events.append(repo.new_event)
                 for it in self.config.active_issueoid_types():
                     cursor = repo_state.get_cursor(it)
                     new_events, new_cursor = gh.get_new_issueoid_events(
@@ -120,7 +141,7 @@ class GHIssues(BaseModel):
                     events.extend(new_events)
                 self.state.set_repo_state(repo, repo_state)
             ### TODO: Honor "include" and "exclude"
-        events.extend(self.state.get_removal_events())
+        events.extend(self.state.get_state_events())
         events.sort(key=attrgetter("timestamp"))
         return events
 
