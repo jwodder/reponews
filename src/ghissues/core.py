@@ -65,12 +65,10 @@ class State(BaseModel):
         return cls(path=path, old_state=state)
 
     def get_repo_state(self, repo: Repository) -> RepoState:
-        return self.old_state.get(repo.id, RepoState(fullname=repo.fullname))
-
-    def set_repo_state(self, repo: Repository, state: RepoState) -> None:
         try:
-            old = self.old_state.pop(repo.id)
+            state = self.old_state[repo.id]
         except KeyError:
+            state = RepoState(fullname=repo.fullname)
             self.state_events.append(
                 RepoTrackedEvent(
                     timestamp=datetime.now().astimezone(),
@@ -78,16 +76,17 @@ class State(BaseModel):
                 )
             )
         else:
-            if old.fullname != repo.fullname:
+            if state.fullname != repo.fullname:
                 self.state_events.append(
                     RepoRenamedEvent(
                         timestamp=datetime.now().astimezone(),
                         repo=repo,
-                        old_fullname=old.fullname,
+                        old_fullname=state.fullname,
                     )
                 )
-        state.fullname = repo.fullname
+                state.fullname = repo.fullname
         self.new_state[repo.id] = state
+        return state
 
     def get_state_events(self) -> Iterator[Event]:
         yield from self.state_events
@@ -136,7 +135,6 @@ class GHIssues(BaseModel):
                     if not self.config.activity.my_activity:
                         new_events = [ev for ev in new_events if not ev.author.is_me]
                     events.extend(new_events)
-                self.state.set_repo_state(repo, repo_state)
             ### TODO: Honor "include" and "exclude"
         events.extend(self.state.get_state_events())
         events.sort(key=attrgetter("timestamp"))
