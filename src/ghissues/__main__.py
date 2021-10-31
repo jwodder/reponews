@@ -1,9 +1,12 @@
 from __future__ import annotations
+import logging
 from pathlib import Path
 from typing import Optional
 import click
+from click_loglevel import LogLevel
 from outgoing import from_config_file
 from platformdirs import user_config_path
+from . import log
 from .core import GHIssues
 
 DEFAULT_CONFIG_FILE = user_config_path("ghissues", "jwodder") / "config.toml"
@@ -19,6 +22,13 @@ DEFAULT_CONFIG_FILE = user_config_path("ghissues", "jwodder") / "config.toml"
     help="Path to configuration file",
 )
 @click.option(
+    "-l",
+    "--log-level",
+    type=LogLevel(),
+    default=logging.WARNING,
+    help="Set logging level  [default: WARNING]",
+)
+@click.option(
     "--print", "mode", flag_value="print", help="Output e-mail instead of sending"
 )
 @click.option(
@@ -32,7 +42,12 @@ DEFAULT_CONFIG_FILE = user_config_path("ghissues", "jwodder") / "config.toml"
     default=True,
     help="Whether to update the state file  [default: --save]",
 )
-def main(config: Path, mode: Optional[str], save: bool) -> None:
+def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
+    logging.basicConfig(
+        format="%(asctime)s [%(levelname)-8s] %(name)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=log_level,
+    )
     ghissues = GHIssues.from_config_file(config)
     events = ghissues.get_new_events()
     if events:
@@ -42,8 +57,11 @@ def main(config: Path, mode: Optional[str], save: bool) -> None:
         elif mode == "body":
             print(msg.get_content())
         else:
+            log.info("Sending e-mail ...")
             with from_config_file(config, fallback=True) as sender:
                 sender.send(msg)
+    else:
+        log.info("No new events")
     if save:
         ghissues.save_state()
 

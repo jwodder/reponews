@@ -9,3 +9,7 @@ __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghissues@varonathe.org"
 __license__ = "MIT"
 __url__ = "https://github.com/jwodder/ghissues"
+
+import logging
+
+log = logging.getLogger(__package__)

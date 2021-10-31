@@ -8,11 +8,13 @@ from pathlib import Path
 from typing import Dict, Iterator, List, Optional
 from eletter import compose
 from pydantic import BaseModel, Field
+from . import log
 from .client import Client
 from .config import Configuration
 from .types import (
     Event,
     IssueoidType,
+    NewIssueoidEvent,
     RepoRenamedEvent,
     Repository,
     RepoTrackedEvent,
@@ -68,6 +70,7 @@ class State(BaseModel):
         try:
             state = self.old_state[repo.id]
         except KeyError:
+            log.info("Now tracking %s", repo.fullname)
             state = RepoState(fullname=repo.fullname)
             self.state_events.append(
                 RepoTrackedEvent(
@@ -77,6 +80,7 @@ class State(BaseModel):
             )
         else:
             if state.fullname != repo.fullname:
+                log.info("Repository renamed: %s → %s", state.fullname, repo.fullname)
                 self.state_events.append(
                     RepoRenamedEvent(
                         timestamp=datetime.now().astimezone(),
@@ -92,6 +96,10 @@ class State(BaseModel):
         yield from self.state_events
         now = datetime.now().astimezone()
         for repo_state in self.old_state.values():
+            log.info(
+                "Did not encounter or fetch activity for %s; no longer tracking",
+                repo_state.fullname,
+            )
             yield RepoUntrackedEvent(
                 timestamp=now,
                 repo_fullname=repo_state.fullname,
@@ -133,7 +141,19 @@ class GHIssues(BaseModel):
                     )
                     repo_state.set_cursor(it, new_cursor)
                     if not self.config.activity.my_activity:
-                        new_events = [ev for ev in new_events if not ev.author.is_me]
+                        events2: List[NewIssueoidEvent] = []
+                        for ev in new_events:
+                            if ev.author.is_me:
+                                log.info(
+                                    "%s %s #%d was created by current user;"
+                                    " not reporting",
+                                    ev.repo.fullname,
+                                    ev.type.value,
+                                    ev.number,
+                                )
+                            else:
+                                events2.append(ev)
+                        new_events = events2
                     events.extend(new_events)
             ### TODO: Honor "include" and "exclude"
         events.extend(self.state.get_state_events())
@@ -151,4 +171,5 @@ class GHIssues(BaseModel):
         )
 
     def save_state(self) -> None:
+        log.info("Saving state ...")
         self.state.save()

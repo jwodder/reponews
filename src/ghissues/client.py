@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 import requests
+from . import log
 from .types import Affiliation, IssueoidType, NewIssueoidEvent, Repository
 
 PAGE_SIZE = 50
@@ -46,7 +47,12 @@ class Client:
         self, affiliations: List[Affiliation]
     ) -> Iterator[Repository]:
         if not affiliations:
+            log.info("No affiliations set; not fetching any affiliated repositories")
             return
+        log.info(
+            "Fetching repositories with affiliations %s",
+            ", ".join(aff.value for aff in affiliations),
+        )
         q = """
             query(
                 $page_size: Int!,
@@ -82,14 +88,28 @@ class Client:
             "affiliations": [aff.value for aff in affiliations],
         }
         for node in self.paginate(q, variables, ("data", "viewer", "repositories"))[0]:
-            yield Repository.from_node(node)
+            repo = Repository.from_node(node)
+            log.info("Found repository %s", repo.fullname)
+            yield repo
 
     def get_new_issueoid_events(
         self, repo: Repository, it: IssueoidType, cursor: Optional[str]
     ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
         if cursor is None:
-            ### TODO: Log a message here
-            return ([], self.get_latest_issueoid_cursor(repo, it))
+            log.info(
+                "No %s cursor set for %s; setting cursor to latest state",
+                it.value,
+                repo.fullname,
+            )
+            new_cursor = self.get_latest_issueoid_cursor(repo, it)
+            if new_cursor is None:
+                log.info(
+                    "No %s events have yet occurred for %s; cursor will remain unset",
+                    it.value,
+                    repo.fullname,
+                )
+            return ([], new_cursor)
+        log.info("Fetching new %s events for %s", it.value, repo.fullname)
         q = """
             query($repo_id: ID!, $page_size: Int!, $cursor: String) {
                 node(id: $repo_id) {
@@ -132,7 +152,15 @@ class Client:
         events: List[NewIssueoidEvent] = []
         nodes, new_cursor = self.paginate(q, variables, ("data", "node", it.api_name))
         for node in nodes:
-            events.append(NewIssueoidEvent.from_node(type=it, repo=repo, node=node))
+            ev = NewIssueoidEvent.from_node(type=it, repo=repo, node=node)
+            log.info(
+                "Found new %s for %s: %r (%d)",
+                it.value,
+                repo.fullname,
+                ev.title,
+                ev.number,
+            )
+            events.append(ev)
         if new_cursor is None:
             new_cursor = cursor
         return events, new_cursor
