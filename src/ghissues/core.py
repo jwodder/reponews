@@ -1,15 +1,15 @@
 from __future__ import annotations
-from contextlib import closing
+from dataclasses import dataclass, field
 from datetime import datetime
 from email.message import EmailMessage
 import json
 from operator import attrgetter
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 from eletter import compose
 from pydantic import BaseModel, Field
 from . import log
-from .client import Client
+from .client import Client, NotFoundError
 from .config import Configuration
 from .types import (
     Event,
@@ -112,9 +112,23 @@ class State(BaseModel):
         )
 
 
-class GHIssues(BaseModel):
+@dataclass
+class GHIssues:
     config: Configuration
     state: State
+    client: Client = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.client = Client(
+            api_url=self.config.api_url,
+            token=self.config.get_auth_token(),
+        )
+
+    def __enter__(self) -> GHIssues:
+        return self
+
+    def __exit__(self, *_exc: Any) -> None:
+        self.client.close()
 
     @classmethod
     def from_config(cls, config: Configuration) -> GHIssues:
@@ -126,39 +140,55 @@ class GHIssues(BaseModel):
 
     def get_new_events(self) -> List[Event]:
         events: List[Event] = []
-        with closing(
-            Client(
-                api_url=self.config.api_url,
-                token=self.config.get_auth_token(),
-            )
-        ) as gh:
-            for repo in gh.get_affiliated_repos(self.config.repos.affiliations):
-                repo_state = self.state.get_repo_state(repo)
-                for it in self.config.active_issueoid_types():
-                    cursor = repo_state.get_cursor(it)
-                    new_events, new_cursor = gh.get_new_issueoid_events(
-                        repo, it, cursor
-                    )
-                    repo_state.set_cursor(it, new_cursor)
-                    if not self.config.activity.my_activity:
-                        events2: List[NewIssueoidEvent] = []
-                        for ev in new_events:
-                            if ev.author.is_me:
-                                log.info(
-                                    "%s %s #%d was created by current user;"
-                                    " not reporting",
-                                    ev.repo.fullname,
-                                    ev.type.value,
-                                    ev.number,
-                                )
-                            else:
-                                events2.append(ev)
-                        new_events = events2
-                    events.extend(new_events)
-            ### TODO: Honor "include" and "exclude"
+        for repo in self.get_repositories():
+            repo_state = self.state.get_repo_state(repo)
+            for it in self.config.active_issueoid_types():
+                cursor = repo_state.get_cursor(it)
+                new_events, new_cursor = self.client.get_new_issueoid_events(
+                    repo, it, cursor
+                )
+                repo_state.set_cursor(it, new_cursor)
+                if not self.config.activity.my_activity:
+                    events2: List[NewIssueoidEvent] = []
+                    for ev in new_events:
+                        if ev.author.is_me:
+                            log.info(
+                                "%s %s #%d was created by current user;"
+                                " not reporting",
+                                ev.repo.fullname,
+                                ev.type.value,
+                                ev.number,
+                            )
+                        else:
+                            events2.append(ev)
+                    new_events = events2
+                events.extend(new_events)
         events.extend(self.state.get_state_events())
         events.sort(key=attrgetter("timestamp"))
         return events
+
+    def get_repositories(self) -> Iterator[Repository]:
+        for repo in self.client.get_affiliated_repos(self.config.repos.affiliations):
+            if self.config.is_repo_excluded(repo):
+                log.info("Repo %s is excluded by config; skipping", repo.fullname)
+            else:
+                yield repo
+        for owner in self.config.get_included_repo_owners():
+            try:
+                for repo in self.client.get_user_repos(owner):
+                    if self.config.is_repo_excluded(repo):
+                        log.info(
+                            "Repo %s is excluded by config; skipping", repo.fullname
+                        )
+                    else:
+                        yield repo
+            except NotFoundError:
+                log.warning("User %s does not exist on GitHub!", owner)
+        for (owner, name) in self.config.get_included_repos():
+            try:
+                yield self.client.get_repo(owner, name)
+            except NotFoundError:
+                log.warning("Repo %s/%s does not exist on GitHub!", owner, name)
 
     def compose_email(self, events: List[Event]) -> EmailMessage:
         return compose(

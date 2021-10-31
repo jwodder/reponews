@@ -22,7 +22,17 @@ class Client:
             self.api_url,
             json={"query": query, "variables": variables or {}},
         )
-        if not r.ok or r.json().get("errors"):
+        if not r.ok:
+            raise APIException(r)
+        data = r.json()
+        if data.get("errors"):
+            try:
+                # TODO: Figure out how to handle multi-errors where some of the
+                # errors are NOT_FOUND
+                if data["errors"][0]["type"] == "NOT_FOUND":
+                    raise NotFoundError(data["errors"][0]["message"])
+            except (AttributeError, LookupError, TypeError, ValueError):
+                pass
             raise APIException(r)
         return r.json()
 
@@ -91,6 +101,58 @@ class Client:
             repo = Repository.from_node(node)
             log.info("Found repository %s", repo.fullname)
             yield repo
+
+    def get_user_repos(self, user: str) -> Iterator[Repository]:
+        log.info("Fetching repositories belonging to %s", user)
+        q = """
+            query($user: String!, $page_size: Int!, $cursor: String) {
+                user(login: $user) {
+                    repositories(
+                        orderBy: {field: NAME, direction: ASC},
+                        first: $page_size,
+                        after: $cursor
+                    ) {
+                        nodes {
+                            id
+                            nameWithOwner
+                            owner { login }
+                            name
+                            url
+                            description
+                            descriptionHTML
+                        }
+                        pageInfo {
+                            endCursor
+                            hasNextPage
+                        }
+                    }
+                }
+            }
+        """
+        variables = {"user": user, "page_size": PAGE_SIZE}
+        for node in self.paginate(q, variables, ("data", "user", "repositories"))[0]:
+            repo = Repository.from_node(node)
+            log.info("Found repository %s", repo.fullname)
+            yield repo
+
+    def get_repo(self, owner: str, name: str) -> Repository:
+        log.info("Fetching info for repo %s/%s", owner, name)
+        q = """
+            query($owner: String!, $name: String!) {
+                repository(owner: $owner, name: $name) {
+                    id
+                    nameWithOwner
+                    owner { login }
+                    name
+                    url
+                    description
+                    descriptionHTML
+                }
+            }
+        """
+        return Repository.from_node(
+            self.query(q, {"owner": owner, "name": name})["data"]["repository"]
+        )
 
     def get_new_issueoid_events(
         self, repo: Repository, it: IssueoidType, cursor: Optional[str]
@@ -214,3 +276,7 @@ class APIException(Exception):
         else:
             msg += json.dumps(resp, sort_keys=True, indent=4)
         return msg
+
+
+class NotFoundError(Exception):
+    pass

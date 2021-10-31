@@ -1,17 +1,24 @@
 from __future__ import annotations
+from collections import defaultdict
 from email.headerregistry import Address as PyAddress
 import json
 import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
+import sys
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
 from pydantic import BaseModel, Field, FilePath
 from pydantic.validators import path_validator, str_validator
 import tomli
-from .types import Affiliation, IssueoidType
+from .types import Affiliation, IssueoidType, Repository
 from .util import expanduser, get_default_state_file, mkalias
+
+if sys.version_info[:2] >= (3, 8):
+    from functools import cached_property
+else:
+    from backports.cached_property import cached_property
 
 if TYPE_CHECKING:
     from pydantic.typing import CallableGenerator
@@ -78,6 +85,10 @@ class BaseConfig(BaseModel):
         alias_generator = mkalias
         extra = "forbid"
 
+        # <https://github.com/samuelcolvin/pydantic/issues/1241>
+        arbitrary_types_allowed = True
+        keep_untouched = (cached_property,)
+
 
 class ActivityConfig(BaseConfig):
     new_issues: bool = True
@@ -90,6 +101,52 @@ class ReposConfig(BaseConfig):
     affiliations: List[Affiliation] = Field(default_factory=lambda: list(Affiliation))
     include: List[RepoSpec] = Field(default_factory=list)
     exclude: List[RepoSpec] = Field(default_factory=list)
+
+
+class RepoInclusions(BaseModel):
+    included_owners: Set[str] = Field(default_factory=set)
+    excluded_owners: Set[str] = Field(default_factory=set)
+    included_repos: Dict[str, Set[str]] = Field(
+        default_factory=lambda: defaultdict(set)
+    )
+    excluded_repos: Dict[str, Set[str]] = Field(
+        default_factory=lambda: defaultdict(set)
+    )
+
+    @classmethod
+    def from_repos_config(cls, repos_config: ReposConfig) -> RepoInclusions:
+        rinc = cls()
+        for rs in repos_config.include:
+            if rs.name is None:
+                rinc.included_owners.add(rs.owner)
+            else:
+                rinc.included_repos[rs.owner].add(rs.name)
+        for rs in repos_config.exclude:
+            if rs.name is None:
+                rinc.excluded_owners.add(rs.owner)
+                rinc.included_owners.discard(rs.owner)
+                rinc.included_repos.pop(rs.owner, None)
+            else:
+                rinc.excluded_repos[rs.owner].add(rs.name)
+                rinc.included_repos[rs.owner].discard(rs.name)
+        return rinc
+
+    def get_included_repo_owners(self) -> List[str]:
+        return sorted(self.included_owners)
+
+    def get_included_repos(self) -> List[Tuple[str, str]]:
+        return [
+            (owner, n)
+            for owner, names in sorted(self.included_repos.items())
+            if owner not in self.included_owners
+            for n in sorted(names)
+        ]
+
+    def is_repo_excluded(self, repo: Repository) -> bool:
+        return (
+            repo.owner in self.excluded_owners
+            or repo.name in self.excluded_repos[repo.owner]
+        )
 
 
 class Configuration(BaseConfig):
@@ -134,6 +191,19 @@ class Configuration(BaseConfig):
             yield IssueoidType.PR
         if self.activity.new_discussions:
             yield IssueoidType.DISCUSSION
+
+    @cached_property
+    def inclusions(self) -> RepoInclusions:
+        return RepoInclusions.from_repos_config(self.repos)
+
+    def get_included_repo_owners(self) -> List[str]:
+        return self.inclusions.get_included_repo_owners()
+
+    def get_included_repos(self) -> List[Tuple[str, str]]:
+        return self.inclusions.get_included_repos()
+
+    def is_repo_excluded(self, repo: Repository) -> bool:
+        return self.inclusions.is_repo_excluded(repo)
 
     def for_json(self) -> Any:
         return json.loads(self.json())

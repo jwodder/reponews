@@ -48,22 +48,22 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
         datefmt="%H:%M:%S",
         level=log_level,
     )
-    ghissues = GHIssues.from_config_file(config)
-    events = ghissues.get_new_events()
-    if events:
-        msg = ghissues.compose_email(events)
-        if mode == "print":
-            print(msg)
-        elif mode == "body":
-            print(msg.get_content())
+    with GHIssues.from_config_file(config) as ghissues:
+        events = ghissues.get_new_events()
+        if events:
+            msg = ghissues.compose_email(events)
+            if mode == "print":
+                print(msg)
+            elif mode == "body":
+                print(msg.get_content())
+            else:
+                log.info("Sending e-mail ...")
+                with from_config_file(config, fallback=True) as sender:
+                    sender.send(msg)
         else:
-            log.info("Sending e-mail ...")
-            with from_config_file(config, fallback=True) as sender:
-                sender.send(msg)
-    else:
-        log.info("No new events")
-    if save:
-        ghissues.save_state()
+            log.info("No new events")
+        if save:
+            ghissues.save_state()
 
 
 if __name__ == "__main__":

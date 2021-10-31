@@ -47,6 +47,9 @@ class Repository(BaseModel):
             descriptionHTML=node["descriptionHTML"],
         )
 
+    def __str__(self) -> str:
+        return self.fullname
+
 
 class User(BaseModel):
     name: str
