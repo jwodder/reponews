@@ -2,8 +2,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 import requests
-from .events import NewIssueoidEvent, Repository
-from .util import Affiliation, IssueoidType
+from .types import Affiliation, IssueoidType, NewIssueoidEvent, Repository
 
 PAGE_SIZE = 50
 

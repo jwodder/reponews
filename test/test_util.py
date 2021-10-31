@@ -1,5 +1,5 @@
 import pytest
-from ghissues.util import IssueoidType
+from ghissues.types import IssueoidType
 
 
 def test_all_issueoid_types() -> None:

@@ -10,7 +10,8 @@ from mailbits import parse_address
 from pydantic import BaseModel, Field, FilePath
 from pydantic.validators import path_validator, str_validator
 import tomli
-from .util import Affiliation, IssueoidType, expanduser, get_default_state_file, mkalias
+from .types import Affiliation, IssueoidType
+from .util import expanduser, get_default_state_file, mkalias
 
 if TYPE_CHECKING:
     from pydantic.typing import CallableGenerator

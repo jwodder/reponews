@@ -9,8 +9,7 @@ from eletter import compose
 from pydantic import BaseModel, Field
 from .client import Client
 from .config import Configuration
-from .events import Event, RepoRemovedEvent, Repository
-from .util import IssueoidType
+from .types import Event, IssueoidType, RepoRemovedEvent, Repository
 
 
 class RepoState(BaseModel):

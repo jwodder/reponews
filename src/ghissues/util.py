@@ -1,27 +1,6 @@
 from __future__ import annotations
-from enum import Enum
 from pathlib import Path
 from platformdirs import user_state_path
-
-
-class IssueoidType(Enum):
-    ISSUE = ("issue", "issues")
-    PR = ("pr", "pullRequests")
-    DISCUSSION = ("discussion", "discussions")
-
-    def __new__(cls, value: str, _api_name: str) -> IssueoidType:
-        obj = object.__new__(cls)
-        obj._value_ = value
-        return obj  # type: ignore[no-any-return]
-
-    def __init__(self, _value: str, api_name: str) -> None:
-        self.api_name = api_name
-
-
-class Affiliation(Enum):
-    OWNER = "OWNER"
-    ORGANIZATION_MEMBER = "ORGANIZATION_MEMBER"
-    COLLABORATOR = "COLLABORATOR"
 
 
 def expanduser(v: Path) -> Path:
