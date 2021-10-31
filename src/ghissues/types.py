@@ -35,14 +35,13 @@ class Repository(BaseModel):
     def new_event(self) -> NewRepoEvent:
         return NewRepoEvent(
             timestamp=datetime.now().astimezone(),
-            repo_fullname=self.fullname,
+            repo=self,
             url=self.url,
         )
 
 
 class Event(BaseModel):
     timestamp: datetime  # Used for sorting
-    repo: Repository
 
 
 class NewIssueoidEvent(Event):
@@ -61,6 +60,7 @@ class NewIssueoidEvent(Event):
 
 
 class NewRepoEvent(Event):
+    repo: Repository
     url: str
 
     def __str__(self) -> str:
@@ -68,5 +68,7 @@ class NewRepoEvent(Event):
 
 
 class RepoRemovedEvent(Event):
+    repo_fullname: str
+
     def __str__(self) -> str:
-        return f"Repository {self.repo.fullname} not found; no longer tracking"
+        return f"Repository {self.repo_fullname} not found; no longer tracking"
