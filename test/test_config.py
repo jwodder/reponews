@@ -2,7 +2,8 @@ from os.path import expanduser
 from pathlib import Path
 from typing import Any
 import pytest
-from ghissues.config import Configuration, get_default_state_file
+from ghissues.config import Configuration
+from ghissues.util import get_default_state_file
 from testlib import filecases
 
 

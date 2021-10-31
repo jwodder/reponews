@@ -1,16 +1,16 @@
 from __future__ import annotations
 from email.headerregistry import Address as PyAddress
-from enum import Enum
 import json
+import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
-from platformdirs import user_state_path
 from pydantic import BaseModel, Field, FilePath
 from pydantic.validators import path_validator, str_validator
 import tomli
+from .util import Affiliation, IssueoidType, expanduser, get_default_state_file, mkalias
 
 if TYPE_CHECKING:
     from pydantic.typing import CallableGenerator
@@ -52,24 +52,6 @@ class Address(BaseModel):
         return PyAddress(self.name or "", addr_spec=self.address)
 
 
-class Affiliation(Enum):
-    OWNER = "OWNER"
-    ORGANIZATION_MEMBER = "ORGANIZATION_MEMBER"
-    COLLABORATOR = "COLLABORATOR"
-
-
-def expanduser(v: Path) -> Path:
-    return v.expanduser()
-
-
-def mkalias(s: str) -> str:
-    return s.replace("_", "-")
-
-
-def get_default_state_file() -> Path:
-    return user_state_path("ghissues", "jwodder") / "ghissues.json"
-
-
 class AliasedBase(BaseModel):
     class Config:
         alias_generator = mkalias
@@ -103,7 +85,7 @@ class RepoSpec(BaseModel):
             raise ValueError(f"Invalid repo spec: {value!r}")
 
 
-class RepoConfig(AliasedBase):
+class ReposConfig(AliasedBase):
     affiliations: List[Affiliation] = Field(default_factory=lambda: list(Affiliation))
     include: List[RepoSpec] = Field(default_factory=list)
     exclude: List[RepoSpec] = Field(default_factory=list)
@@ -118,15 +100,39 @@ class Configuration(AliasedBase):
     # The default is implemented as a factory in order to make it easy to test
     # with a fake $HOME:
     state_file: ExpandedPath = Field(default_factory=get_default_state_file)
-    graphql_api_url: str = "https://api.github.com/graphql"
+    api_url: str = "https://api.github.com/graphql"
     activity: ActivityConfig = Field(default_factory=ActivityConfig)
-    repos: RepoConfig = Field(default_factory=RepoConfig)
+    repos: ReposConfig = Field(default_factory=ReposConfig)
 
     @classmethod
     def from_toml_file(cls, filepath: Union[str, Path]) -> Configuration:
         with open(filepath, "rb") as fp:
             data = tomli.load(fp).get("ghissues", {})
         return cls.parse_obj(data)
+
+    def get_github_token(self) -> str:
+        if self.github_token is not None:
+            return self.github_token
+        elif self.github_token_file is not None:
+            return self.github_token_file.read_text().strip()
+        elif os.environ.get("GITHUB_TOKEN"):
+            return os.environ["GITHUB_TOKEN"]
+        elif os.environ.get("GH_TOKEN"):
+            return os.environ["GH_TOKEN"]
+        else:
+            ### TODO: Use a different/custom exception type?
+            raise RuntimeError(
+                "GitHub OAuth token not set.  Specify in config file or via"
+                " GITHUB_TOKEN or GH_TOKEN environment variable."
+            )
+
+    def active_issueoid_types(self) -> Iterator[IssueoidType]:
+        if self.activity.new_issues:
+            yield IssueoidType.ISSUE
+        if self.activity.new_prs:
+            yield IssueoidType.PR
+        if self.activity.new_discussions:
+            yield IssueoidType.DISCUSSION
 
     def for_json(self) -> Any:
         return json.loads(self.json())

@@ -1,32 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from datetime import datetime
 import json
-from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Type
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 import requests
-from .events import (
-    NewDiscussEvent,
-    NewIssueEvent,
-    NewIssueoidEvent,
-    NewPREvent,
-    NewRepoEvent,
-)
+from .events import NewIssueoidEvent, Repository
+from .util import Affiliation, IssueoidType
 
 PAGE_SIZE = 50
 
-GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
 
-
-class GitHub:
-    def __init__(self, token_file: Path) -> None:
-        token = token_file.read_text().strip()
+class Client:
+    def __init__(self, api_url: str, token: str) -> None:
+        self.api_url = api_url
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"bearer {token}"
 
+    def __enter__(self) -> Client:
+        return self
+
+    def __exit__(self, *_exc: Any) -> None:
+        self.s.close()
+
     def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
         r = self.s.post(
-            GITHUB_GRAPHQL_URL,
+            self.api_url,
             json={
                 "query": query,
                 "variables": variables or {},
@@ -38,7 +34,7 @@ class GitHub:
 
     def paginate(
         self, query: str, variables: Dict[str, Any], conn_path: Sequence[str]
-    ) -> Tuple[list, str]:
+    ) -> Tuple[list, Optional[str]]:
         nodes: list = []
         while True:
             data = self.query(query, variables)
@@ -47,17 +43,33 @@ class GitHub:
                 conn = conn[p]
             nodes.extend(conn["nodes"])
             new_cursor = conn["pageInfo"]["endCursor"]
+            assert new_cursor is None or isinstance(new_cursor, str)
             if conn["pageInfo"]["hasNextPage"]:
                 variables = {**variables, "cursor": new_cursor}
             else:
                 return nodes, new_cursor
 
-    def get_user_repos(self, user: str) -> Iterator[Repository]:
+    def get_user(self) -> str:
+        data = self.query("query { viewer { login } }", {})
+        user = data["data"]["viewer"]["login"]
+        assert isinstance(user, str)
+        return user
+
+    def get_user_repos(
+        self, user: str, affiliations: List[Affiliation]
+    ) -> Iterator[Repository]:
+        if not affiliations:
+            return
         q = """
-            query($user: String!, $page_size: Int!, $cursor: String) {
+            query(
+                $user: String!,
+                $page_size: Int!,
+                $affiliations: [RepositoryAffiliation!],
+                $cursor: String
+            ) {
                 user(login: $user) {
                     repositories(
-                        ownerAffiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR],
+                        ownerAffiliations: $affiliations,
                         orderBy: {field: NAME, direction: ASC},
                         first: $page_size,
                         after: $cursor
@@ -65,6 +77,8 @@ class GitHub:
                         nodes {
                             id
                             nameWithOwner
+                            owner { login }
+                            name
                             createdAt
                             url
                         }
@@ -76,52 +90,31 @@ class GitHub:
                 }
             }
         """
-        variables = {"user": user, "page_size": PAGE_SIZE}
+        variables = {
+            "user": user,
+            "page_size": PAGE_SIZE,
+            "affiliations": [aff.value for aff in affiliations],
+        }
         for node in self.paginate(
             q,
             variables,
             ("data", "user", "repositories"),
         )[0]:
             yield Repository(
-                gh=self,
                 id=node["id"],
+                owner=node["owner"]["login"],
+                name=node["name"],
                 fullname=node["nameWithOwner"],
-                timestamp=parse_timestamp(node["createdAt"]),
+                created=node["createdAt"],
                 url=node["url"],
             )
 
-
-@dataclass
-class Repository:
-    gh: GitHub
-    id: str
-    fullname: str
-    timestamp: datetime
-    url: str
-    issues: IssueoidManager = field(init=False)
-    prs: IssueoidManager = field(init=False)
-    discussions: IssueoidManager = field(init=False)
-    new_event: NewRepoEvent = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.issues = IssueoidManager(self, "issues", NewIssueEvent)
-        self.prs = IssueoidManager(self, "pullRequests", NewPREvent)
-        self.discussions = IssueoidManager(self, "discussions", NewDiscussEvent)
-        # TODO: Make this a property?
-        self.new_event = NewRepoEvent(
-            timestamp=self.timestamp,
-            repo_fullname=self.fullname,
-            url=self.url,
-        )
-
-
-@dataclass
-class IssueoidManager:
-    repo: Repository
-    typename: str
-    event_class: Type[NewIssueoidEvent]
-
-    def get_new(self, cursor: Optional[str]) -> Tuple[List[NewIssueoidEvent], str]:
+    def get_new_issueoid_events(
+        self, repo: Repository, it: IssueoidType, cursor: Optional[str]
+    ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
+        if cursor is None:
+            ### TODO: Log a message here
+            return ([], self.get_latest_issueoid_cursor(repo, it))
         q = """
             query($repo_id: ID!, $page_size: Int!, $cursor: String) {
                 node(id: $repo_id) {
@@ -147,33 +140,34 @@ class IssueoidManager:
                 }
             }
         """ % (
-            self.typename,
+            it.api_name,
         )
         variables = {
-            "repo_id": self.repo.id,
+            "repo_id": repo.id,
             "page_size": PAGE_SIZE,
             "cursor": cursor,
         }
         events: List[NewIssueoidEvent] = []
-        nodes, new_cursor = self.repo.gh.paginate(
-            q,
-            variables,
-            ("data", "node", self.typename),
-        )
+        nodes, new_cursor = self.paginate(q, variables, ("data", "node", it.api_name))
         for node in nodes:
             events.append(
-                self.event_class(
-                    repo_fullname=self.repo.fullname,
-                    timestamp=parse_timestamp(node["createdAt"]),
+                NewIssueoidEvent(
+                    type=it,
+                    repo=repo,
+                    timestamp=node["createdAt"],
                     number=node["number"],
                     title=node["title"],
                     author=node["author"]["login"],
                     url=node["url"],
                 )
             )
+        if new_cursor is None:
+            new_cursor = cursor
         return events, new_cursor
 
-    def get_latest_cursor(self) -> Optional[str]:
+    def get_latest_issueoid_cursor(
+        self, repo: Repository, it: IssueoidType
+    ) -> Optional[str]:
         q = """
             query($repo_id: ID!) {
                 node(id: $repo_id) {
@@ -190,11 +184,11 @@ class IssueoidManager:
                 }
             }
         """ % (
-            self.typename,
+            it.api_name,
         )
-        cursor = self.repo.gh.query(q, {"repo_id": self.repo.id})["data"]["node"][
-            self.typename
-        ]["pageInfo"]["endCursor"]
+        cursor = self.query(q, {"repo_id": repo.id})["data"]["node"][it.api_name][
+            "pageInfo"
+        ]["endCursor"]
         assert cursor is None or isinstance(cursor, str)
         return cursor
 
@@ -220,7 +214,3 @@ class APIException(Exception):
         else:
             msg += json.dumps(resp, sort_keys=True, indent=4)
         return msg
-
-
-def parse_timestamp(s: str) -> datetime:
-    return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S%z")

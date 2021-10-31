@@ -11,7 +11,7 @@
     "github_token": "ghp_1234567890123456789",
     "github_token_file": null,
     "state_file": "~/.varlib/ghissues.json",
-    "graphql_api_url": "https://api.myservice.nil/graphql",
+    "api_url": "https://api.myservice.nil/graphql",
     "activity": {
         "new_issues": false,
         "new_prs": false,

@@ -1,18 +1,34 @@
-from dataclasses import dataclass
+from __future__ import annotations
 from datetime import datetime
-from typing import ClassVar
+from pydantic import BaseModel
+from .util import IssueoidType
 
 
-@dataclass
-class Event:
+class Repository(BaseModel):
+    id: str
+    owner: str
+    name: str
+    fullname: str
+    created: datetime
+    url: str
+
+    @property
+    def new_event(self) -> NewRepoEvent:
+        return NewRepoEvent(
+            timestamp=self.created,
+            repo_fullname=self.fullname,
+            url=self.url,
+        )
+
+
+class Event(BaseModel):
     timestamp: datetime  # Used for sorting
-    repo_fullname: str
+    repo: Repository
 
 
-@dataclass
 class NewIssueoidEvent(Event):
-    type_name: ClassVar[str]
-    repo_fullname: str
+    type: IssueoidType
+    repo: Repository
     number: int
     title: str
     author: str
@@ -20,31 +36,21 @@ class NewIssueoidEvent(Event):
 
     def __str__(self) -> str:
         return (
-            f"[{self.repo_fullname}] {self.type_name} #{self.number}:"
+            f"[{self.repo.fullname}] {self.type.value.upper()} #{self.number}:"
             f" {self.title} (@{self.author})\n<{self.url}>"
         )
 
 
-class NewIssueEvent(NewIssueoidEvent):
-    type_name = "ISSUE"
-
-
-class NewPREvent(NewIssueoidEvent):
-    type_name = "PR"
-
-
-class NewDiscussEvent(NewIssueoidEvent):
-    type_name = "DISCUSSION"
-
-
-@dataclass
 class NewRepoEvent(Event):
     url: str
 
     def __str__(self) -> str:
-        return f"Now tracking repository {self.repo_fullname}\n<{self.url}>"
+        return f"Now tracking repository {self.repo.fullname}\n<{self.url}>"
 
 
 class RepoRemovedEvent(Event):
     def __str__(self) -> str:
-        return f"Repository {self.repo_fullname} not found; no longer tracking"
+        ### TODO: Distinguish between the case when a repository has been
+        ### deleted and when the user's config no longer indicates it should be
+        ### tracked
+        return f"Repository {self.repo.fullname} not found; no longer tracking"
