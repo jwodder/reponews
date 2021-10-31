@@ -66,6 +66,8 @@ class Client:
                             owner { login }
                             name
                             url
+                            description
+                            descriptionHTML
                         }
                         pageInfo {
                             endCursor

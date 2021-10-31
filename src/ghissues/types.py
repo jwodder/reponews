@@ -1,7 +1,8 @@
 from __future__ import annotations
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+from eletter import reply_quote
 from pydantic import BaseModel
 
 
@@ -31,6 +32,8 @@ class Repository(BaseModel):
     name: str
     fullname: str
     url: str
+    description: Optional[str]
+    descriptionHTML: str
 
     @classmethod
     def from_node(cls, node: Dict[str, Any]) -> Repository:
@@ -40,6 +43,8 @@ class Repository(BaseModel):
             name=node["name"],
             fullname=node["nameWithOwner"],
             url=node["url"],
+            description=node["description"],
+            descriptionHTML=node["descriptionHTML"],
         )
 
 
@@ -96,7 +101,10 @@ class RepoTrackedEvent(Event):
     repo: Repository
 
     def __str__(self) -> str:
-        return f"Now tracking repository {self.repo.fullname}\n<{self.repo.url}>"
+        s = f"Now tracking repository {self.repo.fullname}\n<{self.repo.url}>"
+        if self.repo.description:
+            s += "\n" + reply_quote(self.repo.description)
+        return s
 
 
 class RepoUntrackedEvent(Event):
