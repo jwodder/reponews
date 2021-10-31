@@ -32,8 +32,8 @@ class Repository(BaseModel):
     url: str
 
     @property
-    def new_event(self) -> NewRepoEvent:
-        return NewRepoEvent(
+    def new_event(self) -> RepoTrackedEvent:
+        return RepoTrackedEvent(
             timestamp=datetime.now().astimezone(),
             repo=self,
             url=self.url,
@@ -59,7 +59,7 @@ class NewIssueoidEvent(Event):
         )
 
 
-class NewRepoEvent(Event):
+class RepoTrackedEvent(Event):
     repo: Repository
     url: str
 
@@ -67,8 +67,8 @@ class NewRepoEvent(Event):
         return f"Now tracking repository {self.repo.fullname}\n<{self.url}>"
 
 
-class RepoRemovedEvent(Event):
+class RepoUntrackedEvent(Event):
     repo_fullname: str
 
     def __str__(self) -> str:
-        return f"Repository {self.repo_fullname} not found; no longer tracking"
+        return f"No longer tracking repository {self.repo_fullname}"

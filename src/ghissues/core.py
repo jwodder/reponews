@@ -10,7 +10,7 @@ from eletter import compose
 from pydantic import BaseModel, Field
 from .client import Client
 from .config import Configuration
-from .types import Event, IssueoidType, RepoRemovedEvent, Repository
+from .types import Event, IssueoidType, Repository, RepoUntrackedEvent
 
 
 class RepoState(BaseModel):
@@ -61,15 +61,15 @@ class State(BaseModel):
 
     def set_repo_state(self, repo: Repository, state: RepoState) -> None:
         ### TODO: Make the registration of a new ID here be what causes a
-        ### NewRepoEvent
+        ### RepoTrackedEvent
         self.old_state.pop(repo.id, None)
         state.fullname = repo.fullname
         self.new_state[repo.id] = state
 
-    def get_removal_events(self) -> Iterator[RepoRemovedEvent]:
+    def get_removal_events(self) -> Iterator[RepoUntrackedEvent]:
         now = datetime.now().astimezone()
         for repo_state in self.old_state.values():
-            yield RepoRemovedEvent(
+            yield RepoUntrackedEvent(
                 timestamp=now,
                 repo_fullname=repo_state.fullname,
             )
