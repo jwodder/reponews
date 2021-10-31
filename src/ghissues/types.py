@@ -29,13 +29,12 @@ class Repository(BaseModel):
     owner: str
     name: str
     fullname: str
-    created: datetime
     url: str
 
     @property
     def new_event(self) -> NewRepoEvent:
         return NewRepoEvent(
-            timestamp=self.created,
+            timestamp=datetime.now().astimezone(),
             repo_fullname=self.fullname,
             url=self.url,
         )

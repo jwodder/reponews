@@ -75,7 +75,6 @@ class Client:
                             nameWithOwner
                             owner { login }
                             name
-                            createdAt
                             url
                         }
                         pageInfo {
@@ -101,7 +100,6 @@ class Client:
                 owner=node["owner"]["login"],
                 name=node["name"],
                 fullname=node["nameWithOwner"],
-                created=node["createdAt"],
                 url=node["url"],
             )
 
