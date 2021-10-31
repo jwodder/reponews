@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextlib import closing
 from datetime import datetime
 from email.message import EmailMessage
 import json
@@ -94,9 +95,11 @@ class GHIssues(BaseModel):
 
     def get_new_events(self) -> List[Event]:
         events: List[Event] = []
-        with Client(
-            api_url=self.config.api_url,
-            token=self.config.get_github_token(),
+        with closing(
+            Client(
+                api_url=self.config.api_url,
+                token=self.config.get_github_token(),
+            )
         ) as gh:
             user = gh.get_user()
             for repo in gh.get_user_repos(

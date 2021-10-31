@@ -13,10 +13,7 @@ class Client:
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"bearer {token}"
 
-    def __enter__(self) -> Client:
-        return self
-
-    def __exit__(self, *_exc: Any) -> None:
+    def close(self) -> None:
         self.s.close()
 
     def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
