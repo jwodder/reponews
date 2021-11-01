@@ -16,3 +16,7 @@ def mkalias(s: str) -> str:
 
 def get_default_state_file() -> Path:
     return user_state_path("reponews", "jwodder") / "state.json"
+
+
+class NotFoundError(Exception):
+    pass

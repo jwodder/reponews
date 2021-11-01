@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set
 from eletter import compose
 from pydantic import BaseModel, Field
 from . import log
-from .client import Client, NotFoundError
+from .client import Client
 from .config import Configuration
 from .types import (
     Event,
@@ -20,6 +20,7 @@ from .types import (
     RepoTrackedEvent,
     RepoUntrackedEvent,
 )
+from .util import NotFoundError
 
 CursorDict = Dict[IssueoidType, Optional[str]]
 

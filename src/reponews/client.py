@@ -1,10 +1,18 @@
 from __future__ import annotations
 import json
 import platform
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__, log
+from .queries import (
+    NewIssueoidQuery,
+    OwnersReposQuery,
+    QueryManager,
+    T,
+    ViewersReposQuery,
+)
 from .types import Affiliation, IssueoidType, NewIssueoidEvent, Repository
+from .util import NotFoundError
 
 PAGE_SIZE = 50
 
@@ -46,22 +54,15 @@ class Client:
             raise APIException(r)
         return r.json()
 
-    def paginate(
-        self, query: str, variables: Dict[str, Any], conn_path: Sequence[str]
-    ) -> Tuple[list, Optional[str]]:
-        nodes: list = []
-        while True:
-            data = self.query(query, variables)
-            conn = data
-            for p in conn_path:
-                conn = conn[p]
-            nodes.extend(conn["nodes"])
-            new_cursor = conn["pageInfo"]["endCursor"]
-            assert new_cursor is None or isinstance(new_cursor, str)
-            if conn["pageInfo"]["hasNextPage"]:
-                variables = {**variables, "cursor": new_cursor}
-            else:
-                return nodes, new_cursor
+    def do_managed_query(
+        self, manager: QueryManager[T]
+    ) -> Tuple[List[T], Optional[str]]:
+        nodes: List[T] = []
+        while manager.has_next_page():
+            q, variables = manager.make_query()
+            data = self.query(q, variables)
+            nodes.extend(manager.parse_response(data))
+        return (nodes, manager.get_cursor())
 
     def get_affiliated_repos(
         self, affiliations: List[Affiliation]
@@ -73,77 +74,15 @@ class Client:
             "Fetching repositories with affiliations %s",
             ", ".join(aff.value for aff in affiliations),
         )
-        q = """
-            query(
-                $page_size: Int!,
-                $affiliations: [RepositoryAffiliation!],
-                $cursor: String
-            ) {
-                viewer {
-                    repositories(
-                        ownerAffiliations: $affiliations,
-                        orderBy: {field: NAME, direction: ASC},
-                        first: $page_size,
-                        after: $cursor
-                    ) {
-                        nodes {
-                            id
-                            nameWithOwner
-                            owner { login }
-                            name
-                            url
-                            description
-                            descriptionHTML
-                        }
-                        pageInfo {
-                            endCursor
-                            hasNextPage
-                        }
-                    }
-                }
-            }
-        """
-        variables = {
-            "page_size": PAGE_SIZE,
-            "affiliations": [aff.value for aff in affiliations],
-        }
-        for node in self.paginate(q, variables, ("data", "viewer", "repositories"))[0]:
-            repo = Repository.from_node(node)
+        manager = ViewersReposQuery(affiliations=affiliations)
+        for repo in self.do_managed_query(manager)[0]:
             log.info("Found repository %s", repo.fullname)
             yield repo
 
     def get_owner_repos(self, owner: str) -> Iterator[Repository]:
         log.info("Fetching repositories belonging to %s", owner)
-        q = """
-            query($owner: String!, $page_size: Int!, $cursor: String) {
-                repositoryOwner(login: $owner) {
-                    repositories(
-                        orderBy: {field: NAME, direction: ASC},
-                        first: $page_size,
-                        after: $cursor
-                    ) {
-                        nodes {
-                            id
-                            nameWithOwner
-                            owner { login }
-                            name
-                            url
-                            description
-                            descriptionHTML
-                        }
-                        pageInfo {
-                            endCursor
-                            hasNextPage
-                        }
-                    }
-                }
-            }
-        """
-        variables = {"owner": owner, "page_size": PAGE_SIZE}
-        for node in self.paginate(
-            q, variables, ("data", "repositoryOwner", "repositories")
-        )[0]:
-            repo = Repository.from_node(node)
+        manager = OwnersReposQuery(owner=owner)
+        for repo in self.do_managed_query(manager)[0]:
             log.info("Found repository %s", repo.fullname)
             yield repo
 
@@ -170,63 +109,9 @@ class Client:
         self, repo: Repository, it: IssueoidType, cursor: Optional[str]
     ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
         log.info("Fetching new %s events for %s", it.value, repo.fullname)
-        if cursor is None:
-            log.debug(
-                "No %s cursor set for %s; setting cursor to latest state",
-                it.value,
-                repo.fullname,
-            )
-            new_cursor = self.get_latest_issueoid_cursor(repo, it)
-            if new_cursor is None:
-                log.debug(
-                    "No %s events have yet occurred for %s; cursor will remain unset",
-                    it.value,
-                    repo.fullname,
-                )
-            return ([], new_cursor)
-        q = """
-            query($repo_id: ID!, $page_size: Int!, $cursor: String) {
-                node(id: $repo_id) {
-                    ... on Repository {
-                        %s (
-                            orderBy: {field: CREATED_AT, direction: ASC},
-                            first: $page_size,
-                            after: $cursor
-                        ) {
-                            nodes {
-                                author {
-                                    login
-                                    url
-                                    ... on User {
-                                        name
-                                        isViewer
-                                    }
-                                }
-                                createdAt
-                                number
-                                title
-                                url
-                            }
-                            pageInfo {
-                                endCursor
-                                hasNextPage
-                            }
-                        }
-                    }
-                }
-            }
-        """ % (
-            it.api_name,
-        )
-        variables = {
-            "repo_id": repo.id,
-            "page_size": PAGE_SIZE,
-            "cursor": cursor,
-        }
-        events: List[NewIssueoidEvent] = []
-        nodes, new_cursor = self.paginate(q, variables, ("data", "node", it.api_name))
-        for node in nodes:
-            ev = NewIssueoidEvent.from_node(type=it, repo=repo, node=node)
+        manager = NewIssueoidQuery(repo=repo, type=it, cursor=cursor)
+        events, new_cursor = self.do_managed_query(manager)
+        for ev in events:
             log.info(
                 "Found new %s for %s: %r (#%d)",
                 it.value,
@@ -234,37 +119,7 @@ class Client:
                 ev.title,
                 ev.number,
             )
-            events.append(ev)
-        if new_cursor is None:
-            new_cursor = cursor
         return events, new_cursor
-
-    def get_latest_issueoid_cursor(
-        self, repo: Repository, it: IssueoidType
-    ) -> Optional[str]:
-        q = """
-            query($repo_id: ID!) {
-                node(id: $repo_id) {
-                    ... on Repository {
-                        %s (
-                            orderBy: {field: CREATED_AT, direction: ASC},
-                            last: 1
-                        ) {
-                            pageInfo {
-                                endCursor
-                            }
-                        }
-                    }
-                }
-            }
-        """ % (
-            it.api_name,
-        )
-        cursor = self.query(q, {"repo_id": repo.id})["data"]["node"][it.api_name][
-            "pageInfo"
-        ]["endCursor"]
-        assert cursor is None or isinstance(cursor, str)
-        return cursor
 
 
 class APIException(Exception):
@@ -288,7 +143,3 @@ class APIException(Exception):
         else:
             msg += json.dumps(resp, sort_keys=True, indent=4)
         return msg
-
-
-class NotFoundError(Exception):
-    pass

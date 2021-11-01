@@ -59,8 +59,13 @@ class User(BaseModel):
 
     @classmethod
     def from_node(cls, node: Dict[str, Any]) -> User:
+        name = node.get("name")
+        if name is None:
+            # Either the user is a bot (and thus doesn't have a name) or they
+            # never set their display name (and thus it's `null`)
+            name = node["login"]
         return cls(
-            name=node.get("name", node["login"]),  # Bots don't have names
+            name=name,
             login=node["login"],
             url=node["url"],
             is_me=node.get("isViewer", False),
