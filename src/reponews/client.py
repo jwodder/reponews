@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__, log
 from .queries import (
-    NewIssueoidQuery,
+    NewIssueoidsQuery,
     OwnersReposQuery,
     QueryManager,
     T,
@@ -109,7 +109,7 @@ class Client:
         self, repo: Repository, it: IssueoidType, cursor: Optional[str]
     ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
         log.info("Fetching new %s events for %s", it.value, repo.fullname)
-        manager = NewIssueoidQuery(repo=repo, type=it, cursor=cursor)
+        manager = NewIssueoidsQuery(repo=repo, type=it, cursor=cursor)
         events, new_cursor = self.do_managed_query(manager)
         for ev in events:
             log.info(

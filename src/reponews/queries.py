@@ -150,7 +150,7 @@ class OwnersReposQuery(ReposQuery):
         return super().parse_response(data)
 
 
-class NewIssueoidQuery(QueryManager[NewIssueoidEvent], BaseModel):
+class NewIssueoidsQuery(QueryManager[NewIssueoidEvent], BaseModel):
     repo: Repository
     type: IssueoidType
     cursor: Optional[str]
