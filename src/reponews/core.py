@@ -170,7 +170,7 @@ class RepoNews:
         yield from self.client.get_affiliated_repos(self.config.repos.affiliations)
         for owner in self.config.get_included_repo_owners():
             try:
-                yield from self.client.get_user_repos(owner)
+                yield from self.client.get_owner_repos(owner)
             except NotFoundError:
                 log.warning("User %s does not exist!", owner)
         for (owner, name) in self.config.get_included_repos():

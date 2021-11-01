@@ -102,11 +102,11 @@ class Client:
             log.info("Found repository %s", repo.fullname)
             yield repo
 
-    def get_user_repos(self, user: str) -> Iterator[Repository]:
-        log.info("Fetching repositories belonging to %s", user)
+    def get_owner_repos(self, owner: str) -> Iterator[Repository]:
+        log.info("Fetching repositories belonging to %s", owner)
         q = """
-            query($user: String!, $page_size: Int!, $cursor: String) {
-                user(login: $user) {
+            query($owner: String!, $page_size: Int!, $cursor: String) {
+                repositoryOwner(login: $owner) {
                     repositories(
                         orderBy: {field: NAME, direction: ASC},
                         first: $page_size,
@@ -129,8 +129,10 @@ class Client:
                 }
             }
         """
-        variables = {"user": user, "page_size": PAGE_SIZE}
-        for node in self.paginate(q, variables, ("data", "user", "repositories"))[0]:
+        variables = {"owner": owner, "page_size": PAGE_SIZE}
+        for node in self.paginate(
+            q, variables, ("data", "repositoryOwner", "repositories")
+        )[0]:
             repo = Repository.from_node(node)
             log.info("Found repository %s", repo.fullname)
             yield repo
