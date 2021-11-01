@@ -1,5 +1,5 @@
 """
-Send e-mails about new GitHub issues etc.
+Send e-mails about new events on your GitHub repositories
 
 Visit <https://github.com/jwodder/reponews> for more information.
 """
