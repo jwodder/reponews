@@ -96,15 +96,14 @@ class ViewersReposQuery(ReposQuery):
                         orderBy: {field: NAME, direction: ASC},
                         first: $page_size,
                         after: $cursor
-                    ) {
-        """
+                    ) {\n"""
             + indent(self.ROOT, " " * 24)
-            + """
+            + """\
                     }
                 }
             }
             """
-        )
+        ).lstrip()
         variables = {
             "affiliations": [aff.value for aff in self.affiliations],
             "page_size": PAGE_SIZE,
@@ -134,7 +133,7 @@ class OwnersReposQuery(ReposQuery):
                 }
             }
             """
-        )
+        ).lstrip()
         variables = {
             "owner": self.owner,
             "page_size": PAGE_SIZE,
@@ -184,7 +183,7 @@ class NewIssueoidQuery(QueryManager[NewIssueoidEvent], BaseModel):
                 }
                 """
                 % (self.type.api_name,)
-            )
+            ).lstrip()
             variables = {"repo_id": self.repo.id}
         else:
             q = dedent(
@@ -221,7 +220,7 @@ class NewIssueoidQuery(QueryManager[NewIssueoidEvent], BaseModel):
                 }
                 """
                 % (self.type.api_name,)
-            )
+            ).lstrip()
             variables = {
                 "repo_id": self.repo.id,
                 "page_size": PAGE_SIZE,
