@@ -1,11 +1,20 @@
 from __future__ import annotations
 import json
+import platform
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 import requests
-from . import log
+from . import __url__, __version__, log
 from .types import Affiliation, IssueoidType, NewIssueoidEvent, Repository
 
 PAGE_SIZE = 50
+
+USER_AGENT = "reponews/{} ({}) requests/{} {}/{}".format(
+    __version__,
+    __url__,
+    requests.__version__,
+    platform.python_implementation(),
+    platform.python_version(),
+)
 
 
 class Client:
@@ -13,6 +22,7 @@ class Client:
         self.api_url = api_url
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"bearer {token}"
+        self.s.headers["User-Agent"] = USER_AGENT
 
     def close(self) -> None:
         self.s.close()
