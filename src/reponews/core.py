@@ -21,34 +21,18 @@ from .types import (
     RepoUntrackedEvent,
 )
 
+CursorDict = Dict[IssueoidType, Optional[str]]
+
 
 class RepoState(BaseModel):
-    fullname: str
-    issues: Optional[str] = None
-    prs: Optional[str] = None
-    discussions: Optional[str] = None
+    repo: Repository
+    cursors: CursorDict = Field(default_factory=dict)
 
-    ### TODO: Give this a __getitem__/__setitem__ interface instead of these
-    ### methods?
-    def get_cursor(self, it: IssueoidType) -> Optional[str]:
-        if it is IssueoidType.ISSUE:
-            return self.issues
-        elif it is IssueoidType.PR:
-            return self.prs
-        elif it is IssueoidType.DISCUSSION:
-            return self.discussions
-        else:
-            raise AssertionError(f"Unhandled IssueoidType: {it!r}")  # pragma: no cover
-
-    def set_cursor(self, it: IssueoidType, cursor: Optional[str]) -> None:
-        if it is IssueoidType.ISSUE:
-            self.issues = cursor
-        elif it is IssueoidType.PR:
-            self.prs = cursor
-        elif it is IssueoidType.DISCUSSION:
-            self.discussions = cursor
-        else:
-            raise AssertionError(f"Unhandled IssueoidType: {it!r}")  # pragma: no cover
+    def for_json(self) -> Any:
+        return {
+            "repo": self.repo.dict(),
+            "cursors": {k.value: v for k, v in self.cursors.items()},
+        }
 
 
 class State(BaseModel):
@@ -66,12 +50,17 @@ class State(BaseModel):
             state = {}
         return cls(path=path, old_state=state)
 
-    def get_repo_state(self, repo: Repository) -> RepoState:
+    def get_cursors(self, repo: Repository) -> CursorDict:
         try:
-            state = self.old_state.pop(repo.id)
+            return self.old_state[repo.id].cursors
+        except KeyError:
+            return {}
+
+    def set_cursors(self, repo: Repository, cursors: CursorDict) -> None:
+        try:
+            old = self.old_state.pop(repo.id)
         except KeyError:
             log.info("Now tracking %s", repo.fullname)
-            state = RepoState(fullname=repo.fullname)
             self.state_events.append(
                 RepoTrackedEvent(
                     timestamp=datetime.now().astimezone(),
@@ -79,18 +68,18 @@ class State(BaseModel):
                 )
             )
         else:
-            if state.fullname != repo.fullname:
-                log.info("Repository renamed: %s → %s", state.fullname, repo.fullname)
+            if old.repo.fullname != repo.fullname:
+                log.info(
+                    "Repository renamed: %s → %s", old.repo.fullname, repo.fullname
+                )
                 self.state_events.append(
                     RepoRenamedEvent(
                         timestamp=datetime.now().astimezone(),
                         repo=repo,
-                        old_fullname=state.fullname,
+                        old_fullname=old.repo.fullname,
                     )
                 )
-                state.fullname = repo.fullname
-        self.new_state[repo.id] = state
-        return state
+        self.new_state[repo.id] = RepoState(repo=repo, cursors=cursors)
 
     def get_state_events(self) -> Iterator[Event]:
         yield from self.state_events
@@ -98,17 +87,14 @@ class State(BaseModel):
         for repo_state in self.old_state.values():
             log.info(
                 "Did not encounter or fetch activity for %s; no longer tracking",
-                repo_state.fullname,
+                repo_state.repo.fullname,
             )
-            yield RepoUntrackedEvent(
-                timestamp=now,
-                repo_fullname=repo_state.fullname,
-            )
+            yield RepoUntrackedEvent(timestamp=now, repo=repo_state.repo)
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
-            json.dumps({k: v.dict() for k, v in self.new_state.items()})
+            json.dumps({k: v.for_json() for k, v in self.new_state.items()})
         )
 
 
@@ -141,13 +127,11 @@ class RepoNews:
     def get_new_events(self) -> List[Event]:
         events: List[Event] = []
         for repo in self.get_repositories():
-            repo_state = self.state.get_repo_state(repo)
+            cursors = self.state.get_cursors(repo)
             for it in self.config.active_issueoid_types():
-                cursor = repo_state.get_cursor(it)
-                new_events, new_cursor = self.client.get_new_issueoid_events(
-                    repo, it, cursor
+                new_events, cursors[it] = self.client.get_new_issueoid_events(
+                    repo, it, cursors.get(it)
                 )
-                repo_state.set_cursor(it, new_cursor)
                 if not self.config.activity.my_activity:
                     events2: List[NewIssueoidEvent] = []
                     for ev in new_events:
@@ -163,6 +147,7 @@ class RepoNews:
                             events2.append(ev)
                     new_events = events2
                 events.extend(new_events)
+            self.state.set_cursors(repo, cursors)
         events.extend(self.state.get_state_events())
         events.sort(key=attrgetter("timestamp"))
         return events

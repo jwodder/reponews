@@ -69,11 +69,11 @@ class User(BaseModel):
 
 class Event(BaseModel):
     timestamp: datetime  # Used for sorting
+    repo: Repository
 
 
 class NewIssueoidEvent(Event):
     type: IssueoidType
-    repo: Repository
     number: int
     title: str
     author: User
@@ -101,8 +101,6 @@ class NewIssueoidEvent(Event):
 
 
 class RepoTrackedEvent(Event):
-    repo: Repository
-
     def __str__(self) -> str:
         s = f"Now tracking repository {self.repo.fullname}\n<{self.repo.url}>"
         if self.repo.description:
@@ -111,14 +109,11 @@ class RepoTrackedEvent(Event):
 
 
 class RepoUntrackedEvent(Event):
-    repo_fullname: str
-
     def __str__(self) -> str:
-        return f"No longer tracking repository {self.repo_fullname}"
+        return f"No longer tracking repository {self.repo.fullname}"
 
 
 class RepoRenamedEvent(Event):
-    repo: Repository
     old_fullname: str
 
     def __str__(self) -> str:
