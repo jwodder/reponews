@@ -5,7 +5,7 @@ from email.message import EmailMessage
 import json
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Set
 from eletter import compose
 from pydantic import BaseModel, Field
 from . import log
@@ -168,20 +168,24 @@ class GHIssues:
         return events
 
     def get_repositories(self) -> Iterator[Repository]:
-        for repo in self.client.get_affiliated_repos(self.config.repos.affiliations):
+        seen: Set[str] = set()
+        for repo in self._get_repositories():
             if self.config.is_repo_excluded(repo):
                 log.info("Repo %s is excluded by config; skipping", repo.fullname)
+            elif repo.id in seen:
+                log.info(
+                    "Repo %s fetched more than once; not getting events again",
+                    repo.fullname,
+                )
             else:
+                seen.add(repo.id)
                 yield repo
+
+    def _get_repositories(self) -> Iterator[Repository]:
+        yield from self.client.get_affiliated_repos(self.config.repos.affiliations)
         for owner in self.config.get_included_repo_owners():
             try:
-                for repo in self.client.get_user_repos(owner):
-                    if self.config.is_repo_excluded(repo):
-                        log.info(
-                            "Repo %s is excluded by config; skipping", repo.fullname
-                        )
-                    else:
-                        yield repo
+                yield from self.client.get_user_repos(owner)
             except NotFoundError:
                 log.warning("User %s does not exist on GitHub!", owner)
         for (owner, name) in self.config.get_included_repos():
