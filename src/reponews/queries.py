@@ -125,10 +125,9 @@ class OwnersReposQuery(ReposQuery):
                         orderBy: {field: NAME, direction: ASC},
                         first: $page_size,
                         after: $cursor
-                    ) {
-        """
+                    ) {\n"""
             + indent(self.ROOT, " " * 24)
-            + """
+            + """\
                     }
                 }
             }
