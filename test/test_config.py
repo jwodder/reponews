@@ -2,9 +2,9 @@ from os.path import expanduser
 from pathlib import Path
 from typing import Any, List, Tuple
 import pytest
-from ghissues.config import Configuration, ReposConfig
-from ghissues.types import Repository
-from ghissues.util import get_default_state_file
+from reponews.config import Configuration, ReposConfig
+from reponews.types import Repository
+from reponews.util import get_default_state_file
 from testlib import filecases
 
 

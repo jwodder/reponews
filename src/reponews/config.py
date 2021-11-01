@@ -165,7 +165,7 @@ class Configuration(BaseConfig):
     @classmethod
     def from_toml_file(cls, filepath: Union[str, Path]) -> Configuration:
         with open(filepath, "rb") as fp:
-            data = tomli.load(fp).get("ghissues", {})
+            data = tomli.load(fp).get("reponews", {})
         return cls.parse_obj(data)
 
     def get_auth_token(self) -> str:

@@ -113,7 +113,7 @@ class State(BaseModel):
 
 
 @dataclass
-class GHIssues:
+class RepoNews:
     config: Configuration
     state: State
     client: Client = field(init=False)
@@ -124,18 +124,18 @@ class GHIssues:
             token=self.config.get_auth_token(),
         )
 
-    def __enter__(self) -> GHIssues:
+    def __enter__(self) -> RepoNews:
         return self
 
     def __exit__(self, *_exc: Any) -> None:
         self.client.close()
 
     @classmethod
-    def from_config(cls, config: Configuration) -> GHIssues:
+    def from_config(cls, config: Configuration) -> RepoNews:
         return cls(config=config, state=State.from_file(config.state_file))
 
     @classmethod
-    def from_config_file(cls, path: Path) -> GHIssues:
+    def from_config_file(cls, path: Path) -> RepoNews:
         return cls.from_config(Configuration.from_toml_file(path))
 
     def get_new_events(self) -> List[Event]:

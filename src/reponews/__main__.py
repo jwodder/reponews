@@ -7,9 +7,9 @@ from click_loglevel import LogLevel
 from outgoing import from_config_file
 from platformdirs import user_config_path
 from . import log
-from .core import GHIssues
+from .core import RepoNews
 
-DEFAULT_CONFIG_FILE = user_config_path("ghissues", "jwodder") / "config.toml"
+DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
 
 
 @click.command()
@@ -48,10 +48,10 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
         datefmt="%H:%M:%S",
         level=log_level,
     )
-    with GHIssues.from_config_file(config) as ghissues:
-        events = ghissues.get_new_events()
+    with RepoNews.from_config_file(config) as reponews:
+        events = reponews.get_new_events()
         if events:
-            msg = ghissues.compose_email(events)
+            msg = reponews.compose_email(events)
             if mode == "print":
                 print(msg)
             elif mode == "body":
@@ -63,7 +63,7 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
         else:
             log.info("No new events")
         if save:
-            ghissues.save_state()
+            reponews.save_state()
 
 
 if __name__ == "__main__":

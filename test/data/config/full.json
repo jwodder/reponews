@@ -4,13 +4,13 @@
         "address": "me@here.there"
     },
     "sender": {
-        "name": "GHIssues",
-        "address": "ghissues@cron.job"
+        "name": "RepoNews",
+        "address": "reponews@cron.job"
     },
     "subject": "GitHub Activity!",
     "auth_token": "ghp_1234567890123456789",
     "auth_token_file": null,
-    "state_file": "~/.varlib/ghissues.json",
+    "state_file": "~/.varlib/reponews.json",
     "api_url": "https://api.myservice.nil/graphql",
     "activity": {
         "issues": false,
