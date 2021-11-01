@@ -172,12 +172,12 @@ class RepoNews:
             try:
                 yield from self.client.get_user_repos(owner)
             except NotFoundError:
-                log.warning("User %s does not exist on GitHub!", owner)
+                log.warning("User %s does not exist!", owner)
         for (owner, name) in self.config.get_included_repos():
             try:
                 yield self.client.get_repo(owner, name)
             except NotFoundError:
-                log.warning("Repo %s/%s does not exist on GitHub!", owner, name)
+                log.warning("Repo %s/%s does not exist!", owner, name)
 
     def compose_email(self, events: List[Event]) -> EmailMessage:
         return compose(
