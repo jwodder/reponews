@@ -7,9 +7,9 @@ state-file = "~/.varlib/ghissues.json"
 api-url = "https://api.myservice.nil/graphql"
 
 [ghissues.activity]
-new-issues = false
-new-prs = false
-new-discussions = true
+issues = false
+prs = false
+discussions = true
 my-activity = true
 
 [ghissues.repos]

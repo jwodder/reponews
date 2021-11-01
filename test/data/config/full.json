@@ -13,9 +13,9 @@
     "state_file": "~/.varlib/ghissues.json",
     "api_url": "https://api.myservice.nil/graphql",
     "activity": {
-        "new_issues": false,
-        "new_prs": false,
-        "new_discussions": true,
+        "issues": false,
+        "prs": false,
+        "discussions": true,
         "my_activity": true
     },
     "repos": {

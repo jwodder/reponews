@@ -10,9 +10,9 @@
     "state_file": null,
     "api_url": "https://api.github.com/graphql",
     "activity": {
-        "new_issues": true,
-        "new_prs": true,
-        "new_discussions": true,
+        "issues": true,
+        "prs": true,
+        "discussions": true,
         "my_activity": false
     },
     "repos": {

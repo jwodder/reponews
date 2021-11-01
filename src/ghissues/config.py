@@ -91,9 +91,9 @@ class BaseConfig(BaseModel):
 
 
 class ActivityConfig(BaseConfig):
-    new_issues: bool = True
-    new_prs: bool = True
-    new_discussions: bool = True
+    issues: bool = True
+    prs: bool = True
+    discussions: bool = True
     my_activity: bool = False
 
 
@@ -185,11 +185,11 @@ class Configuration(BaseConfig):
             )
 
     def active_issueoid_types(self) -> Iterator[IssueoidType]:
-        if self.activity.new_issues:
+        if self.activity.issues:
             yield IssueoidType.ISSUE
-        if self.activity.new_prs:
+        if self.activity.prs:
             yield IssueoidType.PR
-        if self.activity.new_discussions:
+        if self.activity.discussions:
             yield IssueoidType.DISCUSSION
 
     @cached_property
