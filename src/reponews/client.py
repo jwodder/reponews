@@ -54,15 +54,11 @@ class Client:
             raise APIException(r)
         return r.json()
 
-    def do_managed_query(
-        self, manager: QueryManager[T]
-    ) -> Tuple[List[T], Optional[str]]:
-        nodes: List[T] = []
+    def do_managed_query(self, manager: QueryManager[T]) -> Iterator[T]:
         while manager.has_next_page():
             q, variables = manager.make_query()
             data = self.query(q, variables)
-            nodes.extend(manager.parse_response(data))
-        return (nodes, manager.get_cursor())
+            yield from manager.parse_response(data)
 
     def get_affiliated_repos(
         self, affiliations: List[Affiliation]
@@ -75,14 +71,14 @@ class Client:
             ", ".join(aff.value for aff in affiliations),
         )
         manager = ViewersReposQuery(affiliations=affiliations)
-        for repo in self.do_managed_query(manager)[0]:
+        for repo in self.do_managed_query(manager):
             log.info("Found repository %s", repo.fullname)
             yield repo
 
     def get_owner_repos(self, owner: str) -> Iterator[Repository]:
         log.info("Fetching repositories belonging to %s", owner)
         manager = OwnersReposQuery(owner=owner)
-        for repo in self.do_managed_query(manager)[0]:
+        for repo in self.do_managed_query(manager):
             log.info("Found repository %s", repo.fullname)
             yield repo
 
@@ -110,8 +106,8 @@ class Client:
     ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
         log.info("Fetching new %s events for %s", it.value, repo.fullname)
         manager = NewIssueoidsQuery(repo=repo, type=it, cursor=cursor)
-        events, new_cursor = self.do_managed_query(manager)
-        for ev in events:
+        events: List[NewIssueoidEvent] = []
+        for ev in self.do_managed_query(manager):
             log.info(
                 "Found new %s for %s: %r (#%d)",
                 it.value,
@@ -119,7 +115,8 @@ class Client:
                 ev.title,
                 ev.number,
             )
-        return events, new_cursor
+            events.append(ev)
+        return (events, manager.get_cursor())
 
 
 class APIException(Exception):
