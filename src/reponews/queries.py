@@ -1,16 +1,6 @@
 from abc import ABC, abstractmethod
 from textwrap import dedent, indent
-from typing import (
-    Any,
-    ClassVar,
-    Dict,
-    Generic,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, ClassVar, Dict, Generic, List, Optional, Tuple, TypeVar
 from pydantic import BaseModel
 from . import log
 from .types import Affiliation, IssueoidType, NewIssueoidEvent, Repository
@@ -27,7 +17,7 @@ class QueryManager(ABC, Generic[T]):
         ...
 
     @abstractmethod
-    def parse_response(self, data: Any) -> Iterator[T]:
+    def parse_response(self, data: Any) -> List[T]:
         ...
 
     @abstractmethod
@@ -59,7 +49,7 @@ class ReposQuery(QueryManager[Repository], BaseModel):
     cursor: Optional[str] = None
     hasNextPage: bool = True
 
-    def parse_response(self, data: Any) -> Iterator[Repository]:
+    def parse_response(self, data: Any) -> List[Repository]:
         root = data["data"]
         for p in self.PATH:
             root = root[p]
@@ -68,8 +58,7 @@ class ReposQuery(QueryManager[Repository], BaseModel):
             assert isinstance(new_cursor, str)
             self.cursor = new_cursor
         self.hasNextPage = root["pageInfo"]["hasNextPage"]
-        for node in root["nodes"]:
-            yield Repository.from_node(node)
+        return [Repository.from_node(node) for node in root["nodes"]]
 
     def has_next_page(self) -> bool:
         return self.hasNextPage
@@ -140,7 +129,7 @@ class OwnersReposQuery(ReposQuery):
         }
         return (q, variables)
 
-    def parse_response(self, data: Any) -> Iterator[Repository]:
+    def parse_response(self, data: Any) -> List[Repository]:
         if data["data"]["repositoryOwner"] is None:
             # For some reason, as of 2021-11-01, GitHub handles requests for a
             # nonexistent repositoryOwner by returning `null` instead of
@@ -227,7 +216,7 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent], BaseModel):
             }
         return (q, variables)
 
-    def parse_response(self, data: Any) -> Iterator[NewIssueoidEvent]:
+    def parse_response(self, data: Any) -> List[NewIssueoidEvent]:
         root = data["data"]["node"][self.type.api_name]
         new_cursor = root["pageInfo"]["endCursor"]
         old_cursor = self.cursor
@@ -242,10 +231,13 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent], BaseModel):
                     self.repo.fullname,
                 )
             self.hasNextPage = False
+            return []
         else:
             self.hasNextPage = root["pageInfo"]["hasNextPage"]
-            for node in root["nodes"]:
-                yield NewIssueoidEvent.from_node(self.type, self.repo, node)
+            return [
+                NewIssueoidEvent.from_node(self.type, self.repo, node)
+                for node in root["nodes"]
+            ]
 
     def has_next_page(self) -> bool:
         return self.hasNextPage

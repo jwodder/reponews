@@ -53,52 +53,50 @@ def test_viewers_repos_query() -> None:
             "cursor": None,
         },
     )
-    repos = list(
-        manager.parse_response(
-            {
-                "data": {
-                    "viewer": {
-                        "repositories": {
-                            "nodes": [
-                                {
-                                    "id": "id:viewer/repo",
-                                    "nameWithOwner": "viewer/repo",
-                                    "owner": {"login": "viewer"},
-                                    "name": "repo",
-                                    "url": "https://github.com/viewer/repo",
-                                    "description": "My Very Special Repo(tm)",
-                                    "descriptionHTML": (
-                                        "<div>My Very Special Repo(tm)</div>"
-                                    ),
-                                },
-                                {
-                                    "id": "id:viewer/project",
-                                    "nameWithOwner": "viewer/project",
-                                    "owner": {"login": "viewer"},
-                                    "name": "project",
-                                    "url": "https://github.com/viewer/project",
-                                    "description": "My big ol' project",
-                                    "descriptionHTML": "<div>My big ol' project</div>",
-                                },
-                                {
-                                    "id": "id:org/workspace",
-                                    "nameWithOwner": "org/workspace",
-                                    "owner": {"login": "org"},
-                                    "name": "workspace",
-                                    "url": "https://github.com/viewer/workspace",
-                                    "description": "Where we all work",
-                                    "descriptionHTML": "<div>Where we all work</div>",
-                                },
-                            ],
-                            "pageInfo": {
-                                "endCursor": "cursor:0001",
-                                "hasNextPage": True,
+    repos = manager.parse_response(
+        {
+            "data": {
+                "viewer": {
+                    "repositories": {
+                        "nodes": [
+                            {
+                                "id": "id:viewer/repo",
+                                "nameWithOwner": "viewer/repo",
+                                "owner": {"login": "viewer"},
+                                "name": "repo",
+                                "url": "https://github.com/viewer/repo",
+                                "description": "My Very Special Repo(tm)",
+                                "descriptionHTML": (
+                                    "<div>My Very Special Repo(tm)</div>"
+                                ),
                             },
-                        }
+                            {
+                                "id": "id:viewer/project",
+                                "nameWithOwner": "viewer/project",
+                                "owner": {"login": "viewer"},
+                                "name": "project",
+                                "url": "https://github.com/viewer/project",
+                                "description": "My big ol' project",
+                                "descriptionHTML": "<div>My big ol' project</div>",
+                            },
+                            {
+                                "id": "id:org/workspace",
+                                "nameWithOwner": "org/workspace",
+                                "owner": {"login": "org"},
+                                "name": "workspace",
+                                "url": "https://github.com/viewer/workspace",
+                                "description": "Where we all work",
+                                "descriptionHTML": "<div>Where we all work</div>",
+                            },
+                        ],
+                        "pageInfo": {
+                            "endCursor": "cursor:0001",
+                            "hasNextPage": True,
+                        },
                     }
                 }
             }
-        )
+        }
     )
     assert repos == [
         Repository(
@@ -139,32 +137,30 @@ def test_viewers_repos_query() -> None:
             "cursor": "cursor:0001",
         },
     )
-    repos = list(
-        manager.parse_response(
-            {
-                "data": {
-                    "viewer": {
-                        "repositories": {
-                            "nodes": [
-                                {
-                                    "id": "id:viewer/test",
-                                    "nameWithOwner": "viewer/test",
-                                    "owner": {"login": "viewer"},
-                                    "name": "test",
-                                    "url": "https://github.com/viewer/test",
-                                    "description": None,
-                                    "descriptionHTML": "<div></div>",
-                                },
-                            ],
-                            "pageInfo": {
-                                "endCursor": "cursor:0002",
-                                "hasNextPage": False,
+    repos = manager.parse_response(
+        {
+            "data": {
+                "viewer": {
+                    "repositories": {
+                        "nodes": [
+                            {
+                                "id": "id:viewer/test",
+                                "nameWithOwner": "viewer/test",
+                                "owner": {"login": "viewer"},
+                                "name": "test",
+                                "url": "https://github.com/viewer/test",
+                                "description": None,
+                                "descriptionHTML": "<div></div>",
                             },
-                        }
+                        ],
+                        "pageInfo": {
+                            "endCursor": "cursor:0002",
+                            "hasNextPage": False,
+                        },
                     }
                 }
             }
-        )
+        }
     )
     assert repos == [
         Repository(
@@ -213,52 +209,50 @@ def test_owners_repos_query() -> None:
         q,
         {"owner": "repo.owner", "page_size": PAGE_SIZE, "cursor": None},
     )
-    repos = list(
-        manager.parse_response(
-            {
-                "data": {
-                    "repositoryOwner": {
-                        "repositories": {
-                            "nodes": [
-                                {
-                                    "id": "id:repo.owner/repo",
-                                    "nameWithOwner": "repo.owner/repo",
-                                    "owner": {"login": "repo.owner"},
-                                    "name": "repo",
-                                    "url": "https://github.com/repo.owner/repo",
-                                    "description": "My Very Special Repo(tm)",
-                                    "descriptionHTML": (
-                                        "<div>My Very Special Repo(tm)</div>"
-                                    ),
-                                },
-                                {
-                                    "id": "id:repo.owner/project",
-                                    "nameWithOwner": "repo.owner/project",
-                                    "owner": {"login": "repo.owner"},
-                                    "name": "project",
-                                    "url": "https://github.com/repo.owner/project",
-                                    "description": "My big ol' project",
-                                    "descriptionHTML": "<div>My big ol' project</div>",
-                                },
-                                {
-                                    "id": "id:org/workspace",
-                                    "nameWithOwner": "org/workspace",
-                                    "owner": {"login": "org"},
-                                    "name": "workspace",
-                                    "url": "https://github.com/repo.owner/workspace",
-                                    "description": "Where we all work",
-                                    "descriptionHTML": "<div>Where we all work</div>",
-                                },
-                            ],
-                            "pageInfo": {
-                                "endCursor": "cursor:0001",
-                                "hasNextPage": True,
+    repos = manager.parse_response(
+        {
+            "data": {
+                "repositoryOwner": {
+                    "repositories": {
+                        "nodes": [
+                            {
+                                "id": "id:repo.owner/repo",
+                                "nameWithOwner": "repo.owner/repo",
+                                "owner": {"login": "repo.owner"},
+                                "name": "repo",
+                                "url": "https://github.com/repo.owner/repo",
+                                "description": "My Very Special Repo(tm)",
+                                "descriptionHTML": (
+                                    "<div>My Very Special Repo(tm)</div>"
+                                ),
                             },
-                        }
+                            {
+                                "id": "id:repo.owner/project",
+                                "nameWithOwner": "repo.owner/project",
+                                "owner": {"login": "repo.owner"},
+                                "name": "project",
+                                "url": "https://github.com/repo.owner/project",
+                                "description": "My big ol' project",
+                                "descriptionHTML": "<div>My big ol' project</div>",
+                            },
+                            {
+                                "id": "id:org/workspace",
+                                "nameWithOwner": "org/workspace",
+                                "owner": {"login": "org"},
+                                "name": "workspace",
+                                "url": "https://github.com/repo.owner/workspace",
+                                "description": "Where we all work",
+                                "descriptionHTML": "<div>Where we all work</div>",
+                            },
+                        ],
+                        "pageInfo": {
+                            "endCursor": "cursor:0001",
+                            "hasNextPage": True,
+                        },
                     }
                 }
             }
-        )
+        }
     )
     assert repos == [
         Repository(
@@ -295,32 +289,30 @@ def test_owners_repos_query() -> None:
         q,
         {"owner": "repo.owner", "page_size": PAGE_SIZE, "cursor": "cursor:0001"},
     )
-    repos = list(
-        manager.parse_response(
-            {
-                "data": {
-                    "repositoryOwner": {
-                        "repositories": {
-                            "nodes": [
-                                {
-                                    "id": "id:repo.owner/test",
-                                    "nameWithOwner": "repo.owner/test",
-                                    "owner": {"login": "repo.owner"},
-                                    "name": "test",
-                                    "url": "https://github.com/repo.owner/test",
-                                    "description": None,
-                                    "descriptionHTML": "<div></div>",
-                                },
-                            ],
-                            "pageInfo": {
-                                "endCursor": "cursor:0002",
-                                "hasNextPage": False,
+    repos = manager.parse_response(
+        {
+            "data": {
+                "repositoryOwner": {
+                    "repositories": {
+                        "nodes": [
+                            {
+                                "id": "id:repo.owner/test",
+                                "nameWithOwner": "repo.owner/test",
+                                "owner": {"login": "repo.owner"},
+                                "name": "test",
+                                "url": "https://github.com/repo.owner/test",
+                                "description": None,
+                                "descriptionHTML": "<div></div>",
                             },
-                        }
+                        ],
+                        "pageInfo": {
+                            "endCursor": "cursor:0002",
+                            "hasNextPage": False,
+                        },
                     }
                 }
             }
-        )
+        }
     )
     assert repos == [
         Repository(
@@ -340,28 +332,26 @@ def test_owners_repos_query() -> None:
 def test_owners_repos_query_not_found() -> None:
     manager = OwnersReposQuery(owner="DNE")
     with pytest.raises(NotFoundError):
-        next(manager.parse_response({"data": {"repositoryOwner": None}}))
+        manager.parse_response({"data": {"repositoryOwner": None}})
 
 
 def test_owners_repos_query_no_repos() -> None:
     manager = OwnersReposQuery(owner="newbie")
     assert (
-        list(
-            manager.parse_response(
-                {
-                    "data": {
-                        "repositoryOwner": {
-                            "repositories": {
-                                "nodes": [],
-                                "pageInfo": {
-                                    "endCursor": None,
-                                    "hasNextPage": False,
-                                },
-                            }
+        manager.parse_response(
+            {
+                "data": {
+                    "repositoryOwner": {
+                        "repositories": {
+                            "nodes": [],
+                            "pageInfo": {
+                                "endCursor": None,
+                                "hasNextPage": False,
+                            },
                         }
                     }
                 }
-            )
+            }
         )
         == []
     )
@@ -417,45 +407,43 @@ def test_new_issueoid_query() -> None:
         q,
         {"repo_id": "id:viewer/repo", "page_size": PAGE_SIZE, "cursor": "cursor:0001"},
     )
-    events = list(
-        manager.parse_response(
-            {
-                "data": {
-                    "node": {
-                        "pullRequests": {
-                            "nodes": [
-                                {
-                                    "author": {
-                                        "login": "a.contributor",
-                                        "url": "https://github.com/a.contributor",
-                                        "name": "A. Contributor",
-                                        "isViewer": False,
-                                    },
-                                    "createdAt": "2021-07-04T12:15:07Z",
-                                    "number": 1,
-                                    "title": "Add a feature",
-                                    "url": "https://github.com/viewer/repo/pull/1",
+    events = manager.parse_response(
+        {
+            "data": {
+                "node": {
+                    "pullRequests": {
+                        "nodes": [
+                            {
+                                "author": {
+                                    "login": "a.contributor",
+                                    "url": "https://github.com/a.contributor",
+                                    "name": "A. Contributor",
+                                    "isViewer": False,
                                 },
-                                {
-                                    "author": {
-                                        "login": "prbot",
-                                        "url": "https://github.com/apps/prbot",
-                                    },
-                                    "createdAt": "2021-07-04T12:34:56Z",
-                                    "number": 2,
-                                    "title": "Automated pull request",
-                                    "url": "https://github.com/viewer/repo/pull/2",
-                                },
-                            ],
-                            "pageInfo": {
-                                "endCursor": "cursor:0002",
-                                "hasNextPage": True,
+                                "createdAt": "2021-07-04T12:15:07Z",
+                                "number": 1,
+                                "title": "Add a feature",
+                                "url": "https://github.com/viewer/repo/pull/1",
                             },
-                        }
+                            {
+                                "author": {
+                                    "login": "prbot",
+                                    "url": "https://github.com/apps/prbot",
+                                },
+                                "createdAt": "2021-07-04T12:34:56Z",
+                                "number": 2,
+                                "title": "Automated pull request",
+                                "url": "https://github.com/viewer/repo/pull/2",
+                            },
+                        ],
+                        "pageInfo": {
+                            "endCursor": "cursor:0002",
+                            "hasNextPage": True,
+                        },
                     }
                 }
             }
-        )
+        }
     )
     assert events == [
         NewIssueoidEvent(
@@ -493,35 +481,33 @@ def test_new_issueoid_query() -> None:
         q,
         {"repo_id": "id:viewer/repo", "page_size": PAGE_SIZE, "cursor": "cursor:0002"},
     )
-    events = list(
-        manager.parse_response(
-            {
-                "data": {
-                    "node": {
-                        "pullRequests": {
-                            "nodes": [
-                                {
-                                    "author": {
-                                        "login": "new-user",
-                                        "url": "https://github.com/new-user",
-                                        "name": None,
-                                        "isViewer": False,
-                                    },
-                                    "createdAt": "2021-07-05T01:02:03Z",
-                                    "number": 4,
-                                    "title": "What am I doing?",
-                                    "url": "https://github.com/viewer/repo/pull/4",
+    events = manager.parse_response(
+        {
+            "data": {
+                "node": {
+                    "pullRequests": {
+                        "nodes": [
+                            {
+                                "author": {
+                                    "login": "new-user",
+                                    "url": "https://github.com/new-user",
+                                    "name": None,
+                                    "isViewer": False,
                                 },
-                            ],
-                            "pageInfo": {
-                                "endCursor": "cursor:0003",
-                                "hasNextPage": False,
+                                "createdAt": "2021-07-05T01:02:03Z",
+                                "number": 4,
+                                "title": "What am I doing?",
+                                "url": "https://github.com/viewer/repo/pull/4",
                             },
-                        }
+                        ],
+                        "pageInfo": {
+                            "endCursor": "cursor:0003",
+                            "hasNextPage": False,
+                        },
                     }
                 }
             }
-        )
+        }
     )
     assert events == [
         NewIssueoidEvent(
@@ -556,22 +542,20 @@ def test_new_issueoid_query_no_events() -> None:
     manager = NewIssueoidsQuery(repo=repo, type=IssueoidType.PR, cursor="cursor:0001")
 
     assert (
-        list(
-            manager.parse_response(
-                {
-                    "data": {
-                        "node": {
-                            "pullRequests": {
-                                "nodes": [],
-                                "pageInfo": {
-                                    "endCursor": None,
-                                    "hasNextPage": False,
-                                },
-                            }
+        manager.parse_response(
+            {
+                "data": {
+                    "node": {
+                        "pullRequests": {
+                            "nodes": [],
+                            "pageInfo": {
+                                "endCursor": None,
+                                "hasNextPage": False,
+                            },
                         }
                     }
                 }
-            )
+            }
         )
         == []
     )
@@ -609,18 +593,16 @@ def test_new_issueoid_query_null_cursor() -> None:
     assert manager.has_next_page()
     assert manager.make_query() == (q, {"repo_id": "id:viewer/repo"})
     assert (
-        list(
-            manager.parse_response(
-                {
-                    "data": {
-                        "node": {
-                            "discussions": {
-                                "pageInfo": {"endCursor": "cursor:0001"},
-                            }
+        manager.parse_response(
+            {
+                "data": {
+                    "node": {
+                        "discussions": {
+                            "pageInfo": {"endCursor": "cursor:0001"},
                         }
                     }
                 }
-            )
+            }
         )
         == []
     )
