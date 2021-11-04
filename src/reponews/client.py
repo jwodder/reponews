@@ -4,6 +4,7 @@ import platform
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__, log
+from .qlobjs import REPO_FIELDS, Object
 from .qmanager import (
     NewIssueoidsQuery,
     OwnersReposQuery,
@@ -84,19 +85,15 @@ class Client:
 
     def get_repo(self, owner: str, name: str) -> Repository:
         log.info("Fetching info for repo %s/%s", owner, name)
-        q = """
-            query($owner: String!, $name: String!) {
-                repository(owner: $owner, name: $name) {
-                    id
-                    nameWithOwner
-                    owner { login }
-                    name
-                    url
-                    description
-                    descriptionHTML
-                }
-            }
-        """
+        q = str(
+            Object(
+                "query",
+                {"$owner": "String!", "$name": "String!"},
+                Object(
+                    "repository", {"owner": "$owner", "name": "$name"}, *REPO_FIELDS
+                ),
+            )
+        )
         return Repository.from_node(
             self.query(q, {"owner": owner, "name": name})["data"]["repository"]
         )

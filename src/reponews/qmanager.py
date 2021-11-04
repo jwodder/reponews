@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any, ClassVar, Dict, Generic, List, Optional, Tuple, TypeVar
 from pydantic import BaseModel
-from .qlobjs import Object
+from .qlobjs import REPO_FIELDS, Object
 from .types import Affiliation, CursorDict, IssueoidType, NewIssueoidEvent, Repository
 from .util import NotFoundError
 
@@ -25,17 +25,7 @@ class QueryManager(BaseModel, Generic[T]):
 class ReposQuery(QueryManager[Repository]):
     PATH: ClassVar[Tuple[str, ...]]
     ROOT_FIELDS: ClassVar[List[Object]] = [
-        Object(
-            "nodes",
-            {},
-            "id",
-            "nameWithOwner",
-            Object("owner", {}, "login"),
-            "name",
-            "url",
-            "description",
-            "descriptionHTML",
-        ),
+        Object("nodes", {}, *REPO_FIELDS),
         Object("pageInfo", {}, "endCursor", "hasNextPage"),
     ]
     cursor: Optional[str] = None

@@ -29,13 +29,6 @@ class Object:
         return s
 
 
-ACTOR_FIELDS: List[Union[str, Object]] = [
-    "login",
-    "url",
-    Object("... on User", {}, "name", "isViewer"),
-]
-
-
 def mkissueoid_connection(name: str) -> Object:
     return Object(
         name,
@@ -56,6 +49,22 @@ def mkissueoid_connection(name: str) -> Object:
         Object("pageInfo", {}, "endCursor", "hasNextPage"),
     )
 
+
+ACTOR_FIELDS: List[Union[str, Object]] = [
+    "login",
+    "url",
+    Object("... on User", {}, "name", "isViewer"),
+]
+
+REPO_FIELDS: List[Union[str, Object]] = [
+    "id",
+    "nameWithOwner",
+    Object("owner", {}, "login"),
+    "name",
+    "url",
+    "description",
+    "descriptionHTML",
+]
 
 ISSUE_CONNECTION = mkissueoid_connection("issues")
 PR_CONNECTION = mkissueoid_connection("pullRequests")
