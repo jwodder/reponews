@@ -4,11 +4,11 @@ import platform
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__, log
-from .qlobjs import REPO_FIELDS, Object
 from .qmanager import (
     NewIssueoidsQuery,
     OwnersReposQuery,
     QueryManager,
+    SingleRepoQuery,
     T,
     ViewersReposQuery,
 )
@@ -85,18 +85,8 @@ class Client:
 
     def get_repo(self, owner: str, name: str) -> Repository:
         log.info("Fetching info for repo %s/%s", owner, name)
-        q = str(
-            Object(
-                "query",
-                {"$owner": "String!", "$name": "String!"},
-                Object(
-                    "repository", {"owner": "$owner", "name": "$name"}, *REPO_FIELDS
-                ),
-            )
-        )
-        return Repository.from_node(
-            self.query(q, {"owner": owner, "name": name})["data"]["repository"]
-        )
+        manager = SingleRepoQuery(owner=owner, name=name)
+        return next(self.do_managed_query(manager))
 
     def get_new_issueoid_events(
         self, repo: Repository, types: List[IssueoidType], cursors: CursorDict

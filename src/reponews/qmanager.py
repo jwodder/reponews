@@ -24,10 +24,6 @@ class QueryManager(BaseModel, Generic[T]):
 
 class ReposQuery(QueryManager[Repository]):
     PATH: ClassVar[Tuple[str, ...]]
-    ROOT_FIELDS: ClassVar[List[Object]] = [
-        Object("nodes", {}, *REPO_FIELDS),
-        Object("pageInfo", {}, "endCursor", "hasNextPage"),
-    ]
     cursor: Optional[str] = None
 
     def parse_response(self, data: Any) -> List[Repository]:
@@ -66,7 +62,8 @@ class ViewersReposQuery(ReposQuery):
                             "first": "$page_size",
                             "after": "$cursor",
                         },
-                        *self.ROOT_FIELDS,
+                        Object("nodes", {}, *REPO_FIELDS),
+                        Object("pageInfo", {}, "endCursor", "hasNextPage"),
                     ),
                 ),
             )
@@ -98,7 +95,8 @@ class OwnersReposQuery(ReposQuery):
                             "first": "$page_size",
                             "after": "$cursor",
                         },
-                        *self.ROOT_FIELDS,
+                        Object("nodes", {}, *REPO_FIELDS),
+                        Object("pageInfo", {}, "endCursor", "hasNextPage"),
                     ),
                 ),
             )
@@ -118,6 +116,27 @@ class OwnersReposQuery(ReposQuery):
             # users & repositories.
             raise NotFoundError(f"No such repository owner: {self.owner!r}")
         return super().parse_response(data)
+
+
+class SingleRepoQuery(QueryManager[Repository]):
+    owner: str
+    name: str
+
+    def make_query(self) -> Tuple[str, Dict[str, Any]]:
+        q = str(
+            Object(
+                "query",
+                {"$owner": "String!", "$name": "String!"},
+                Object(
+                    "repository", {"owner": "$owner", "name": "$name"}, *REPO_FIELDS
+                ),
+            )
+        )
+        return (q, {"owner": self.owner, "name": self.name})
+
+    def parse_response(self, data: Any) -> List[Repository]:
+        self.has_next_page = False
+        return [Repository.from_node(data["data"]["repository"])]
 
 
 class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):

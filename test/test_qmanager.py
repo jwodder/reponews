@@ -5,6 +5,7 @@ from reponews.qmanager import (
     PAGE_SIZE,
     NewIssueoidsQuery,
     OwnersReposQuery,
+    SingleRepoQuery,
     ViewersReposQuery,
 )
 from reponews.types import Affiliation, IssueoidType, NewIssueoidEvent, Repository, User
@@ -365,6 +366,54 @@ def test_owners_repos_query_no_repos() -> None:
         == []
     )
     assert manager.cursor is None
+    assert not manager.has_next_page
+
+
+def test_single_repo_query() -> None:
+    q = (
+        "query($owner: String!, $name: String!) {\n"
+        "    repository(owner: $owner, name: $name) {\n"
+        "        id\n"
+        "        nameWithOwner\n"
+        "        owner {\n"
+        "            login\n"
+        "        }\n"
+        "        name\n"
+        "        url\n"
+        "        description\n"
+        "        descriptionHTML\n"
+        "    }\n"
+        "}\n"
+    )
+    manager = SingleRepoQuery(owner="repo.owner", name="repo")
+    assert manager.has_next_page
+    assert manager.make_query() == (q, {"owner": "repo.owner", "name": "repo"})
+    repos = manager.parse_response(
+        {
+            "data": {
+                "repository": {
+                    "id": "id:repo.owner/repo",
+                    "nameWithOwner": "repo.owner/repo",
+                    "owner": {"login": "repo.owner"},
+                    "name": "repo",
+                    "url": "https://github.com/repo.owner/repo",
+                    "description": "My Very Special Repo(tm)",
+                    "descriptionHTML": "<div>My Very Special Repo(tm)</div>",
+                },
+            }
+        }
+    )
+    assert repos == [
+        Repository(
+            id="id:repo.owner/repo",
+            fullname="repo.owner/repo",
+            owner="repo.owner",
+            name="repo",
+            url="https://github.com/repo.owner/repo",
+            description="My Very Special Repo(tm)",
+            descriptionHTML="<div>My Very Special Repo(tm)</div>",
+        ),
+    ]
     assert not manager.has_next_page
 
 
