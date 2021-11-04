@@ -6,20 +6,25 @@ from typing import Any, Dict, Optional
 from eletter import reply_quote
 from pydantic import BaseModel
 from . import log
+from .qlobjs import DISCUSSION_CONNECTION, ISSUE_CONNECTION, PR_CONNECTION, Object
 
 
 class IssueoidType(Enum):
-    ISSUE = ("issue", "issues")
-    PR = ("pr", "pullRequests")
-    DISCUSSION = ("discussion", "discussions")
+    ISSUE = ("issue", "issues", ISSUE_CONNECTION)
+    PR = ("pr", "pullRequests", PR_CONNECTION)
+    DISCUSSION = ("discussion", "discussions", DISCUSSION_CONNECTION)
 
-    def __new__(cls, value: str, _api_name: str) -> IssueoidType:
+    def __new__(cls, value: str, _api_name: str, _connection: Object) -> IssueoidType:
         obj = object.__new__(cls)
         obj._value_ = value
         return obj  # type: ignore[no-any-return]
 
-    def __init__(self, _value: str, api_name: str) -> None:
+    def __init__(self, _value: str, api_name: str, connection: Object) -> None:
         self.api_name = api_name
+        self.connection = connection
+
+
+CursorDict = Dict[IssueoidType, Optional[str]]
 
 
 class Affiliation(Enum):

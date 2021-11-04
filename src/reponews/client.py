@@ -4,14 +4,14 @@ import platform
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__, log
-from .queries import (
+from .qmanager import (
     NewIssueoidsQuery,
     OwnersReposQuery,
     QueryManager,
     T,
     ViewersReposQuery,
 )
-from .types import Affiliation, IssueoidType, NewIssueoidEvent, Repository
+from .types import Affiliation, CursorDict, IssueoidType, NewIssueoidEvent, Repository
 from .util import NotFoundError
 
 PAGE_SIZE = 50
@@ -102,21 +102,25 @@ class Client:
         )
 
     def get_new_issueoid_events(
-        self, repo: Repository, it: IssueoidType, cursor: Optional[str]
-    ) -> Tuple[List[NewIssueoidEvent], Optional[str]]:
-        log.info("Fetching new %s events for %s", it.value, repo.fullname)
-        manager = NewIssueoidsQuery(repo=repo, type=it, cursor=cursor)
+        self, repo: Repository, types: List[IssueoidType], cursors: CursorDict
+    ) -> Tuple[List[NewIssueoidEvent], CursorDict]:
+        log.info(
+            "Fetching new %s events for %s",
+            ", ".join(it.value for it in types),
+            repo.fullname,
+        )
+        manager = NewIssueoidsQuery(repo=repo, types=types, cursors=cursors)
         events: List[NewIssueoidEvent] = []
         for ev in self.do_managed_query(manager):
             log.info(
                 "Found new %s for %s: %r (#%d)",
-                it.value,
+                ev.type.value,
                 repo.fullname,
                 ev.title,
                 ev.number,
             )
             events.append(ev)
-        return (events, manager.cursor)
+        return (events, manager.cursors)
 
 
 class APIException(Exception):

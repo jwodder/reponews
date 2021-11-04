@@ -5,15 +5,15 @@ from email.message import EmailMessage
 import json
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Set
+from typing import Any, Dict, Iterator, List, Set
 from eletter import compose
 from pydantic import BaseModel, Field
 from . import log
 from .client import Client
 from .config import Configuration
 from .types import (
+    CursorDict,
     Event,
-    IssueoidType,
     NewIssueoidEvent,
     RepoRenamedEvent,
     Repository,
@@ -21,8 +21,6 @@ from .types import (
     RepoUntrackedEvent,
 )
 from .util import NotFoundError
-
-CursorDict = Dict[IssueoidType, Optional[str]]
 
 
 class RepoState(BaseModel):
@@ -128,26 +126,27 @@ class RepoNews:
     def get_new_events(self) -> List[Event]:
         events: List[Event] = []
         for repo in self.get_repositories():
-            cursors = self.state.get_cursors(repo)
-            for it in self.config.active_issueoid_types():
-                new_events, cursors[it] = self.client.get_new_issueoid_events(
-                    repo, it, cursors.get(it)
-                )
-                if not self.config.activity.my_activity:
-                    events2: List[NewIssueoidEvent] = []
-                    for ev in new_events:
-                        if ev.author.is_me:
-                            log.info(
-                                "%s %s #%d was created by current user;"
-                                " not reporting",
-                                ev.repo.fullname,
-                                ev.type.value,
-                                ev.number,
-                            )
-                        else:
-                            events2.append(ev)
-                    new_events = events2
-                events.extend(new_events)
+            types = list(self.config.active_issueoid_types())
+            if not types:
+                log.info("No tracked activity configured for %s", repo.fullname)
+                continue
+            new_events, cursors = self.client.get_new_issueoid_events(
+                repo, types, self.state.get_cursors(repo)
+            )
+            if not self.config.activity.my_activity:
+                events2: List[NewIssueoidEvent] = []
+                for ev in new_events:
+                    if ev.author.is_me:
+                        log.info(
+                            "%s %s#%d was created by current user; not reporting",
+                            ev.repo.fullname,
+                            ev.type.value,
+                            ev.number,
+                        )
+                    else:
+                        events2.append(ev)
+                new_events = events2
+            events.extend(new_events)
             self.state.set_cursors(repo, cursors)
         events.extend(self.state.get_state_events())
         events.sort(key=attrgetter("timestamp"))
