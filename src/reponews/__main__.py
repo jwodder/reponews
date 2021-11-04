@@ -6,8 +6,8 @@ import click
 from click_loglevel import LogLevel
 from outgoing import from_config_file
 from platformdirs import user_config_path
-from . import log
 from .core import RepoNews
+from .util import log
 
 DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
 

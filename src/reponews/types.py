@@ -5,8 +5,8 @@ import json
 from typing import Any, Dict, Optional
 from eletter import reply_quote
 from pydantic import BaseModel
-from . import log
 from .qlobjs import DISCUSSION_CONNECTION, ISSUE_CONNECTION, PR_CONNECTION, Object
+from .util import log
 
 
 class IssueoidType(Enum):

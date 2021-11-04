@@ -1,6 +1,9 @@
 from __future__ import annotations
+import logging
 from pathlib import Path
 from platformdirs import user_state_path
+
+log = logging.getLogger("reponews")
 
 
 def expanduser(v: Path) -> Path:

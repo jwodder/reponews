@@ -9,7 +9,3 @@ __author__ = "John Thorvald Wodder II"
 __author_email__ = "reponews@varonathe.org"
 __license__ = "MIT"
 __url__ = "https://github.com/jwodder/reponews"
-
-import logging
-
-log = logging.getLogger(__package__)

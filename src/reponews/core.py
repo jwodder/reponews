@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Set
 from eletter import compose
 from pydantic import BaseModel, Field
-from . import log
 from .client import Client
 from .config import Configuration
 from .types import (
@@ -20,7 +19,7 @@ from .types import (
     RepoTrackedEvent,
     RepoUntrackedEvent,
 )
-from .util import NotFoundError
+from .util import NotFoundError, log
 
 
 class RepoState(BaseModel):

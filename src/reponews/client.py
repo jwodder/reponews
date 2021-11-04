@@ -3,7 +3,7 @@ import json
 import platform
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
-from . import __url__, __version__, log
+from . import __url__, __version__
 from .qmanager import (
     NewIssueoidsQuery,
     OwnersReposQuery,
@@ -13,7 +13,7 @@ from .qmanager import (
     ViewersReposQuery,
 )
 from .types import Affiliation, CursorDict, IssueoidType, NewIssueoidEvent, Repository
-from .util import NotFoundError
+from .util import NotFoundError, log
 
 PAGE_SIZE = 50
 
