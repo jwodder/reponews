@@ -44,7 +44,7 @@ def test_viewers_repos_query() -> None:
     manager = ViewersReposQuery(
         affiliations=[Affiliation.OWNER, Affiliation.ORGANIZATION_MEMBER]
     )
-    assert manager.has_next_page()
+    assert manager.has_next_page
     assert manager.make_query() == (
         q,
         {
@@ -127,8 +127,8 @@ def test_viewers_repos_query() -> None:
             descriptionHTML="<div>Where we all work</div>",
         ),
     ]
-    assert manager.get_cursor() == "cursor:0001"
-    assert manager.has_next_page()
+    assert manager.cursor == "cursor:0001"
+    assert manager.has_next_page
     assert manager.make_query() == (
         q,
         {
@@ -173,8 +173,8 @@ def test_viewers_repos_query() -> None:
             descriptionHTML="<div></div>",
         )
     ]
-    assert manager.get_cursor() == "cursor:0002"
-    assert not manager.has_next_page()
+    assert manager.cursor == "cursor:0002"
+    assert not manager.has_next_page
 
 
 def test_owners_repos_query() -> None:
@@ -204,7 +204,7 @@ def test_owners_repos_query() -> None:
         "}\n"
     )
     manager = OwnersReposQuery(owner="repo.owner")
-    assert manager.has_next_page()
+    assert manager.has_next_page
     assert manager.make_query() == (
         q,
         {"owner": "repo.owner", "page_size": PAGE_SIZE, "cursor": None},
@@ -283,8 +283,8 @@ def test_owners_repos_query() -> None:
             descriptionHTML="<div>Where we all work</div>",
         ),
     ]
-    assert manager.get_cursor() == "cursor:0001"
-    assert manager.has_next_page()
+    assert manager.cursor == "cursor:0001"
+    assert manager.has_next_page
     assert manager.make_query() == (
         q,
         {"owner": "repo.owner", "page_size": PAGE_SIZE, "cursor": "cursor:0001"},
@@ -325,8 +325,8 @@ def test_owners_repos_query() -> None:
             descriptionHTML="<div></div>",
         )
     ]
-    assert manager.get_cursor() == "cursor:0002"
-    assert not manager.has_next_page()
+    assert manager.cursor == "cursor:0002"
+    assert not manager.has_next_page
 
 
 def test_owners_repos_query_not_found() -> None:
@@ -355,8 +355,8 @@ def test_owners_repos_query_no_repos() -> None:
         )
         == []
     )
-    assert manager.get_cursor() is None
-    assert not manager.has_next_page()
+    assert manager.cursor is None
+    assert not manager.has_next_page
 
 
 def test_new_issueoid_query() -> None:
@@ -402,7 +402,7 @@ def test_new_issueoid_query() -> None:
         descriptionHTML="<div>My Very Special Repo(tm)</div>",
     )
     manager = NewIssueoidsQuery(repo=repo, type=IssueoidType.PR, cursor="cursor:0001")
-    assert manager.has_next_page()
+    assert manager.has_next_page
     assert manager.make_query() == (
         q,
         {"repo_id": "id:viewer/repo", "page_size": PAGE_SIZE, "cursor": "cursor:0001"},
@@ -475,8 +475,8 @@ def test_new_issueoid_query() -> None:
             ),
         ),
     ]
-    assert manager.get_cursor() == "cursor:0002"
-    assert manager.has_next_page()
+    assert manager.cursor == "cursor:0002"
+    assert manager.has_next_page
     assert manager.make_query() == (
         q,
         {"repo_id": "id:viewer/repo", "page_size": PAGE_SIZE, "cursor": "cursor:0002"},
@@ -525,8 +525,8 @@ def test_new_issueoid_query() -> None:
             ),
         ),
     ]
-    assert manager.get_cursor() == "cursor:0003"
-    assert not manager.has_next_page()
+    assert manager.cursor == "cursor:0003"
+    assert not manager.has_next_page
 
 
 def test_new_issueoid_query_no_events() -> None:
@@ -559,8 +559,8 @@ def test_new_issueoid_query_no_events() -> None:
         )
         == []
     )
-    assert manager.get_cursor() == "cursor:0001"
-    assert not manager.has_next_page()
+    assert manager.cursor == "cursor:0001"
+    assert not manager.has_next_page
 
 
 def test_new_issueoid_query_null_cursor() -> None:
@@ -590,7 +590,7 @@ def test_new_issueoid_query_null_cursor() -> None:
         descriptionHTML="<div>My Very Special Repo(tm)</div>",
     )
     manager = NewIssueoidsQuery(repo=repo, type=IssueoidType.DISCUSSION, cursor=None)
-    assert manager.has_next_page()
+    assert manager.has_next_page
     assert manager.make_query() == (q, {"repo_id": "id:viewer/repo"})
     assert (
         manager.parse_response(
@@ -606,5 +606,5 @@ def test_new_issueoid_query_null_cursor() -> None:
         )
         == []
     )
-    assert manager.get_cursor() == "cursor:0001"
-    assert not manager.has_next_page()
+    assert manager.cursor == "cursor:0001"
+    assert not manager.has_next_page

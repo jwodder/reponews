@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from textwrap import dedent, indent
 from typing import Any, ClassVar, Dict, Generic, List, Optional, Tuple, TypeVar
 from pydantic import BaseModel
@@ -11,7 +11,9 @@ PAGE_SIZE = 50
 T = TypeVar("T")
 
 
-class QueryManager(ABC, Generic[T]):
+class QueryManager(BaseModel, Generic[T]):
+    has_next_page: bool = True
+
     @abstractmethod
     def make_query(self) -> Tuple[str, Dict[str, Any]]:
         ...
@@ -20,16 +22,8 @@ class QueryManager(ABC, Generic[T]):
     def parse_response(self, data: Any) -> List[T]:
         ...
 
-    @abstractmethod
-    def has_next_page(self) -> bool:
-        ...
 
-    @abstractmethod
-    def get_cursor(self) -> Optional[str]:
-        ...
-
-
-class ReposQuery(QueryManager[Repository], BaseModel):
+class ReposQuery(QueryManager[Repository]):
     PATH: ClassVar[Tuple[str, ...]]
     ROOT: ClassVar[str] = (
         "nodes {\n"
@@ -47,7 +41,6 @@ class ReposQuery(QueryManager[Repository], BaseModel):
         "}\n"
     )
     cursor: Optional[str] = None
-    hasNextPage: bool = True
 
     def parse_response(self, data: Any) -> List[Repository]:
         root = data["data"]
@@ -57,14 +50,8 @@ class ReposQuery(QueryManager[Repository], BaseModel):
         if new_cursor is not None:
             assert isinstance(new_cursor, str)
             self.cursor = new_cursor
-        self.hasNextPage = root["pageInfo"]["hasNextPage"]
+        self.has_next_page = root["pageInfo"]["hasNextPage"]
         return [Repository.from_node(node) for node in root["nodes"]]
-
-    def has_next_page(self) -> bool:
-        return self.hasNextPage
-
-    def get_cursor(self) -> Optional[str]:
-        return self.cursor
 
 
 class ViewersReposQuery(ReposQuery):
@@ -139,11 +126,10 @@ class OwnersReposQuery(ReposQuery):
         return super().parse_response(data)
 
 
-class NewIssueoidsQuery(QueryManager[NewIssueoidEvent], BaseModel):
+class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):
     repo: Repository
     type: IssueoidType
     cursor: Optional[str]
-    hasNextPage: bool = True
 
     def make_query(self) -> Tuple[str, Dict[str, Any]]:
         variables: Dict[str, Any]
@@ -230,17 +216,11 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent], BaseModel):
                     self.type.value,
                     self.repo.fullname,
                 )
-            self.hasNextPage = False
+            self.has_next_page = False
             return []
         else:
-            self.hasNextPage = root["pageInfo"]["hasNextPage"]
+            self.has_next_page = root["pageInfo"]["hasNextPage"]
             return [
                 NewIssueoidEvent.from_node(self.type, self.repo, node)
                 for node in root["nodes"]
             ]
-
-    def has_next_page(self) -> bool:
-        return self.hasNextPage
-
-    def get_cursor(self) -> Optional[str]:
-        return self.cursor

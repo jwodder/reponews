@@ -55,7 +55,7 @@ class Client:
         return r.json()
 
     def do_managed_query(self, manager: QueryManager[T]) -> Iterator[T]:
-        while manager.has_next_page():
+        while manager.has_next_page:
             q, variables = manager.make_query()
             data = self.query(q, variables)
             yield from manager.parse_response(data)
@@ -116,7 +116,7 @@ class Client:
                 ev.number,
             )
             events.append(ev)
-        return (events, manager.get_cursor())
+        return (events, manager.cursor)
 
 
 class APIException(Exception):
