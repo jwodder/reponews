@@ -1,9 +1,11 @@
 from __future__ import annotations
 from datetime import datetime
 from enum import Enum
+import json
 from typing import Any, Dict, Optional
 from eletter import reply_quote
 from pydantic import BaseModel
+from . import log
 
 
 class IssueoidType(Enum):
@@ -37,6 +39,7 @@ class Repository(BaseModel):
 
     @classmethod
     def from_node(cls, node: Dict[str, Any]) -> Repository:
+        log.debug("Constructing Repository from node: %s", json.dumps(node))
         return cls(
             id=node["id"],
             owner=node["owner"]["login"],
@@ -59,6 +62,7 @@ class User(BaseModel):
 
     @classmethod
     def from_node(cls, node: Dict[str, Any]) -> User:
+        log.debug("Constructing User from node: %s", json.dumps(node))
         name = node.get("name")
         if name is None:
             # Either the user is a bot (and thus doesn't have a name) or they
@@ -88,6 +92,7 @@ class NewIssueoidEvent(Event):
     def from_node(
         cls, type: IssueoidType, repo: Repository, node: Dict[str, Any]
     ) -> NewIssueoidEvent:
+        log.debug("Constructing NewIssueoidEvent from node: %s", json.dumps(node))
         return cls(
             type=type,
             repo=repo,
