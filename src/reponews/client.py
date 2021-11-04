@@ -101,7 +101,7 @@ class Client:
         for ev in self.do_managed_query(manager):
             log.info(
                 "Found new %s for %s: %r (#%d)",
-                ev.type.value,
+                ev.TYPE,
                 repo.fullname,
                 ev.title,
                 ev.number,

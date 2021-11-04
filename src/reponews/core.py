@@ -137,9 +137,9 @@ class RepoNews:
                 for ev in new_events:
                     if ev.author.is_me:
                         log.info(
-                            "%s %s#%d was created by current user; not reporting",
+                            "%s %s #%d was created by current user; not reporting",
                             ev.repo.fullname,
-                            ev.type.value,
+                            ev.TYPE,
                             ev.number,
                         )
                     else:

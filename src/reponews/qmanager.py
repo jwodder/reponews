@@ -150,7 +150,7 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):
         connections: List[Object] = []
         for it in self.types:
             if it in self.cursors:
-                connections.append(it.connection)
+                connections.append(it.event_cls.CONNECTION)
                 variable_defs["$page_size"] = "Int!"
                 variables["page_size"] = PAGE_SIZE
                 variable_defs[f"${it.api_name}_cursor"] = "String"
@@ -187,7 +187,7 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):
                 if root["pageInfo"]["hasNextPage"]:
                     self.has_next_page = True
                 for node in root["nodes"]:
-                    events.append(NewIssueoidEvent.from_node(it, self.repo, node))
+                    events.append(it.event_cls.from_node(self.repo, node))
                 if new_cursor is not None:
                     assert isinstance(new_cursor, str)
                     self.cursors[it] = new_cursor

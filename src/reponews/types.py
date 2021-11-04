@@ -2,29 +2,11 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 import json
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar, Dict, Optional, Type
 from eletter import reply_quote
 from pydantic import BaseModel
 from .qlobjs import DISCUSSION_CONNECTION, ISSUE_CONNECTION, PR_CONNECTION, Object
 from .util import log
-
-
-class IssueoidType(Enum):
-    ISSUE = ("issue", "issues", ISSUE_CONNECTION)
-    PR = ("pr", "pullRequests", PR_CONNECTION)
-    DISCUSSION = ("discussion", "discussions", DISCUSSION_CONNECTION)
-
-    def __new__(cls, value: str, _api_name: str, _connection: Object) -> IssueoidType:
-        obj = object.__new__(cls)
-        obj._value_ = value
-        return obj  # type: ignore[no-any-return]
-
-    def __init__(self, _value: str, api_name: str, connection: Object) -> None:
-        self.api_name = api_name
-        self.connection = connection
-
-
-CursorDict = Dict[IssueoidType, Optional[str]]
 
 
 class Affiliation(Enum):
@@ -87,19 +69,17 @@ class Event(BaseModel):
 
 
 class NewIssueoidEvent(Event):
-    type: IssueoidType
+    CONNECTION: ClassVar[Object]
+    TYPE: ClassVar[str]
     number: int
     title: str
     author: User
     url: str
 
     @classmethod
-    def from_node(
-        cls, type: IssueoidType, repo: Repository, node: Dict[str, Any]
-    ) -> NewIssueoidEvent:
-        log.debug("Constructing NewIssueoidEvent from node: %s", json.dumps(node))
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewIssueoidEvent:
+        log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         return cls(
-            type=type,
             repo=repo,
             timestamp=node["createdAt"],
             number=node["number"],
@@ -110,9 +90,24 @@ class NewIssueoidEvent(Event):
 
     def __str__(self) -> str:
         return (
-            f"[{self.repo.fullname}] {self.type.value.upper()} #{self.number}:"
+            f"[{self.repo.fullname}] {self.TYPE.upper()} #{self.number}:"
             f" {self.title} (@{self.author.login})\n<{self.url}>"
         )
+
+
+class NewIssueEvent(NewIssueoidEvent):
+    CONNECTION = ISSUE_CONNECTION
+    TYPE = "issue"
+
+
+class NewPREvent(NewIssueoidEvent):
+    CONNECTION = PR_CONNECTION
+    TYPE = "pr"
+
+
+class NewDiscussionEvent(NewIssueoidEvent):
+    CONNECTION = DISCUSSION_CONNECTION
+    TYPE = "discussion"
 
 
 class RepoTrackedEvent(Event):
@@ -133,3 +128,23 @@ class RepoRenamedEvent(Event):
 
     def __str__(self) -> str:
         return f"Repository renamed: {self.old_fullname} → {self.repo.fullname}"
+
+
+class IssueoidType(Enum):
+    ISSUE = ("issue", "issues", NewIssueEvent)
+    PR = ("pr", "pullRequests", NewPREvent)
+    DISCUSSION = ("discussion", "discussions", NewDiscussionEvent)
+
+    def __new__(cls, value: str, _api_name: str, _event_cls: type) -> IssueoidType:
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj  # type: ignore[no-any-return]
+
+    def __init__(
+        self, _value: str, api_name: str, event_cls: Type[NewIssueoidEvent]
+    ) -> None:
+        self.api_name = api_name
+        self.event_cls = event_cls
+
+
+CursorDict = Dict[IssueoidType, Optional[str]]

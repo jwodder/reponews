@@ -8,7 +8,15 @@ from reponews.qmanager import (
     SingleRepoQuery,
     ViewersReposQuery,
 )
-from reponews.types import Affiliation, IssueoidType, NewIssueoidEvent, Repository, User
+from reponews.types import (
+    Affiliation,
+    IssueoidType,
+    NewDiscussionEvent,
+    NewIssueEvent,
+    NewPREvent,
+    Repository,
+    User,
+)
 from reponews.util import NotFoundError
 
 
@@ -514,10 +522,9 @@ def test_new_issueoid_query() -> None:
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewPREvent(
             timestamp=datetime(2021, 7, 4, 12, 15, 7, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.PR,
             number=1,
             title="Add a feature",
             url="https://github.com/viewer/repo/pull/1",
@@ -528,10 +535,9 @@ def test_new_issueoid_query() -> None:
                 is_me=False,
             ),
         ),
-        NewIssueoidEvent(
+        NewPREvent(
             timestamp=datetime(2021, 7, 4, 12, 34, 56, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.PR,
             number=2,
             title="Automated pull request",
             url="https://github.com/viewer/repo/pull/2",
@@ -582,10 +588,9 @@ def test_new_issueoid_query() -> None:
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewPREvent(
             timestamp=datetime(2021, 7, 5, 1, 2, 3, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.PR,
             number=4,
             title="What am I doing?",
             url="https://github.com/viewer/repo/pull/4",
@@ -762,10 +767,9 @@ def test_new_issueoid_query_null_cursor_some_events() -> None:
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewDiscussionEvent(
             timestamp=datetime(2021, 11, 4, 19, 46, 29, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.DISCUSSION,
             number=42,
             title="How is everybody doing?",
             url="https://github.com/viewer/repo/discussions/42",
@@ -979,10 +983,9 @@ def test_new_issueoid_query_multiple_types() -> None:
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewIssueEvent(
             timestamp=datetime(2021, 7, 4, 12, 15, 7, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.ISSUE,
             number=1,
             title="Found a bug",
             url="https://github.com/viewer/repo/issues/1",
@@ -993,10 +996,9 @@ def test_new_issueoid_query_multiple_types() -> None:
                 is_me=False,
             ),
         ),
-        NewIssueoidEvent(
+        NewIssueEvent(
             timestamp=datetime(2021, 7, 4, 12, 34, 56, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.ISSUE,
             number=2,
             title="I would like to request a feature",
             url="https://github.com/viewer/repo/issues/2",
@@ -1007,10 +1009,9 @@ def test_new_issueoid_query_multiple_types() -> None:
                 is_me=False,
             ),
         ),
-        NewIssueoidEvent(
+        NewDiscussionEvent(
             timestamp=datetime(2021, 7, 5, 1, 2, 3, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.DISCUSSION,
             number=3,
             title="Let's talk about your code.",
             url="https://github.com/viewer/repo/discussions/3",
@@ -1072,10 +1073,9 @@ def test_new_issueoid_query_multiple_types() -> None:
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewIssueEvent(
             timestamp=datetime(2021, 7, 6, 1, 2, 3, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.ISSUE,
             number=4,
             title="What am I doing?",
             url="https://github.com/viewer/repo/issues/4",
@@ -1272,10 +1272,9 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewIssueEvent(
             timestamp=datetime(2021, 7, 4, 12, 15, 7, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.ISSUE,
             number=1,
             title="Found a bug",
             url="https://github.com/viewer/repo/issues/1",
@@ -1286,10 +1285,9 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
                 is_me=False,
             ),
         ),
-        NewIssueoidEvent(
+        NewIssueEvent(
             timestamp=datetime(2021, 7, 4, 12, 34, 56, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.ISSUE,
             number=2,
             title="I would like to request a feature",
             url="https://github.com/viewer/repo/issues/2",
@@ -1351,10 +1349,9 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
         }
     )
     assert events == [
-        NewIssueoidEvent(
+        NewIssueEvent(
             timestamp=datetime(2021, 7, 6, 1, 2, 3, tzinfo=timezone.utc),
             repo=repo,
-            type=IssueoidType.ISSUE,
             number=4,
             title="What am I doing?",
             url="https://github.com/viewer/repo/issues/4",
