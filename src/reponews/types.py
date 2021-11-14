@@ -1,4 +1,6 @@
-from __future__ import annotations
+# We can't use `from __future__ import annotations` here yet due to a bug in
+# pydantic under Python 3.9.8:
+# <https://github.com/samuelcolvin/pydantic/issues/3401>
 from datetime import datetime
 from enum import Enum
 import json
@@ -25,7 +27,7 @@ class Repository(BaseModel):
     descriptionHTML: str
 
     @classmethod
-    def from_node(cls, node: Dict[str, Any]) -> Repository:
+    def from_node(cls, node: Dict[str, Any]) -> "Repository":
         log.debug("Constructing Repository from node: %s", json.dumps(node))
         return cls(
             id=node["id"],
@@ -48,7 +50,7 @@ class User(BaseModel):
     is_me: bool
 
     @classmethod
-    def from_node(cls, node: Dict[str, Any]) -> User:
+    def from_node(cls, node: Dict[str, Any]) -> "User":
         log.debug("Constructing User from node: %s", json.dumps(node))
         name = node.get("name")
         if name is None:
@@ -77,7 +79,7 @@ class NewIssueoidEvent(Event):
     url: str
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewIssueoidEvent:
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewIssueoidEvent":
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         return cls(
             repo=repo,
@@ -135,7 +137,7 @@ class IssueoidType(Enum):
     PR = ("pr", "pullRequests", NewPREvent)
     DISCUSSION = ("discussion", "discussions", NewDiscussionEvent)
 
-    def __new__(cls, value: str, _api_name: str, _event_cls: type) -> IssueoidType:
+    def __new__(cls, value: str, _api_name: str, _event_cls: type) -> "IssueoidType":
         obj = object.__new__(cls)
         obj._value_ = value
         return obj  # type: ignore[no-any-return]
