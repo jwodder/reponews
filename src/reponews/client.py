@@ -73,14 +73,14 @@ class Client:
         )
         manager = ViewersReposQuery(affiliations=affiliations)
         for repo in self.do_managed_query(manager):
-            log.info("Found repository %s", repo.fullname)
+            log.info("Found repository %s", repo)
             yield repo
 
     def get_owner_repos(self, owner: str) -> Iterator[Repository]:
         log.info("Fetching repositories belonging to %s", owner)
         manager = OwnersReposQuery(owner=owner)
         for repo in self.do_managed_query(manager):
-            log.info("Found repository %s", repo.fullname)
+            log.info("Found repository %s", repo)
             yield repo
 
     def get_repo(self, owner: str, name: str) -> Repository:
@@ -92,19 +92,13 @@ class Client:
         self, repo: Repository, types: List[IssueoidType], cursors: CursorDict
     ) -> Tuple[List[NewIssueoidEvent], CursorDict]:
         log.info(
-            "Fetching new %s events for %s",
-            ", ".join(it.value for it in types),
-            repo.fullname,
+            "Fetching new %s events for %s", ", ".join(it.value for it in types), repo
         )
         manager = NewIssueoidsQuery(repo=repo, types=types, cursors=cursors)
         events: List[NewIssueoidEvent] = []
         for ev in self.do_managed_query(manager):
             log.info(
-                "Found new %s for %s: %r (#%d)",
-                ev.TYPE,
-                repo.fullname,
-                ev.title,
-                ev.number,
+                "Found new %s for %s: %r (#%d)", ev.TYPE, repo, ev.title, ev.number
             )
             events.append(ev)
         return (events, manager.cursors)

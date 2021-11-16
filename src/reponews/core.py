@@ -58,7 +58,7 @@ class State(BaseModel):
         try:
             old = self.old_state.pop(repo.id)
         except KeyError:
-            log.info("Now tracking %s", repo.fullname)
+            log.info("Now tracking %s", repo)
             self.state_events.append(
                 RepoTrackedEvent(
                     timestamp=datetime.now().astimezone(),
@@ -66,15 +66,13 @@ class State(BaseModel):
                 )
             )
         else:
-            if old.repo.fullname != repo.fullname:
-                log.info(
-                    "Repository renamed: %s → %s", old.repo.fullname, repo.fullname
-                )
+            if old.repo.nameWithOwner != repo.nameWithOwner:
+                log.info("Repository renamed: %s → %s", old.repo, repo)
                 self.state_events.append(
                     RepoRenamedEvent(
                         timestamp=datetime.now().astimezone(),
                         repo=repo,
-                        old_fullname=old.repo.fullname,
+                        old_nameWithOwner=old.repo.nameWithOwner,
                     )
                 )
         self.new_state[repo.id] = RepoState(repo=repo, cursors=cursors)
@@ -85,7 +83,7 @@ class State(BaseModel):
         for repo_state in self.old_state.values():
             log.info(
                 "Did not encounter or fetch activity for %s; no longer tracking",
-                repo_state.repo.fullname,
+                repo_state.repo,
             )
             yield RepoUntrackedEvent(timestamp=now, repo=repo_state.repo)
 
@@ -127,7 +125,7 @@ class RepoNews:
         for repo in self.get_repositories():
             types = list(self.config.active_issueoid_types())
             if not types:
-                log.info("No tracked activity configured for %s", repo.fullname)
+                log.info("No tracked activity configured for %s", repo)
                 continue
             new_events, cursors = self.client.get_new_issueoid_events(
                 repo, types, self.state.get_cursors(repo)
@@ -135,10 +133,10 @@ class RepoNews:
             if not self.config.activity.my_activity:
                 events2: List[NewIssueoidEvent] = []
                 for ev in new_events:
-                    if ev.author.is_me:
+                    if ev.author.isViewer:
                         log.info(
                             "%s %s #%d was created by current user; not reporting",
-                            ev.repo.fullname,
+                            ev.repo,
                             ev.TYPE,
                             ev.number,
                         )
@@ -155,11 +153,10 @@ class RepoNews:
         seen: Set[str] = set()
         for repo in self._get_repositories():
             if self.config.is_repo_excluded(repo):
-                log.info("Repo %s is excluded by config; skipping", repo.fullname)
+                log.info("Repo %s is excluded by config; skipping", repo)
             elif repo.id in seen:
                 log.info(
-                    "Repo %s fetched more than once; not getting events again",
-                    repo.fullname,
+                    "Repo %s fetched more than once; not getting events again", repo
                 )
             else:
                 seen.add(repo.id)

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, List, Tuple
 import pytest
 from reponews.config import Configuration, ReposConfig
-from reponews.types import Repository
+from reponews.types import Repository, User
 from reponews.util import get_default_state_file
 from testlib import filecases
 
@@ -11,9 +11,9 @@ from testlib import filecases
 def mkrepo(owner: str, name: str) -> Repository:
     return Repository(
         id="1234",
-        owner=owner,
+        owner=User(login=owner, url=f"https://github.com/{owner}"),
         name=name,
-        fullname=f"{owner}/{name}",
+        nameWithOwner=f"{owner}/{name}",
         url=f"https://github.com/{owner}/{name}",
         description="A repository",
         descriptionHTML="A repository",

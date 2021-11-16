@@ -56,10 +56,17 @@ ACTOR_FIELDS: List[Union[str, Object]] = [
     Object("... on User", {}, "name", "isViewer"),
 ]
 
+OWNER_FIELDS: List[Union[str, Object]] = [
+    "login",
+    "url",
+    Object("... on User", {}, "name", "isViewer"),
+    Object("... on Organization", {}, "name"),
+]
+
 REPO_FIELDS: List[Union[str, Object]] = [
     "id",
     "nameWithOwner",
-    Object("owner", {}, "login"),
+    Object("owner", {}, *OWNER_FIELDS),
     "name",
     "url",
     "description",

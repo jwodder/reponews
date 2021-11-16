@@ -17,11 +17,28 @@ class Affiliation(Enum):
     COLLABORATOR = "COLLABORATOR"
 
 
+class User(BaseModel):
+    # `name` is None/unset when the user is a bot or they never set their
+    # display name
+    name: Optional[str] = None
+    login: str
+    url: str
+    isViewer: bool = False
+
+    @classmethod
+    def from_node(cls, node: Dict[str, Any]) -> "User":
+        log.debug("Constructing User from node: %s", json.dumps(node))
+        return cls.parse_obj(node)
+
+    def __str__(self) -> str:
+        return self.login
+
+
 class Repository(BaseModel):
     id: str
-    owner: str
+    owner: User
     name: str
-    fullname: str
+    nameWithOwner: str
     url: str
     description: Optional[str]
     descriptionHTML: str
@@ -29,40 +46,10 @@ class Repository(BaseModel):
     @classmethod
     def from_node(cls, node: Dict[str, Any]) -> "Repository":
         log.debug("Constructing Repository from node: %s", json.dumps(node))
-        return cls(
-            id=node["id"],
-            owner=node["owner"]["login"],
-            name=node["name"],
-            fullname=node["nameWithOwner"],
-            url=node["url"],
-            description=node["description"],
-            descriptionHTML=node["descriptionHTML"],
-        )
+        return cls.parse_obj(node)
 
     def __str__(self) -> str:
-        return self.fullname
-
-
-class User(BaseModel):
-    name: str
-    login: str
-    url: str
-    is_me: bool
-
-    @classmethod
-    def from_node(cls, node: Dict[str, Any]) -> "User":
-        log.debug("Constructing User from node: %s", json.dumps(node))
-        name = node.get("name")
-        if name is None:
-            # Either the user is a bot (and thus doesn't have a name) or they
-            # never set their display name (and thus it's `null`)
-            name = node["login"]
-        return cls(
-            name=name,
-            login=node["login"],
-            url=node["url"],
-            is_me=node.get("isViewer", False),
-        )
+        return self.nameWithOwner
 
 
 class Event(BaseModel):
@@ -81,18 +68,13 @@ class NewIssueoidEvent(Event):
     @classmethod
     def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewIssueoidEvent":
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
-        return cls(
-            repo=repo,
-            timestamp=node["createdAt"],
-            number=node["number"],
-            title=node["title"],
-            author=User.from_node(node["author"]),
-            url=node["url"],
-        )
+        node["timestamp"] = node.pop("createdAt")
+        node["repo"] = repo
+        return cls.parse_obj(node)
 
     def __str__(self) -> str:
         return (
-            f"[{self.repo.fullname}] {self.TYPE.upper()} #{self.number}:"
+            f"[{self.repo.nameWithOwner}] {self.TYPE.upper()} #{self.number}:"
             f" {self.title} (@{self.author.login})\n<{self.url}>"
         )
 
@@ -114,22 +96,24 @@ class NewDiscussionEvent(NewIssueoidEvent):
 
 class RepoTrackedEvent(Event):
     def __str__(self) -> str:
-        s = f"Now tracking repository {self.repo.fullname}\n<{self.repo.url}>"
+        s = f"Now tracking repository {self.repo.nameWithOwner}\n<{self.repo.url}>"
         if self.repo.description:
-            s += "\n" + reply_quote(self.repo.description)
+            s += "\n" + reply_quote(self.repo.description).rstrip("\n")
         return s
 
 
 class RepoUntrackedEvent(Event):
     def __str__(self) -> str:
-        return f"No longer tracking repository {self.repo.fullname}"
+        return f"No longer tracking repository {self.repo.nameWithOwner}"
 
 
 class RepoRenamedEvent(Event):
-    old_fullname: str
+    old_nameWithOwner: str
 
     def __str__(self) -> str:
-        return f"Repository renamed: {self.old_fullname} → {self.repo.fullname}"
+        return (
+            f"Repository renamed: {self.old_nameWithOwner} → {self.repo.nameWithOwner}"
+        )
 
 
 class IssueoidType(Enum):

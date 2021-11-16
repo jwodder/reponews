@@ -144,8 +144,8 @@ class RepoInclusions(BaseModel):
 
     def is_repo_excluded(self, repo: Repository) -> bool:
         return (
-            repo.owner in self.excluded_owners
-            or repo.name in self.excluded_repos[repo.owner]
+            repo.owner.login in self.excluded_owners
+            or repo.name in self.excluded_repos[repo.owner.login]
         )
 
 

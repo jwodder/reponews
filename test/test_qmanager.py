@@ -39,6 +39,14 @@ def test_viewers_repos_query() -> None:
         "                nameWithOwner\n"
         "                owner {\n"
         "                    login\n"
+        "                    url\n"
+        "                    ... on User {\n"
+        "                        name\n"
+        "                        isViewer\n"
+        "                    }\n"
+        "                    ... on Organization {\n"
+        "                        name\n"
+        "                    }\n"
         "                }\n"
         "                name\n"
         "                url\n"
@@ -74,7 +82,12 @@ def test_viewers_repos_query() -> None:
                             {
                                 "id": "id:viewer/repo",
                                 "nameWithOwner": "viewer/repo",
-                                "owner": {"login": "viewer"},
+                                "owner": {
+                                    "login": "viewer",
+                                    "url": "https://github.com/viewer",
+                                    "name": "Vid Ewer",
+                                    "isViewer": True,
+                                },
                                 "name": "repo",
                                 "url": "https://github.com/viewer/repo",
                                 "description": "My Very Special Repo(tm)",
@@ -85,7 +98,12 @@ def test_viewers_repos_query() -> None:
                             {
                                 "id": "id:viewer/project",
                                 "nameWithOwner": "viewer/project",
-                                "owner": {"login": "viewer"},
+                                "owner": {
+                                    "login": "viewer",
+                                    "url": "https://github.com/viewer",
+                                    "name": "Vid Ewer",
+                                    "isViewer": True,
+                                },
                                 "name": "project",
                                 "url": "https://github.com/viewer/project",
                                 "description": "My big ol' project",
@@ -94,7 +112,11 @@ def test_viewers_repos_query() -> None:
                             {
                                 "id": "id:org/workspace",
                                 "nameWithOwner": "org/workspace",
-                                "owner": {"login": "org"},
+                                "owner": {
+                                    "login": "org",
+                                    "url": "https://github.com/org",
+                                    "name": "The Org Corp",
+                                },
                                 "name": "workspace",
                                 "url": "https://github.com/viewer/workspace",
                                 "description": "Where we all work",
@@ -113,8 +135,13 @@ def test_viewers_repos_query() -> None:
     assert repos == [
         Repository(
             id="id:viewer/repo",
-            fullname="viewer/repo",
-            owner="viewer",
+            nameWithOwner="viewer/repo",
+            owner=User(
+                login="viewer",
+                url="https://github.com/viewer",
+                name="Vid Ewer",
+                isViewer=True,
+            ),
             name="repo",
             url="https://github.com/viewer/repo",
             description="My Very Special Repo(tm)",
@@ -122,8 +149,13 @@ def test_viewers_repos_query() -> None:
         ),
         Repository(
             id="id:viewer/project",
-            fullname="viewer/project",
-            owner="viewer",
+            nameWithOwner="viewer/project",
+            owner=User(
+                login="viewer",
+                url="https://github.com/viewer",
+                name="Vid Ewer",
+                isViewer=True,
+            ),
             name="project",
             url="https://github.com/viewer/project",
             description="My big ol' project",
@@ -131,8 +163,13 @@ def test_viewers_repos_query() -> None:
         ),
         Repository(
             id="id:org/workspace",
-            fullname="org/workspace",
-            owner="org",
+            nameWithOwner="org/workspace",
+            owner=User(
+                login="org",
+                url="https://github.com/org",
+                name="The Org Corp",
+                isViewer=False,
+            ),
             name="workspace",
             url="https://github.com/viewer/workspace",
             description="Where we all work",
@@ -158,7 +195,12 @@ def test_viewers_repos_query() -> None:
                             {
                                 "id": "id:viewer/test",
                                 "nameWithOwner": "viewer/test",
-                                "owner": {"login": "viewer"},
+                                "owner": {
+                                    "login": "viewer",
+                                    "url": "https://github.com/viewer",
+                                    "name": "Vid Ewer",
+                                    "isViewer": True,
+                                },
                                 "name": "test",
                                 "url": "https://github.com/viewer/test",
                                 "description": None,
@@ -177,8 +219,13 @@ def test_viewers_repos_query() -> None:
     assert repos == [
         Repository(
             id="id:viewer/test",
-            fullname="viewer/test",
-            owner="viewer",
+            nameWithOwner="viewer/test",
+            owner=User(
+                login="viewer",
+                url="https://github.com/viewer",
+                name="Vid Ewer",
+                isViewer=True,
+            ),
             name="test",
             url="https://github.com/viewer/test",
             description=None,
@@ -207,6 +254,14 @@ def test_owners_repos_query() -> None:
         "                nameWithOwner\n"
         "                owner {\n"
         "                    login\n"
+        "                    url\n"
+        "                    ... on User {\n"
+        "                        name\n"
+        "                        isViewer\n"
+        "                    }\n"
+        "                    ... on Organization {\n"
+        "                        name\n"
+        "                    }\n"
         "                }\n"
         "                name\n"
         "                url\n"
@@ -236,7 +291,12 @@ def test_owners_repos_query() -> None:
                             {
                                 "id": "id:repo.owner/repo",
                                 "nameWithOwner": "repo.owner/repo",
-                                "owner": {"login": "repo.owner"},
+                                "owner": {
+                                    "login": "repo.owner",
+                                    "url": "https://github.com/repo.owner",
+                                    "name": "Repository Owner",
+                                    "isViewer": False,
+                                },
                                 "name": "repo",
                                 "url": "https://github.com/repo.owner/repo",
                                 "description": "My Very Special Repo(tm)",
@@ -247,7 +307,12 @@ def test_owners_repos_query() -> None:
                             {
                                 "id": "id:repo.owner/project",
                                 "nameWithOwner": "repo.owner/project",
-                                "owner": {"login": "repo.owner"},
+                                "owner": {
+                                    "login": "repo.owner",
+                                    "url": "https://github.com/repo.owner",
+                                    "name": "Repository Owner",
+                                    "isViewer": False,
+                                },
                                 "name": "project",
                                 "url": "https://github.com/repo.owner/project",
                                 "description": "My big ol' project",
@@ -256,9 +321,13 @@ def test_owners_repos_query() -> None:
                             {
                                 "id": "id:org/workspace",
                                 "nameWithOwner": "org/workspace",
-                                "owner": {"login": "org"},
+                                "owner": {
+                                    "login": "org",
+                                    "url": "https://github.com/org",
+                                    "name": "The Org Corp",
+                                },
                                 "name": "workspace",
-                                "url": "https://github.com/repo.owner/workspace",
+                                "url": "https://github.com/org/workspace",
                                 "description": "Where we all work",
                                 "descriptionHTML": "<div>Where we all work</div>",
                             },
@@ -275,8 +344,13 @@ def test_owners_repos_query() -> None:
     assert repos == [
         Repository(
             id="id:repo.owner/repo",
-            fullname="repo.owner/repo",
-            owner="repo.owner",
+            nameWithOwner="repo.owner/repo",
+            owner=User(
+                login="repo.owner",
+                url="https://github.com/repo.owner",
+                name="Repository Owner",
+                isViewer=False,
+            ),
             name="repo",
             url="https://github.com/repo.owner/repo",
             description="My Very Special Repo(tm)",
@@ -284,8 +358,13 @@ def test_owners_repos_query() -> None:
         ),
         Repository(
             id="id:repo.owner/project",
-            fullname="repo.owner/project",
-            owner="repo.owner",
+            nameWithOwner="repo.owner/project",
+            owner=User(
+                login="repo.owner",
+                url="https://github.com/repo.owner",
+                name="Repository Owner",
+                isViewer=False,
+            ),
             name="project",
             url="https://github.com/repo.owner/project",
             description="My big ol' project",
@@ -293,10 +372,15 @@ def test_owners_repos_query() -> None:
         ),
         Repository(
             id="id:org/workspace",
-            fullname="org/workspace",
-            owner="org",
+            nameWithOwner="org/workspace",
+            owner=User(
+                login="org",
+                url="https://github.com/org",
+                name="The Org Corp",
+                isViewer=False,
+            ),
             name="workspace",
-            url="https://github.com/repo.owner/workspace",
+            url="https://github.com/org/workspace",
             description="Where we all work",
             descriptionHTML="<div>Where we all work</div>",
         ),
@@ -316,7 +400,12 @@ def test_owners_repos_query() -> None:
                             {
                                 "id": "id:repo.owner/test",
                                 "nameWithOwner": "repo.owner/test",
-                                "owner": {"login": "repo.owner"},
+                                "owner": {
+                                    "login": "repo.owner",
+                                    "url": "https://github.com/repo.owner",
+                                    "name": "Repository Owner",
+                                    "isViewer": False,
+                                },
                                 "name": "test",
                                 "url": "https://github.com/repo.owner/test",
                                 "description": None,
@@ -335,8 +424,13 @@ def test_owners_repos_query() -> None:
     assert repos == [
         Repository(
             id="id:repo.owner/test",
-            fullname="repo.owner/test",
-            owner="repo.owner",
+            nameWithOwner="repo.owner/test",
+            owner=User(
+                login="repo.owner",
+                url="https://github.com/repo.owner",
+                name="Repository Owner",
+                isViewer=False,
+            ),
             name="test",
             url="https://github.com/repo.owner/test",
             description=None,
@@ -385,6 +479,14 @@ def test_single_repo_query() -> None:
         "        nameWithOwner\n"
         "        owner {\n"
         "            login\n"
+        "            url\n"
+        "            ... on User {\n"
+        "                name\n"
+        "                isViewer\n"
+        "            }\n"
+        "            ... on Organization {\n"
+        "                name\n"
+        "            }\n"
         "        }\n"
         "        name\n"
         "        url\n"
@@ -402,7 +504,12 @@ def test_single_repo_query() -> None:
                 "repository": {
                     "id": "id:repo.owner/repo",
                     "nameWithOwner": "repo.owner/repo",
-                    "owner": {"login": "repo.owner"},
+                    "owner": {
+                        "login": "repo.owner",
+                        "url": "https://github.com/repo.owner",
+                        "name": "Repository Owner",
+                        "isViewer": False,
+                    },
                     "name": "repo",
                     "url": "https://github.com/repo.owner/repo",
                     "description": "My Very Special Repo(tm)",
@@ -414,8 +521,13 @@ def test_single_repo_query() -> None:
     assert repos == [
         Repository(
             id="id:repo.owner/repo",
-            fullname="repo.owner/repo",
-            owner="repo.owner",
+            nameWithOwner="repo.owner/repo",
+            owner=User(
+                login="repo.owner",
+                url="https://github.com/repo.owner",
+                name="Repository Owner",
+                isViewer=False,
+            ),
             name="repo",
             url="https://github.com/repo.owner/repo",
             description="My Very Special Repo(tm)",
@@ -464,8 +576,13 @@ def test_new_issueoid_query() -> None:
     )
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -532,7 +649,7 @@ def test_new_issueoid_query() -> None:
                 login="a.contributor",
                 url="https://github.com/a.contributor",
                 name="A. Contributor",
-                is_me=False,
+                isViewer=False,
             ),
         ),
         NewPREvent(
@@ -544,8 +661,8 @@ def test_new_issueoid_query() -> None:
             author=User(
                 login="prbot",
                 url="https://github.com/apps/prbot",
-                name="prbot",
-                is_me=False,
+                name=None,
+                isViewer=False,
             ),
         ),
     ]
@@ -597,8 +714,8 @@ def test_new_issueoid_query() -> None:
             author=User(
                 login="new-user",
                 url="https://github.com/new-user",
-                name="new-user",
-                is_me=False,
+                name=None,
+                isViewer=False,
             ),
         ),
     ]
@@ -609,8 +726,13 @@ def test_new_issueoid_query() -> None:
 def test_new_issueoid_query_no_events() -> None:
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -680,8 +802,13 @@ def test_new_issueoid_query_null_cursor_no_events() -> None:
     )
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -726,8 +853,13 @@ def test_new_issueoid_query_null_cursor_no_events() -> None:
 def test_new_issueoid_query_null_cursor_some_events() -> None:
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -777,7 +909,7 @@ def test_new_issueoid_query_null_cursor_some_events() -> None:
                 login="need-to-know",
                 url="https://github.com/need-to-know",
                 name="Please tell me",
-                is_me=False,
+                isViewer=False,
             ),
         ),
     ]
@@ -805,8 +937,13 @@ def test_new_issueoid_query_no_cursor(new_cursor: Optional[str]) -> None:
     )
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -897,8 +1034,13 @@ def test_new_issueoid_query_multiple_types() -> None:
     )
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -993,7 +1135,7 @@ def test_new_issueoid_query_multiple_types() -> None:
                 login="bfg",
                 url="https://github.com/bfg",
                 name="Bug Finder General",
-                is_me=False,
+                isViewer=False,
             ),
         ),
         NewIssueEvent(
@@ -1005,8 +1147,8 @@ def test_new_issueoid_query_multiple_types() -> None:
             author=User(
                 login="needstuff",
                 url="https://github.com/needstuff",
-                name="needstuff",
-                is_me=False,
+                name=None,
+                isViewer=False,
             ),
         ),
         NewDiscussionEvent(
@@ -1019,7 +1161,7 @@ def test_new_issueoid_query_multiple_types() -> None:
                 login="repo-therapist",
                 url="https://github.com/repo-therapist",
                 name="Repository Therapy",
-                is_me=False,
+                isViewer=False,
             ),
         ),
     ]
@@ -1082,8 +1224,8 @@ def test_new_issueoid_query_multiple_types() -> None:
             author=User(
                 login="new-user",
                 url="https://github.com/new-user",
-                name="new-user",
-                is_me=False,
+                name=None,
+                isViewer=False,
             ),
         ),
     ]
@@ -1207,8 +1349,13 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
 
     repo = Repository(
         id="id:viewer/repo",
-        fullname="viewer/repo",
-        owner="viewer",
+        nameWithOwner="viewer/repo",
+        owner=User(
+            login="viewer",
+            url="https://github.com/viewer",
+            name="Vid Ewer",
+            isViewer=True,
+        ),
         name="repo",
         url="https://github.com/viewer/repo",
         description="My Very Special Repo(tm)",
@@ -1282,7 +1429,7 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
                 login="bfg",
                 url="https://github.com/bfg",
                 name="Bug Finder General",
-                is_me=False,
+                isViewer=False,
             ),
         ),
         NewIssueEvent(
@@ -1294,8 +1441,8 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
             author=User(
                 login="needstuff",
                 url="https://github.com/needstuff",
-                name="needstuff",
-                is_me=False,
+                name=None,
+                isViewer=False,
             ),
         ),
     ]
@@ -1358,8 +1505,8 @@ def test_new_issueoid_query_multiple_types_one_unset_cursor(
             author=User(
                 login="new-user",
                 url="https://github.com/new-user",
-                name="new-user",
-                is_me=False,
+                name=None,
+                isViewer=False,
             ),
         ),
     ]
