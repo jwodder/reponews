@@ -32,6 +32,8 @@ class Client:
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"bearer {token}"
         self.s.headers["User-Agent"] = USER_AGENT
+        # <https://github.blog/2021-11-16-graphql-global-id-migration-update/>
+        self.s.headers["X-Github-Next-Global-ID"] = "1"
 
     def close(self) -> None:
         self.s.close()
