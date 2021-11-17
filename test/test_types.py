@@ -1,36 +1,77 @@
 import pytest
-from reponews.types import IssueoidType, NewDiscussionEvent, NewIssueEvent, NewPREvent
+from reponews.types import (
+    ActivityType,
+    NewDiscussionEvent,
+    NewForkEvent,
+    NewIssueEvent,
+    NewPREvent,
+    NewReleaseEvent,
+    NewStarEvent,
+    NewTagEvent,
+)
 
 
 def test_all_issueoid_types() -> None:
-    assert list(IssueoidType) == [
-        IssueoidType.ISSUE,
-        IssueoidType.PR,
-        IssueoidType.DISCUSSION,
+    assert list(ActivityType) == [
+        ActivityType.ISSUE,
+        ActivityType.PR,
+        ActivityType.DISCUSSION,
+        ActivityType.RELEASE,
+        ActivityType.TAG,
+        ActivityType.STAR,
+        ActivityType.FORK,
     ]
 
 
 @pytest.mark.parametrize(
     "obj,name,value,api_name,event_cls",
     [
-        (IssueoidType.ISSUE, "ISSUE", "issue", "issues", NewIssueEvent),
-        (IssueoidType.PR, "PR", "pr", "pullRequests", NewPREvent),
+        (ActivityType.ISSUE, "ISSUE", "issue", "issues", NewIssueEvent),
+        (ActivityType.PR, "PR", "pr", "pullRequests", NewPREvent),
         (
-            IssueoidType.DISCUSSION,
+            ActivityType.DISCUSSION,
             "DISCUSSION",
             "discussion",
             "discussions",
             NewDiscussionEvent,
         ),
+        (
+            ActivityType.RELEASE,
+            "RELEASE",
+            "release",
+            "releases",
+            NewReleaseEvent,
+        ),
+        (
+            ActivityType.TAG,
+            "TAG",
+            "tag",
+            "tags",
+            NewTagEvent,
+        ),
+        (
+            ActivityType.STAR,
+            "STAR",
+            "star",
+            "stargazers",
+            NewStarEvent,
+        ),
+        (
+            ActivityType.FORK,
+            "FORK",
+            "fork",
+            "forks",
+            NewForkEvent,
+        ),
     ],
 )
 def test_issueoid_type(
-    obj: IssueoidType, name: str, value: str, api_name: str, event_cls: type
+    obj: ActivityType, name: str, value: str, api_name: str, event_cls: type
 ) -> None:
     assert obj.name == name
     assert obj.value == value
     assert obj.api_name == api_name
     assert obj.event_cls is event_cls
-    assert obj is IssueoidType[name]
+    assert obj is ActivityType[name]
     # <https://github.com/python/mypy/issues/10573>
-    assert obj is IssueoidType(value)  # type: ignore[call-arg]
+    assert obj is ActivityType(value)  # type: ignore[call-arg]

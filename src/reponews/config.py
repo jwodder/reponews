@@ -12,7 +12,7 @@ from mailbits import parse_address
 from pydantic import BaseModel, Field, FilePath
 from pydantic.validators import path_validator, str_validator
 import tomli
-from .types import Affiliation, IssueoidType, Repository
+from .types import ActivityType, Affiliation, Repository
 from .util import expanduser, get_default_state_file, mkalias
 
 if sys.version_info[:2] >= (3, 8):
@@ -94,6 +94,10 @@ class ActivityConfig(BaseConfig):
     issues: bool = True
     prs: bool = True
     discussions: bool = True
+    releases: bool = True
+    tags: bool = True
+    stars: bool = True
+    forks: bool = True
     my_activity: bool = False
 
 
@@ -184,13 +188,21 @@ class Configuration(BaseConfig):
                 " GITHUB_TOKEN or GH_TOKEN environment variable."
             )
 
-    def active_issueoid_types(self) -> Iterator[IssueoidType]:
+    def get_activity_types(self) -> Iterator[ActivityType]:
         if self.activity.issues:
-            yield IssueoidType.ISSUE
+            yield ActivityType.ISSUE
         if self.activity.prs:
-            yield IssueoidType.PR
+            yield ActivityType.PR
         if self.activity.discussions:
-            yield IssueoidType.DISCUSSION
+            yield ActivityType.DISCUSSION
+        if self.activity.releases:
+            yield ActivityType.RELEASE
+        if self.activity.tags:
+            yield ActivityType.TAG
+        if self.activity.stars:
+            yield ActivityType.STAR
+        if self.activity.forks:
+            yield ActivityType.FORK
 
     @cached_property
     def inclusions(self) -> RepoInclusions:

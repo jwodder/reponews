@@ -5,15 +5,14 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__
 from .qmanager import (
-    NewIssueoidsQuery,
+    ActivityQuery,
     OwnersReposQuery,
     QueryManager,
     SingleRepoQuery,
-    T,
     ViewersReposQuery,
 )
-from .types import Affiliation, CursorDict, IssueoidType, NewIssueoidEvent, Repository
-from .util import NotFoundError, log
+from .types import ActivityType, Affiliation, CursorDict, RepoActivity, Repository
+from .util import NotFoundError, T, log
 
 PAGE_SIZE = 50
 
@@ -90,18 +89,16 @@ class Client:
         manager = SingleRepoQuery(owner=owner, name=name)
         return next(self.do_managed_query(manager))
 
-    def get_new_issueoid_events(
-        self, repo: Repository, types: List[IssueoidType], cursors: CursorDict
-    ) -> Tuple[List[NewIssueoidEvent], CursorDict]:
+    def get_new_repo_activity(
+        self, repo: Repository, types: List[ActivityType], cursors: CursorDict
+    ) -> Tuple[List[RepoActivity], CursorDict]:
         log.info(
-            "Fetching new %s events for %s", ", ".join(it.value for it in types), repo
+            "Fetching new %s activity for %s", ", ".join(it.value for it in types), repo
         )
-        manager = NewIssueoidsQuery(repo=repo, types=types, cursors=cursors)
-        events: List[NewIssueoidEvent] = []
+        manager = ActivityQuery(repo=repo, types=types, cursors=cursors)
+        events: List[RepoActivity] = []
         for ev in self.do_managed_query(manager):
-            log.info(
-                "Found new %s for %s: %r (#%d)", ev.TYPE, repo, ev.title, ev.number
-            )
+            log.info("Found activity on %s: %s", repo, ev.logmsg)
             events.append(ev)
         return (events, manager.cursors)
 

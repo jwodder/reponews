@@ -49,7 +49,7 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
         level=log_level,
     )
     with RepoNews.from_config_file(config) as reponews:
-        events = reponews.get_new_events()
+        events = reponews.get_new_activity()
         if events:
             msg = reponews.compose_email(events)
             if mode == "print":
@@ -61,7 +61,7 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
                 with from_config_file(config, fallback=True) as sender:
                     sender.send(msg)
         else:
-            log.info("No new events")
+            log.info("No new activity")
         if save:
             reponews.save_state()
 

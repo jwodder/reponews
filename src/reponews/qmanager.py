@@ -1,13 +1,11 @@
 from abc import abstractmethod
-from typing import Any, ClassVar, Dict, Generic, List, Optional, Tuple, TypeVar
+from typing import Any, ClassVar, Dict, Generic, List, Optional, Tuple
 from pydantic import BaseModel
 from .qlobjs import REPO_FIELDS, Object
-from .types import Affiliation, CursorDict, IssueoidType, NewIssueoidEvent, Repository
-from .util import NotFoundError
+from .types import ActivityType, Affiliation, CursorDict, RepoActivity, Repository
+from .util import BogusEventError, NotFoundError, T, log
 
 PAGE_SIZE = 50
-
-T = TypeVar("T")
 
 
 class QueryManager(BaseModel, Generic[T]):
@@ -139,9 +137,9 @@ class SingleRepoQuery(QueryManager[Repository]):
         return [Repository.from_node(data["data"]["repository"])]
 
 
-class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):
+class ActivityQuery(QueryManager[RepoActivity]):
     repo: Repository
-    types: List[IssueoidType]
+    types: List[ActivityType]
     cursors: CursorDict
 
     def make_query(self) -> Tuple[str, Dict[str, Any]]:
@@ -156,16 +154,7 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):
                 variable_defs[f"${it.api_name}_cursor"] = "String"
                 variables[f"{it.api_name}_cursor"] = self.cursors[it]
             else:
-                connections.append(
-                    Object(
-                        it.api_name,
-                        {
-                            "orderBy": "{field: CREATED_AT, direction: ASC}",
-                            "last": "1",
-                        },
-                        Object("pageInfo", {}, "endCursor"),
-                    )
-                )
+                connections.append(it.event_cls.LAST_CONNECTION)
         query = Object(
             "query",
             variable_defs,
@@ -177,17 +166,23 @@ class NewIssueoidsQuery(QueryManager[NewIssueoidEvent]):
         )
         return (str(query), variables)
 
-    def parse_response(self, data: Any) -> List[NewIssueoidEvent]:
+    def parse_response(self, data: Any) -> List[RepoActivity]:
         events = []
         self.has_next_page = False
         for it in self.types:
             root = data["data"]["node"][it.api_name]
-            new_cursor = root["pageInfo"]["endCursor"]
+            pageInfo = root.pop("pageInfo")
+            new_cursor = pageInfo["endCursor"]
             if it in self.cursors:
-                if root["pageInfo"]["hasNextPage"]:
+                if pageInfo["hasNextPage"]:
                     self.has_next_page = True
-                for node in root["nodes"]:
-                    events.append(it.event_cls.from_node(self.repo, node))
+                assert len(root) <= 1
+                nodes: List[dict] = next(iter(root.values()), [])
+                for node in nodes:
+                    try:
+                        events.append(it.event_cls.from_node(self.repo, node))
+                    except BogusEventError as e:
+                        log.debug("Discarding bogus event: %s", e)
                 if new_cursor is not None:
                     assert isinstance(new_cursor, str)
                     self.cursors[it] = new_cursor

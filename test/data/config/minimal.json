@@ -13,6 +13,10 @@
         "issues": true,
         "prs": true,
         "discussions": true,
+        "releases": true,
+        "tags": true,
+        "stars": true,
+        "forks": true,
         "my_activity": false
     },
     "repos": {

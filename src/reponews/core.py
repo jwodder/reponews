@@ -13,7 +13,7 @@ from .config import Configuration
 from .types import (
     CursorDict,
     Event,
-    NewIssueoidEvent,
+    RepoActivity,
     RepoRenamedEvent,
     Repository,
     RepoTrackedEvent,
@@ -120,25 +120,22 @@ class RepoNews:
     def from_config_file(cls, path: Path) -> RepoNews:
         return cls.from_config(Configuration.from_toml_file(path))
 
-    def get_new_events(self) -> List[Event]:
+    def get_new_activity(self) -> List[Event]:
         events: List[Event] = []
         for repo in self.get_repositories():
-            types = list(self.config.active_issueoid_types())
+            types = list(self.config.get_activity_types())
             if not types:
                 log.info("No tracked activity configured for %s", repo)
                 continue
-            new_events, cursors = self.client.get_new_issueoid_events(
+            new_events, cursors = self.client.get_new_repo_activity(
                 repo, types, self.state.get_cursors(repo)
             )
             if not self.config.activity.my_activity:
-                events2: List[NewIssueoidEvent] = []
+                events2: List[RepoActivity] = []
                 for ev in new_events:
-                    if ev.author.isViewer:
+                    if ev.is_mine:
                         log.info(
-                            "%s %s #%d was created by current user; not reporting",
-                            ev.repo,
-                            ev.TYPE,
-                            ev.number,
+                            "%s was created by current user; not reporting", ev.logmsg
                         )
                     else:
                         events2.append(ev)
