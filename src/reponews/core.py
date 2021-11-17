@@ -75,7 +75,7 @@ class State(BaseModel):
                     RepoRenamedEvent(
                         timestamp=datetime.now().astimezone(),
                         repo=repo,
-                        old_nameWithOwner=old.repo.nameWithOwner,
+                        old_repo=old.repo,
                     )
                 )
         self.new_state[repo.id] = RepoState(repo=repo, cursors=cursors)

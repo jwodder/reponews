@@ -293,11 +293,12 @@ class RepoUntrackedEvent(Event):
 
 
 class RepoRenamedEvent(Event):
-    old_nameWithOwner: str
+    old_repo: Repository
 
     def __str__(self) -> str:
         return (
-            f"Repository renamed: {self.old_nameWithOwner} → {self.repo.nameWithOwner}"
+            f"Repository renamed: {self.old_repo.nameWithOwner} →"
+            f" {self.repo.nameWithOwner}"
         )
 
 
