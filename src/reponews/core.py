@@ -11,8 +11,11 @@ from pydantic import BaseModel, Field
 from .client import Client
 from .config import Configuration
 from .types import (
+    ActivityType,
     CursorDict,
     Event,
+    NewReleaseEvent,
+    NewTagEvent,
     RepoActivity,
     RepoRenamedEvent,
     Repository,
@@ -130,12 +133,36 @@ class RepoNews:
             new_events, cursors = self.client.get_new_repo_activity(
                 repo, types, self.state.get_cursors(repo)
             )
+            events2: List[RepoActivity]
             if not self.config.activity.my_activity:
-                events2: List[RepoActivity] = []
+                events2 = []
                 for ev in new_events:
                     if ev.is_mine:
                         log.info(
                             "%s was created by current user; not reporting", ev.logmsg
+                        )
+                    else:
+                        events2.append(ev)
+                new_events = events2
+            if (
+                ActivityType.RELEASE in types
+                and ActivityType.TAG in types
+                and not self.config.activity.released_tags
+            ):
+                events2 = []
+                release_tags = set()
+                tag_events: List[NewTagEvent] = []
+                for ev in new_events:
+                    if isinstance(ev, NewTagEvent):
+                        tag_events.append(ev)
+                    else:
+                        if isinstance(ev, NewReleaseEvent):
+                            release_tags.add(ev.tagName)
+                        events2.append(ev)
+                for ev in tag_events:
+                    if ev.name in release_tags:
+                        log.info(
+                            "Tag %s also present as a release; not reporting", ev.name
                         )
                     else:
                         events2.append(ev)

@@ -1,12 +1,12 @@
 {
     "recipient": {
-        "name": null,
+        "name": "Myself",
         "address": "me@here.there"
     },
     "sender": null,
     "subject": "New issues on your GitHub repositories",
     "auth_token": null,
-    "auth_token_file": "~/.github",
+    "auth_token_file": null,
     "state_file": null,
     "api_url": "https://api.github.com/graphql",
     "activity": {
@@ -15,7 +15,7 @@
         "discussions": true,
         "releases": true,
         "tags": true,
-        "released_tags": false,
+        "released_tags": true,
         "stars": true,
         "forks": true,
         "my_activity": false

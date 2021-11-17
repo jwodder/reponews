@@ -96,6 +96,7 @@ class ActivityConfig(BaseConfig):
     discussions: bool = True
     releases: bool = True
     tags: bool = True
+    released_tags: bool = False
     stars: bool = True
     forks: bool = True
     my_activity: bool = False

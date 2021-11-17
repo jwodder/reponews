@@ -1,0 +1,7 @@
+[reponews]
+recipient = "Myself <me@here.there>"
+
+[reponews.activity]
+releases = true
+tags = true
+released-tags = true

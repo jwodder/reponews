@@ -18,6 +18,7 @@
         "discussions": true,
         "releases": true,
         "tags": true,
+        "released_tags": false,
         "stars": true,
         "forks": true,
         "my_activity": true
