@@ -4,7 +4,7 @@
         "address": "me@here.there"
     },
     "sender": null,
-    "subject": "New issues on your GitHub repositories",
+    "subject": "[reponews] New activity on your GitHub repositories",
     "auth_token": null,
     "auth_token_file": "~/.github",
     "state_file": null,

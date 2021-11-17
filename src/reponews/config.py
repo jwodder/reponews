@@ -157,7 +157,7 @@ class RepoInclusions(BaseModel):
 class Configuration(BaseConfig):
     recipient: Address
     sender: Optional[Address] = None
-    subject: str = "New issues on your GitHub repositories"
+    subject: str = "[reponews] New activity on your GitHub repositories"
     auth_token: Optional[str] = None
     auth_token_file: Optional[ExpandedFilePath] = None
     # The default is implemented as a factory in order to make it easy to test
