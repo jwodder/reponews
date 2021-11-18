@@ -48,6 +48,7 @@ class State(BaseModel):
             with path.open() as fp:
                 state = json.load(fp)
         except FileNotFoundError:
+            log.info("State file not found; treating as empty")
             state = {}
         return cls(path=path, old_state=state)
 
