@@ -7,7 +7,7 @@ from platformdirs import user_state_path
 T = TypeVar("T")
 
 
-log = logging.getLogger("reponews")
+log = logging.getLogger(__package__)
 
 
 def mkalias(s: str) -> str:
