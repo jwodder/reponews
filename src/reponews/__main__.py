@@ -50,7 +50,7 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
     """
     logging.basicConfig(
         format="%(asctime)s [%(levelname)-8s] %(name)s: %(message)s",
-        datefmt="%H:%M:%S",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
         level=log_level,
     )
     try:
