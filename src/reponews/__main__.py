@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 import click
 from click_loglevel import LogLevel
-from outgoing import from_config_file
+from outgoing import Sender, from_config_file
 from platformdirs import user_config_path
 from .core import RepoNews
 from .util import UserError, log
@@ -59,6 +59,13 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
                 raise click.UsageError(
                     "reponews.recipient must be set when constructing an e-mail"
                 )
+            sender: Optional[Sender]
+            if mode is None:
+                # Fail early if the outgoing config is invalid or missing:
+                sender = from_config_file(config, fallback=True)
+                assert sender is not None
+            else:
+                sender = None
             events = reponews.get_new_activity()
             if events:
                 if mode == "print":
@@ -68,7 +75,8 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
                 else:
                     log.info("Sending e-mail ...")
                     msg = reponews.compose_email(events)
-                    with from_config_file(config, fallback=True) as sender:
+                    assert sender is not None
+                    with sender:
                         sender.send(msg)
             else:
                 log.info("No new activity")
