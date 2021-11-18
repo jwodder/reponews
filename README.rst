@@ -150,12 +150,12 @@ Configuration
 ``reponews`` is configured via a `TOML <https://toml.io>`_ file whose default
 location depends on your OS:
 
-=======  ======================================================================
+=======  ==================================================================
 Linux    ``~/.local/share/reponews/config.toml``
          or ``$XDG_DATA_HOME/reponews/config.toml``
 macOS    ``~/Library/Preferences/reponews/config.toml``
-Windows  ``C:\\Users\\<username>\\AppData\\Local\\jwodder\\reponews\\config.toml``
-=======  ======================================================================
+Windows  ``C:\Users\<username>\AppData\Local\jwodder\reponews\config.toml``
+=======  ==================================================================
 
 This TOML file must contain a ``[reponews]`` table with the following keys &
 subtables (all of which are optional unless stated otherwise).  Unknown keys
@@ -167,8 +167,8 @@ result in an error.
     ``"me@example.com"``) or a display name with an address in angle brackets
     (e.g., ``"Madam E <me@example.com>"``).  Note that, if the display name
     contains any punctuation, it needs to be enclosed in double quotes (which
-    then need to be escaped for use in the TOML string), e.g., ``"\\"Joe Q.
-    Recipient\\" <jqr@example.net>"``).
+    then need to be escaped for use in the TOML string), e.g., ``"\"Joe Q.
+    Recipient\" <jqr@example.net>"``).
 
 ``sender`` : e-mail address
     The ``From:`` address to put on ``reponews``'s e-mails; specified the same
@@ -202,12 +202,12 @@ result in an error.
 
     The default location for the state file depends on your OS:
 
-    =======  ==================================================================
+    =======  =================================================================
     Linux    ``~/.local/state/reponews/state.json``
              or ``$XDG_STATE_HOME/reponews/state.json``
     macOS    ``~/Library/Application Support/reponews/state.json``
-    Windows  ``C:\\Users\\<username>\\AppData\\Local\\jwodder\\reponews\\state.json``
-    =======  ==================================================================
+    Windows  ``C:\Users\<username>\AppData\Local\jwodder\reponews\state.json``
+    =======  =================================================================
 
 ``api-url`` : URL
     The GraphQL endpoint to query; defaults to <https://api.github.com/graphql>
