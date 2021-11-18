@@ -7,7 +7,7 @@ from click_loglevel import LogLevel
 from outgoing import from_config_file
 from platformdirs import user_config_path
 from .core import RepoNews
-from .util import log
+from .util import UserError, log
 
 DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
 
@@ -53,22 +53,29 @@ def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
         datefmt="%H:%M:%S",
         level=log_level,
     )
-    with RepoNews.from_config_file(config) as reponews:
-        events = reponews.get_new_activity()
-        if events:
-            msg = reponews.compose_email(events)
-            if mode == "print":
-                print(msg)
-            elif mode == "body":
-                print(msg.get_content())
+    try:
+        with RepoNews.from_config_file(config) as reponews:
+            if (mode is None or mode == "print") and reponews.config.recipient is None:
+                raise click.UsageError(
+                    "reponews.recipient must be set when constructing an e-mail"
+                )
+            events = reponews.get_new_activity()
+            if events:
+                if mode == "print":
+                    print(reponews.compose_email(events))
+                elif mode == "body":
+                    print(reponews.compose_email_body(events))
+                else:
+                    log.info("Sending e-mail ...")
+                    msg = reponews.compose_email(events)
+                    with from_config_file(config, fallback=True) as sender:
+                        sender.send(msg)
             else:
-                log.info("Sending e-mail ...")
-                with from_config_file(config, fallback=True) as sender:
-                    sender.send(msg)
-        else:
-            log.info("No new activity")
-        if save:
-            reponews.save_state()
+                log.info("No new activity")
+            if save:
+                reponews.save_state()
+    except UserError as e:
+        raise click.UsageError(str(e))
 
 
 if __name__ == "__main__":

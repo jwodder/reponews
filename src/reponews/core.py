@@ -22,7 +22,7 @@ from .types import (
     RepoTrackedEvent,
     RepoUntrackedEvent,
 )
-from .util import NotFoundError, log
+from .util import NotFoundError, UserError, log
 
 
 class RepoState(BaseModel):
@@ -199,14 +199,21 @@ class RepoNews:
             except NotFoundError:
                 log.warning("Repo %s/%s does not exist!", owner, name)
 
+    def compose_email_body(self, events: List[Event]) -> str:
+        return "\n\n".join(map(str, events))
+
     def compose_email(self, events: List[Event]) -> EmailMessage:
+        if self.config.recipient is None:
+            raise UserError(
+                "reponews.recipient must be set when constructing an e-mail"
+            )
         return compose(
             subject=self.config.subject,
             from_=self.config.sender.as_py_address()
             if self.config.sender is not None
             else None,
             to=[self.config.recipient.as_py_address()],
-            text="\n\n".join(map(str, events)),
+            text=self.compose_email_body(events),
         )
 
     def save_state(self) -> None:

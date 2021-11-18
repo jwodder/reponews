@@ -162,13 +162,13 @@ subtables (all of which are optional unless stated otherwise).  Unknown keys
 result in an error.
 
 ``recipient`` : e-mail address
-    *(required)* The e-mail address to which ``reponews`` should send its
-    reports.  This can be either a plain e-mail address (e.g.,
-    ``"me@example.com"``) or a display name with an address in angle brackets
-    (e.g., ``"Madam E <me@example.com>"``).  Note that, if the display name
-    contains any punctuation, it needs to be enclosed in double quotes (which
-    then need to be escaped for use in the TOML string), e.g., ``"\"Joe Q.
-    Recipient\" <jqr@example.net>"``).
+    *(required when ``--print-body`` is not given)* The e-mail address to which
+    ``reponews`` should send its reports.  This can be either a plain e-mail
+    address (e.g., ``"me@example.com"``) or a display name with an address in
+    angle brackets (e.g., ``"Madam E <me@example.com>"``).  Note that, if the
+    display name contains any punctuation, it needs to be enclosed in double
+    quotes (which then need to be escaped for use in the TOML string), e.g.,
+    ``"\"Joe Q.  Recipient\" <jqr@example.net>"``).
 
 ``sender`` : e-mail address
     The ``From:`` address to put on ``reponews``'s e-mails; specified the same

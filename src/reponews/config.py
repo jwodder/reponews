@@ -13,7 +13,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, FilePath, parse_obj_as
 from pydantic.validators import path_validator, str_validator
 import tomli
 from .types import ActivityType, Affiliation, Repository
-from .util import expanduser, get_default_state_file, mkalias
+from .util import UserError, expanduser, get_default_state_file, mkalias
 
 if sys.version_info[:2] >= (3, 8):
     from functools import cached_property
@@ -155,7 +155,7 @@ class RepoInclusions(BaseModel):
 
 
 class Configuration(BaseConfig):
-    recipient: Address
+    recipient: Optional[Address] = None
     sender: Optional[Address] = None
     subject: str = "[reponews] New activity on your GitHub repositories"
     auth_token: Optional[str] = None
@@ -183,8 +183,7 @@ class Configuration(BaseConfig):
         elif os.environ.get("GH_TOKEN"):
             return os.environ["GH_TOKEN"]
         else:
-            ### TODO: Use a different/custom exception type?
-            raise RuntimeError(
+            raise UserError(
                 "GitHub OAuth token not set.  Specify in config file or via"
                 " GITHUB_TOKEN or GH_TOKEN environment variable."
             )

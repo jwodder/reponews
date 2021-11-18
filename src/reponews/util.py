@@ -31,3 +31,7 @@ class NotFoundError(Exception):
 
 class BogusEventError(Exception):
     pass
+
+
+class UserError(Exception):
+    pass
