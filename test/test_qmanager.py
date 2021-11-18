@@ -541,7 +541,7 @@ def test_single_repo_query() -> None:
     assert not manager.has_next_page
 
 
-def test_new_issueoid_query() -> None:
+def test_activity_query() -> None:
     q = (
         "query(\n"
         "    $repo_id: ID!,\n"
@@ -727,7 +727,7 @@ def test_new_issueoid_query() -> None:
     assert not manager.has_next_page
 
 
-def test_new_issueoid_query_no_events() -> None:
+def test_activity_query_no_events() -> None:
     repo = Repository(
         id="id:viewer/repo",
         nameWithOwner="viewer/repo",
@@ -767,7 +767,7 @@ def test_new_issueoid_query_no_events() -> None:
     assert not manager.has_next_page
 
 
-def test_new_issueoid_query_null_cursor_no_events() -> None:
+def test_activity_query_null_cursor_no_events() -> None:
     q = (
         "query(\n"
         "    $repo_id: ID!,\n"
@@ -854,7 +854,7 @@ def test_new_issueoid_query_null_cursor_no_events() -> None:
     assert not manager.has_next_page
 
 
-def test_new_issueoid_query_null_cursor_some_events() -> None:
+def test_activity_query_null_cursor_some_events() -> None:
     repo = Repository(
         id="id:viewer/repo",
         nameWithOwner="viewer/repo",
@@ -922,7 +922,7 @@ def test_new_issueoid_query_null_cursor_some_events() -> None:
 
 
 @pytest.mark.parametrize("new_cursor", [None, "cursor:0001"])
-def test_new_issueoid_query_no_cursor(new_cursor: Optional[str]) -> None:
+def test_activity_query_no_cursor(new_cursor: Optional[str]) -> None:
     q = (
         "query($repo_id: ID!) {\n"
         "    node(id: $repo_id) {\n"
@@ -974,7 +974,7 @@ def test_new_issueoid_query_no_cursor(new_cursor: Optional[str]) -> None:
     assert not manager.has_next_page
 
 
-def test_new_issueoid_query_multiple_types() -> None:
+def test_activity_query_multiple_types() -> None:
     q = (
         "query(\n"
         "    $repo_id: ID!,\n"
@@ -1241,7 +1241,7 @@ def test_new_issueoid_query_multiple_types() -> None:
 
 
 @pytest.mark.parametrize("new_cursor", [None, "cursor:d001"])
-def test_new_issueoid_query_multiple_types_one_unset_cursor(
+def test_activity_query_multiple_types_one_unset_cursor(
     new_cursor: Optional[str],
 ) -> None:
     q1 = (

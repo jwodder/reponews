@@ -11,7 +11,7 @@ from reponews.types import (
 )
 
 
-def test_all_issueoid_types() -> None:
+def test_all_activity_types() -> None:
     assert list(ActivityType) == [
         ActivityType.ISSUE,
         ActivityType.PR,
@@ -65,7 +65,7 @@ def test_all_issueoid_types() -> None:
         ),
     ],
 )
-def test_issueoid_type(
+def test_activity_type(
     obj: ActivityType, name: str, value: str, api_name: str, event_cls: type
 ) -> None:
     assert obj.name == name
