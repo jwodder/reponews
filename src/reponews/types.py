@@ -42,12 +42,6 @@ class User(BaseModel):
     url: str
     isViewer: bool = False
 
-    @classmethod
-    def from_node(cls, node: Dict[str, Any]) -> "User":
-        ### TODO: Is this still used?
-        log.debug("Constructing User from node: %s", json.dumps(node))
-        return cls.parse_obj(node)
-
     def __str__(self) -> str:
         return self.login
 
