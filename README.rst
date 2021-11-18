@@ -162,7 +162,7 @@ subtables (all of which are optional unless stated otherwise).  Unknown keys
 result in an error.
 
 ``recipient`` : e-mail address
-    *(required when ``--print-body`` is not given)* The e-mail address to which
+    [Required when ``--print-body`` is not given] The e-mail address to which
     ``reponews`` should send its reports.  This can be either a plain e-mail
     address (e.g., ``"me@example.com"``) or a display name with an address in
     angle brackets (e.g., ``"Madam E <me@example.com>"``).  Note that, if the
