@@ -43,6 +43,11 @@ DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
     help="Whether to update the state file  [default: --save]",
 )
 def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
+    """
+    Send e-mails about new events on your GitHub repositories.
+
+    Visit <https://github.com/jwodder/reponews> for more information.
+    """
     logging.basicConfig(
         format="%(asctime)s [%(levelname)-8s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
