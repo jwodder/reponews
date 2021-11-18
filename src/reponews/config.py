@@ -92,7 +92,7 @@ class BaseConfig(BaseModel):
 
 class ActivityConfig(BaseConfig):
     issues: bool = True
-    prs: bool = True
+    pull_requests: bool = True
     discussions: bool = True
     releases: bool = True
     tags: bool = True
@@ -192,7 +192,7 @@ class Configuration(BaseConfig):
     def get_activity_types(self) -> Iterator[ActivityType]:
         if self.activity.issues:
             yield ActivityType.ISSUE
-        if self.activity.prs:
+        if self.activity.pull_requests:
             yield ActivityType.PR
         if self.activity.discussions:
             yield ActivityType.DISCUSSION

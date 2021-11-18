@@ -219,7 +219,7 @@ result in an error.
     ``issues`` : boolean
         Whether to report new issues in tracked repositories; defaults to true
 
-    ``prs`` : boolean
+    ``pull-requests`` : boolean
         Whether to report new pull requests in tracked repositories; defaults
         to true
 

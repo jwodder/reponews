@@ -14,7 +14,7 @@
     "api_url": "https://api.myservice.nil/graphql",
     "activity": {
         "issues": false,
-        "prs": false,
+        "pull_requests": false,
         "discussions": true,
         "releases": true,
         "tags": true,

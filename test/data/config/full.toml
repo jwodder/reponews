@@ -8,7 +8,7 @@ api-url = "https://api.myservice.nil/graphql"
 
 [reponews.activity]
 issues = false
-prs = false
+pull-requests = false
 discussions = true
 my-activity = true
 

@@ -11,7 +11,7 @@
     "api_url": "https://api.github.com/graphql",
     "activity": {
         "issues": true,
-        "prs": true,
+        "pull_requests": true,
         "discussions": true,
         "releases": true,
         "tags": true,
