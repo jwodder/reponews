@@ -9,11 +9,11 @@ import sys
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
-from pydantic import AnyHttpUrl, BaseModel, Field, FilePath, parse_obj_as
-from pydantic.validators import path_validator, str_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, parse_obj_as, validator
+from pydantic.validators import str_validator
 import tomli
 from .types import ActivityType, Affiliation, Repository
-from .util import UserError, expanduser, get_default_state_file, mkalias
+from .util import UserError, get_default_state_file, mkalias
 
 if sys.version_info[:2] >= (3, 8):
     from functools import cached_property
@@ -22,24 +22,6 @@ else:
 
 if TYPE_CHECKING:
     from pydantic.typing import CallableGenerator
-
-    ExpandedPath = Path
-    ExpandedFilePath = Path
-
-else:
-
-    class ExpandedPath(Path):
-        @classmethod
-        def __get_validators__(cls) -> CallableGenerator:
-            yield path_validator
-            yield expanduser
-
-    class ExpandedFilePath(FilePath):
-        @classmethod
-        def __get_validators__(cls) -> CallableGenerator:
-            yield path_validator
-            yield expanduser
-            yield from super().__get_validators__()
 
 
 class Address(BaseModel):
@@ -159,19 +141,28 @@ class Configuration(BaseConfig):
     sender: Optional[Address] = None
     subject: str = "[reponews] New activity on your GitHub repositories"
     auth_token: Optional[str] = None
-    auth_token_file: Optional[ExpandedFilePath] = None
+    auth_token_file: Optional[Path] = None
     # The default is implemented as a factory in order to make it easy to test
     # with a fake $HOME:
-    state_file: ExpandedPath = Field(default_factory=get_default_state_file)
+    state_file: Path = Field(default_factory=get_default_state_file)
     api_url: AnyHttpUrl = parse_obj_as(AnyHttpUrl, "https://api.github.com/graphql")
     activity: ActivityConfig = Field(default_factory=ActivityConfig)
     repos: ReposConfig = Field(default_factory=ReposConfig)
+
+    @validator("auth_token_file", "state_file")
+    def _expand_path(cls, v: Optional[Path]) -> Optional[Path]:  # noqa: B902, U100
+        return v.expanduser() if v is not None else v
 
     @classmethod
     def from_toml_file(cls, filepath: Union[str, Path]) -> Configuration:
         with open(filepath, "rb") as fp:
             data = tomli.load(fp).get("reponews", {})
-        return cls.parse_obj(data)
+        basedir = Path(filepath).parent
+        config = cls.parse_obj(data)
+        if config.auth_token_file is not None:
+            config.auth_token_file = basedir / config.auth_token_file
+        config.state_file = basedir / config.state_file
+        return config
 
     def get_auth_token(self) -> str:
         if self.auth_token is not None:

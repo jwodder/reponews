@@ -1,0 +1,25 @@
+{
+    "recipient": null,
+    "sender": null,
+    "subject": "[reponews] New activity on your GitHub repositories",
+    "auth_token": null,
+    "auth_token_file": "{config}/token.txt",
+    "state_file": "{config}/state/reponews.json",
+    "api_url": "https://api.github.com/graphql",
+    "activity": {
+        "issues": true,
+        "pull_requests": true,
+        "discussions": true,
+        "releases": true,
+        "tags": true,
+        "released_tags": false,
+        "stars": true,
+        "forks": true,
+        "my_activity": false
+    },
+    "repos": {
+        "affiliations": ["OWNER", "ORGANIZATION_MEMBER", "COLLABORATOR"],
+        "include": [],
+        "exclude": []
+    }
+}

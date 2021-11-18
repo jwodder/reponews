@@ -193,12 +193,15 @@ result in an error.
     token and possibly leading and/or trailing whitespace.
 
     The path may start with a tilde (``~``) to indicate a file in the user's
-    home directory.
+    home directory.  A relative path will be resolved relative to the directory
+    containing the config file.
 
 ``state-file`` : path
     The path to the file where ``reponews`` will store repository activity
     state, used to determine the cutoff point for new activity.  The path may
     start with a tilde (``~``) to indicate a file in the user's home directory.
+    A relative path will be resolved relative to the directory containing the
+    config file.
 
     The default location for the state file depends on your OS:
 

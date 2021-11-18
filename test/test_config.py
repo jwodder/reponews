@@ -28,7 +28,7 @@ def test_parse_config(tmp_home: Path, tomlfile: Path, expected: Any) -> None:
         expected["state_file"] = get_default_state_file()
     for key in ("auth_token_file", "state_file"):
         if expected[key] is not None:
-            expected[key] = expanduser(expected[key])
+            expected[key] = expanduser(expected[key]).format(config=tomlfile.parent)
     assert config.for_json() == expected
 
 
