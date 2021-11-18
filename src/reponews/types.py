@@ -139,7 +139,7 @@ class NewDiscussionEvent(NewIssueoidEvent):
 class NewReleaseEvent(RepoActivity):
     CONNECTION = RELEASE_CONNECTION
     LAST_CONNECTION = RELEASE_LAST_CONNECTION
-    name: str
+    name: Optional[str]
     tagName: str
     author: Optional[User]
     description: Optional[str]
@@ -169,7 +169,11 @@ class NewReleaseEvent(RepoActivity):
             s += " [draft]"
         if self.isPrerelease:
             s += " [prerelease]"
-        s += f": {self.name}\n<{self.url}>"
+        if self.name:
+            s += f": {self.name}"
+        if self.author is not None:
+            s += f" (@{self.author.login})"
+        s += f"\n<{self.url}>"
         if self.description:
             s += "\n" + reply_quote(self.description).rstrip("\n")
         return s
@@ -217,10 +221,11 @@ class NewTagEvent(RepoActivity):
         return self.user is not None and self.user.isViewer
 
     def __str__(self) -> str:
-        return (
-            f"[{self.repo.nameWithOwner}] TAG {self.name}"
-            f" <{self.repo.url}/releases/tag/{self.name}>"
-        )
+        s = f"[{self.repo.nameWithOwner}] TAG {self.name}"
+        if self.user is not None:
+            s += f" (@{self.user.login})"
+        s += f"\n<{self.repo.url}/releases/tag/{self.name}>"
+        return s
 
 
 class NewStarEvent(RepoActivity):
@@ -268,8 +273,8 @@ class NewForkEvent(RepoActivity):
 
     def __str__(self) -> str:
         return (
-            f"@{self.fork.owner.login} forked {self.repo.nameWithOwner}:"
-            f" <{self.fork.url}>"
+            f"@{self.fork.owner.login} forked {self.repo.nameWithOwner}\n"
+            f"<{self.fork.url}>"
         )
 
 
