@@ -250,7 +250,7 @@ class NewStarEvent(RepoActivity):
         return self.user.isViewer
 
     def __str__(self) -> str:
-        return "★ @{self.user.login} starred {self.repo.nameWithOwner}"
+        return f"★ @{self.user.login} starred {self.repo.nameWithOwner}"
 
 
 class NewForkEvent(RepoActivity):
