@@ -9,7 +9,7 @@ import sys
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
-from pydantic import BaseModel, Field, FilePath
+from pydantic import AnyHttpUrl, BaseModel, Field, FilePath, parse_obj_as
 from pydantic.validators import path_validator, str_validator
 import tomli
 from .types import ActivityType, Affiliation, Repository
@@ -163,7 +163,7 @@ class Configuration(BaseConfig):
     # The default is implemented as a factory in order to make it easy to test
     # with a fake $HOME:
     state_file: ExpandedPath = Field(default_factory=get_default_state_file)
-    api_url: str = "https://api.github.com/graphql"
+    api_url: AnyHttpUrl = parse_obj_as(AnyHttpUrl, "https://api.github.com/graphql")
     activity: ActivityConfig = Field(default_factory=ActivityConfig)
     repos: ReposConfig = Field(default_factory=ReposConfig)
 
