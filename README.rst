@@ -18,13 +18,14 @@
 | `Issues <https://github.com/jwodder/reponews/issues>`_
 
 Do you want to receive e-mail notifications about new issues, pull requests,
-and the like on your GitHub repositories?  Of course you do — but turning on
-e-mail notifications in GitHub for repositories you're watching will mean you
-get an e-mail for every comment on every issue, which is a bit too much.
-``reponews`` aims for a happy medium: only e-mailing you about new issues and
-similar activity on repositories of your choice.  Simply set it up to run under
-cron or another job scheduler (sold separately) and you'll get periodic e-mails
-listing new events.
+discussions, releases, tags, stargazers, & forks on your GitHub repositories?
+Of course you do — but turning on e-mail notifications in GitHub for
+repositories you're watching will mean you get an e-mail for every comment on
+every issue, which is a bit too much.  ``reponews`` aims for a happy medium:
+only e-mailing you about new issues and similar activity — not about comments —
+and only on repositories of your choice.  Simply set it up to run under cron or
+another job scheduler (sold separately) and you'll get periodic e-mails listing
+new events.
 
 Installation & Setup
 ====================
@@ -46,7 +47,7 @@ __ https://docs.github.com/en/authentication/keeping-your-account-and-data
 - The e-mail address that ``reponews`` should send its reports to
 - Details on how to send those e-mails
 
-An example configuration file, for sending e-mails to <luser@example.com> with
+An example configuration file, for sending e-mails to luser@example.com with
 the ``sendmail`` command:
 
 .. code:: toml
@@ -75,7 +76,7 @@ An example of the sort of e-mail that ``reponews`` might send you::
     [luser/my-repo] PR #43: I fixed that bug (@bug.fixer)
     <https://github.com/luser/my-repo/pull/43>
 
-    ★ @confused.user starred orgcorp/bigrepo
+    ★ @repo.fan starred orgcorp/bigrepo
 
     [orgcorp/bigrepo] DISCUSSION #123: How do I use this? (@confused.user)
     <https://github.com/orgcorp/bigrepo/discussions/123>
@@ -168,8 +169,8 @@ result in an error.
     address (e.g., ``"me@example.com"``) or a display name with an address in
     angle brackets (e.g., ``"Madam E <me@example.com>"``).  Note that, if the
     display name contains any punctuation, it needs to be enclosed in double
-    quotes (which then need to be escaped for use in the TOML string), e.g.,
-    ``"\"Joe Q.  Recipient\" <jqr@example.net>"``).
+    quotes, which then need to be escaped for use in the TOML string, e.g.,
+    ``"\"Joe Q.  Recipient\" <jqr@example.net>"``.
 
 ``sender`` : e-mail address
     The ``From:`` address to put on ``reponews``'s e-mails; specified the same
