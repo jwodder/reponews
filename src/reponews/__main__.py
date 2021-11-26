@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 import click
 from click_loglevel import LogLevel
+from dotenv import find_dotenv, load_dotenv
 from outgoing import Sender, from_config_file
 from platformdirs import user_config_path
 from . import __version__
@@ -29,6 +30,12 @@ DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
     help="Path to configuration file",
 )
 @click.option(
+    "-E",
+    "--env",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Load environment variables from given .env file",
+)
+@click.option(
     "-l",
     "--log-level",
     type=LogLevel(),
@@ -49,12 +56,17 @@ DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
     default=True,
     help="Whether to update the state file  [default: --save]",
 )
-def main(config: Path, log_level: int, mode: Optional[str], save: bool) -> None:
+def main(
+    config: Path, log_level: int, mode: Optional[str], save: bool, env: Optional[str]
+) -> None:
     """
     Send e-mails about new events on your GitHub repositories.
 
     Visit <https://github.com/jwodder/reponews> for more information.
     """
+    if env is None:
+        env = find_dotenv(usecwd=True)
+    load_dotenv(env)
     logging.basicConfig(
         format="%(asctime)s [%(levelname)-8s] %(name)s: %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S%z",

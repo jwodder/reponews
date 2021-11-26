@@ -130,6 +130,12 @@ Options
                                 "`Configuration`_" below for the default config
                                 file location.
 
+-E FILE, --env FILE             Load environment variables from the given
+                                ``.env`` file.  By default, environment
+                                variables are loaded from the first file named
+                                "``.env``" found by searching from the current
+                                directory upwards.
+
 -l LEVEL, --log-level LEVEL     Set the log level to the given value.  Possible
                                 values are "``CRITICAL``", "``ERROR``",
                                 "``WARNING``", "``INFO``", "``DEBUG``" (all
@@ -187,7 +193,9 @@ result in an error.
     the GitHub API.  If ``auth-token`` is not set, the token will be read from
     the file specified by ``auth-token-file``; if that is also not set, the
     environment variables ``GITHUB_TOKEN`` and ``GH_TOKEN`` will be consulted
-    for the token, in that order.
+    for the token, in that order.  Environment variables can be either set
+    directly in the environment or else read from a ``.env`` file (See the
+    ``--env`` option under "Options_" above).
 
 ``auth-token-file`` : path
     The path to a file containing the GitHub OAuth token/personal access token
