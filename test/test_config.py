@@ -1,11 +1,14 @@
+import json
+from operator import attrgetter
 from os.path import expanduser
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import List, Tuple
 import pytest
 from reponews.config import ActivityPrefs, Configuration, ReposConfig
 from reponews.types import Repository, User
 from reponews.util import get_default_state_file
-from testlib import DATA_DIR, filecases
+
+DATA_DIR = Path(__file__).with_name("data")
 
 
 def mkrepo(owner: str, name: str) -> Repository:
@@ -20,10 +23,16 @@ def mkrepo(owner: str, name: str) -> Repository:
     )
 
 
-@pytest.mark.parametrize("tomlfile,expected", filecases("config", "*.toml"))
+@pytest.mark.parametrize(
+    "tomlfile",
+    sorted((DATA_DIR / "config").glob("*.toml")),
+    ids=attrgetter("name"),
+)
 @pytest.mark.usefixtures("tmp_home")
-def test_parse_config(tomlfile: Path, expected: Any) -> None:
+def test_parse_config(tomlfile: Path) -> None:
     config = Configuration.from_toml_file(tomlfile)
+    with tomlfile.with_suffix(".json").open() as fp:
+        expected = json.load(fp)
     if expected["state_file"] is None:
         expected["state_file"] = get_default_state_file()
     for key in ("auth_token_file", "state_file"):
