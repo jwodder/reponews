@@ -130,6 +130,11 @@ Options
                                 "`Configuration`_" below for the default config
                                 file location.
 
+--dump-repos                    Instead of fetching repository activity, dump
+                                the set of tracked repositories and their
+                                configured activity preferences as a JSON
+                                document
+
 -E FILE, --env FILE             Load environment variables from the given
                                 ``.env`` file.  By default, environment
                                 variables are loaded from the first file named

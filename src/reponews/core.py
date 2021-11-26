@@ -203,6 +203,13 @@ class RepoNews:
             except NotFoundError:
                 log.warning("Repo %s/%s does not exist!", owner, name)
 
+    def dump_repo_prefs(self) -> Dict[str, dict]:
+        prefs: Dict[str, dict] = {}
+        for repo, is_affiliated in self.get_repositories():
+            activity = self.config.get_repo_activity_prefs(repo, is_affiliated)
+            prefs[str(repo)] = activity.dict()
+        return prefs
+
     def compose_email_body(self, events: List[Event]) -> str:
         return "\n\n".join(map(str, events))
 
