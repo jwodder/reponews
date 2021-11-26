@@ -62,9 +62,42 @@ class RepoSpec(BaseModel):
             raise ValueError(f"Invalid repo spec: {value!r}")
 
 
+class RepoSpecKey(str):
+    # Like RepoSpec, but usable as a key in a dict that can be JSONified by
+    # pydantic.  (We're not using RepoSpec itself as such a key because we want
+    # RepoSpecs to be expanded into dicts when JSONified.)
+    owner: str
+    name: Optional[str]
+
+    def __init__(self, s: str) -> None:
+        owner, name = s.split("/")
+        self.owner = owner
+        self.name = None if name == "*" else name
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield str_validator
+        yield cls._validate
+        yield cls
+
+    @classmethod
+    def _validate(cls, value: str) -> str:
+        if re.fullmatch(
+            fr"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
+        ):
+            return value
+        else:
+            raise ValueError(f"Invalid repo spec: {value!r}")
+
+    @classmethod
+    def parse(cls, s: str) -> RepoSpecKey:
+        return parse_obj_as(cls, s)
+
+
 class BaseConfig(BaseModel):
     class Config:
         alias_generator = mkalias
+        allow_population_by_field_name = True
         extra = "forbid"
 
         # <https://github.com/samuelcolvin/pydantic/issues/1241>
@@ -72,7 +105,19 @@ class BaseConfig(BaseModel):
         keep_untouched = (cached_property,)
 
 
-class ActivityConfig(BaseConfig):
+class PartialActivityPrefs(BaseConfig):
+    issues: Optional[bool] = None
+    pull_requests: Optional[bool] = None
+    discussions: Optional[bool] = None
+    releases: Optional[bool] = None
+    tags: Optional[bool] = None
+    released_tags: Optional[bool] = None
+    stars: Optional[bool] = None
+    forks: Optional[bool] = None
+    my_activity: Optional[bool] = None
+
+
+class ActivityPrefs(PartialActivityPrefs):
     issues: bool = True
     pull_requests: bool = True
     discussions: bool = True
@@ -82,6 +127,40 @@ class ActivityConfig(BaseConfig):
     stars: bool = True
     forks: bool = True
     my_activity: bool = False
+
+    def get_activity_types(self) -> Iterator[ActivityType]:
+        if self.issues:
+            yield ActivityType.ISSUE
+        if self.pull_requests:
+            yield ActivityType.PR
+        if self.discussions:
+            yield ActivityType.DISCUSSION
+        if self.releases:
+            yield ActivityType.RELEASE
+        if self.tags:
+            yield ActivityType.TAG
+        if self.stars:
+            yield ActivityType.STAR
+        if self.forks:
+            yield ActivityType.FORK
+
+    def update(self, prefs: PartialActivityPrefs) -> None:
+        pd = dict(prefs)
+        for field_name in self.__fields__.keys():
+            v = pd[field_name]
+            if v is not None:
+                assert isinstance(v, bool)
+                setattr(self, field_name, v)
+
+
+class RepoActivityPrefs(PartialActivityPrefs):
+    # TODO: include: bool = True
+    pass
+
+
+class ActivityConfig(PartialActivityPrefs):
+    affiliated: PartialActivityPrefs = Field(default_factory=PartialActivityPrefs)
+    repo: Dict[RepoSpecKey, RepoActivityPrefs] = Field(default_factory=dict)
 
 
 class ReposConfig(BaseConfig):
@@ -179,21 +258,21 @@ class Configuration(BaseConfig):
                 " GITHUB_TOKEN or GH_TOKEN environment variable."
             )
 
-    def get_activity_types(self) -> Iterator[ActivityType]:
-        if self.activity.issues:
-            yield ActivityType.ISSUE
-        if self.activity.pull_requests:
-            yield ActivityType.PR
-        if self.activity.discussions:
-            yield ActivityType.DISCUSSION
-        if self.activity.releases:
-            yield ActivityType.RELEASE
-        if self.activity.tags:
-            yield ActivityType.TAG
-        if self.activity.stars:
-            yield ActivityType.STAR
-        if self.activity.forks:
-            yield ActivityType.FORK
+    def get_repo_activity_prefs(
+        self, repo: Repository, is_affiliated: bool
+    ) -> ActivityPrefs:
+        prefs = ActivityPrefs()
+        prefs.update(self.activity)
+        if is_affiliated:
+            prefs.update(self.activity.affiliated)
+        for spec in [f"{repo.owner}/*", str(repo)]:
+            try:
+                p = self.activity.repo[RepoSpecKey.parse(spec)]
+            except KeyError:
+                pass
+            else:
+                prefs.update(p)
+        return prefs
 
     @cached_property
     def inclusions(self) -> RepoInclusions:

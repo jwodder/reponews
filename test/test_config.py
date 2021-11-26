@@ -2,10 +2,10 @@ from os.path import expanduser
 from pathlib import Path
 from typing import Any, List, Tuple
 import pytest
-from reponews.config import Configuration, ReposConfig
+from reponews.config import ActivityPrefs, Configuration, ReposConfig
 from reponews.types import Repository, User
 from reponews.util import get_default_state_file
-from testlib import filecases
+from testlib import DATA_DIR, filecases
 
 
 def mkrepo(owner: str, name: str) -> Repository:
@@ -21,8 +21,8 @@ def mkrepo(owner: str, name: str) -> Repository:
 
 
 @pytest.mark.parametrize("tomlfile,expected", filecases("config", "*.toml"))
-def test_parse_config(tmp_home: Path, tomlfile: Path, expected: Any) -> None:
-    (tmp_home / ".github").touch()
+@pytest.mark.usefixtures("tmp_home")
+def test_parse_config(tomlfile: Path, expected: Any) -> None:
     config = Configuration.from_toml_file(tomlfile)
     if expected["state_file"] is None:
         expected["state_file"] = get_default_state_file()
@@ -90,3 +90,271 @@ def test_inclusions(
         assert not config.is_repo_excluded(repo)
     for repo in excluded_repos:
         assert config.is_repo_excluded(repo)
+
+
+@pytest.mark.parametrize(
+    "cfgname,repo,is_affiliated,prefs",
+    [
+        (
+            "empty.toml",
+            mkrepo("owner", "repo"),
+            True,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "empty.toml",
+            mkrepo("owner", "repo"),
+            False,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "full.toml",
+            mkrepo("owner", "repo"),
+            True,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=False,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=True,
+            ),
+        ),
+        (
+            "full.toml",
+            mkrepo("owner", "repo"),
+            False,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=False,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=True,
+            ),
+        ),
+        (
+            "repo-activity01.toml",
+            mkrepo("luser", "repo"),
+            True,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=False,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity01.toml",
+            mkrepo("luser", "repo"),
+            False,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity01.toml",
+            mkrepo("owner", "project"),
+            False,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=False,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=True,
+            ),
+        ),
+        (
+            "repo-activity01.toml",
+            mkrepo("owner", "repo"),
+            False,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=False,
+                tags=False,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity01.toml",
+            mkrepo("owner", "repo"),
+            True,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=False,
+                discussions=True,
+                releases=False,
+                tags=False,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity02.toml",
+            mkrepo("luser", "repo"),
+            True,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=False,
+                discussions=False,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=False,
+                forks=False,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity02.toml",
+            mkrepo("luser", "repo"),
+            False,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=True,
+                discussions=False,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=False,
+                forks=False,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity02.toml",
+            mkrepo("owner", "project"),
+            False,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=True,
+                discussions=False,
+                releases=True,
+                tags=False,
+                released_tags=False,
+                stars=True,
+                forks=False,
+                my_activity=True,
+            ),
+        ),
+        (
+            "repo-activity02.toml",
+            mkrepo("owner", "repo"),
+            False,
+            ActivityPrefs(
+                issues=False,
+                pull_requests=True,
+                discussions=False,
+                releases=False,
+                tags=False,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "repo-activity02.toml",
+            mkrepo("owner", "repo"),
+            True,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=False,
+                discussions=False,
+                releases=False,
+                tags=False,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "yestags.toml",
+            mkrepo("owner", "repo"),
+            True,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=True,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+        (
+            "yestags.toml",
+            mkrepo("owner", "repo"),
+            False,
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=True,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+        ),
+    ],
+)
+def test_get_repo_activity_prefs(
+    cfgname: str, repo: Repository, is_affiliated: bool, prefs: ActivityPrefs
+) -> None:
+    config = Configuration.from_toml_file(DATA_DIR / "config" / cfgname)
+    assert config.get_repo_activity_prefs(repo, is_affiliated) == prefs

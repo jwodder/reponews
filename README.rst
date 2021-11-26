@@ -255,6 +255,31 @@ result in an error.
         When false (the default), activity performed by the authenticated user
         is not reported.
 
+    ``affiliated`` : table
+        A subtable describing what types of repository activity to fetch &
+        track for repositories affiliated with the authenticated user.  The
+        table's keys are the same as the boolean keys of
+        ``[reponews.activity]``.
+
+    ``repo`` : table
+        A subtable describing what types of repository activity to fetch &
+        track for specific repositories or repositories belonging to a given
+        user/organization.  The keys of the subtable must be of the form
+        ``"owner/name"`` (for a specific repository) or ``"owner/*"`` (for all
+        repositories belonging to a given user/organization), and the values
+        must be subtables with the same boolean keys as
+        ``[reponews.activity]``.
+
+    When determining the activity to fetch & track for a repository
+    ``owner/name``, each setting is looked up in the relevant tables in the
+    following order, from highest precedence to lowest precedence:
+
+    1. ``[reponews.activity.repo."owner/name"]``
+    2. ``[reponews.activity.repo."owner/*"]``
+    3. ``[reponews.activity.affiliated]`` (if the repository is affiliated with
+       the authenticated user)
+    4. ``[reponews.activity]``
+
 ``repos`` : table
     A subtable describing what repositories to track.  This table may contain
     the following keys:
@@ -287,11 +312,11 @@ result in an error.
 Sending E-Mail
 ==============
 
-``reponews`` uses `outgoing`_ for sending e-mail, allowing it to handle
-multiple sending methods like sendmail, SMTP, and more.  The `outgoing
-configuration`_ can be located in the ``reponews`` configuration file (as an
-``[outgoing]`` table) or in ``outgoing``'s default configuration file.  See
-`outgoing's documentation <https://outgoing.rtfd.io>`_ for more information.
+``reponews`` uses outgoing_ for sending e-mail, allowing it to handle multiple
+sending methods like sendmail, SMTP, and more.  The `outgoing configuration`_
+can be located in the ``reponews`` configuration file (as an ``[outgoing]``
+table) or in ``outgoing``'s default configuration file.  See `outgoing's
+documentation <https://outgoing.rtfd.io>`_ for more information.
 
 .. _outgoing: https://github.com/jwodder/outgoing
 

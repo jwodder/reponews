@@ -16,12 +16,24 @@
         "issues": false,
         "pull_requests": false,
         "discussions": true,
-        "releases": true,
-        "tags": true,
-        "released_tags": false,
-        "stars": true,
-        "forks": true,
-        "my_activity": true
+        "releases": null,
+        "tags": null,
+        "released_tags": null,
+        "stars": null,
+        "forks": null,
+        "my_activity": true,
+        "affiliated": {
+            "issues": null,
+            "pull_requests": null,
+            "discussions": null,
+            "releases": null,
+            "tags": null,
+            "released_tags": null,
+            "stars": null,
+            "forks": null,
+            "my_activity": null
+        },
+        "repo": {}
     },
     "repos": {
         "affiliations": ["OWNER"],

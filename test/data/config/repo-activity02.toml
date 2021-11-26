@@ -1,0 +1,19 @@
+[reponews.activity]
+issues = false
+discussions = false
+stars = false
+forks = false
+
+[reponews.activity.affiliated]
+issues = true
+pull-requests = false
+
+[reponews.activity.repo."owner/*"]
+tags = false
+stars = true
+my-activity = true
+
+[reponews.activity.repo."owner/repo"]
+releases = false
+forks = true
+my-activity = false

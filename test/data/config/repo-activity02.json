@@ -1,0 +1,60 @@
+{
+    "recipient": null,
+    "sender": null,
+    "subject": "[reponews] New activity on your GitHub repositories",
+    "auth_token": null,
+    "auth_token_file": null,
+    "state_file": null,
+    "api_url": "https://api.github.com/graphql",
+    "activity": {
+        "issues": false,
+        "pull_requests": null,
+        "discussions": false,
+        "releases": null,
+        "tags": null,
+        "released_tags": null,
+        "stars": false,
+        "forks": false,
+        "my_activity": null,
+        "affiliated": {
+            "issues": true,
+            "pull_requests": false,
+            "discussions": null,
+            "releases": null,
+            "tags": null,
+            "released_tags": null,
+            "stars": null,
+            "forks": null,
+            "my_activity": null
+        },
+        "repo": {
+            "owner/*": {
+                "issues": null,
+                "pull_requests": null,
+                "discussions": null,
+                "releases": null,
+                "tags": false,
+                "released_tags": null,
+                "stars": true,
+                "forks": null,
+                "my_activity": true
+            },
+            "owner/repo": {
+                "issues": null,
+                "pull_requests": null,
+                "discussions": null,
+                "releases": false,
+                "tags": null,
+                "released_tags": null,
+                "stars": null,
+                "forks": true,
+                "my_activity": false
+            }
+        }
+    },
+    "repos": {
+        "affiliations": ["OWNER", "ORGANIZATION_MEMBER", "COLLABORATOR"],
+        "include": [],
+        "exclude": []
+    }
+}

@@ -1,0 +1,11 @@
+[reponews.activity.affiliated]
+issues = false
+pull-requests = false
+
+[reponews.activity.repo."owner/*"]
+tags = false
+my-activity = true
+
+[reponews.activity.repo."owner/repo"]
+releases = false
+my-activity = false

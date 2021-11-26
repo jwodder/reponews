@@ -17,8 +17,8 @@
         "forks": null,
         "my_activity": null,
         "affiliated": {
-            "issues": null,
-            "pull_requests": null,
+            "issues": false,
+            "pull_requests": false,
             "discussions": null,
             "releases": null,
             "tags": null,
@@ -27,7 +27,30 @@
             "forks": null,
             "my_activity": null
         },
-        "repo": {}
+        "repo": {
+            "owner/*": {
+                "issues": null,
+                "pull_requests": null,
+                "discussions": null,
+                "releases": null,
+                "tags": false,
+                "released_tags": null,
+                "stars": null,
+                "forks": null,
+                "my_activity": true
+            },
+            "owner/repo": {
+                "issues": null,
+                "pull_requests": null,
+                "discussions": null,
+                "releases": false,
+                "tags": null,
+                "released_tags": null,
+                "stars": null,
+                "forks": null,
+                "my_activity": false
+            }
+        }
     },
     "repos": {
         "affiliations": ["OWNER", "ORGANIZATION_MEMBER", "COLLABORATOR"],

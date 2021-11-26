@@ -5,7 +5,7 @@ from email.message import EmailMessage
 import json
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Set
+from typing import Any, Dict, Iterator, List, Set, Tuple
 from eletter import compose
 from pydantic import BaseModel, Field
 from .client import Client
@@ -126,8 +126,9 @@ class RepoNews:
 
     def get_new_activity(self) -> List[Event]:
         events: List[Event] = []
-        for repo in self.get_repositories():
-            types = list(self.config.get_activity_types())
+        for repo, is_affiliated in self.get_repositories():
+            activity = self.config.get_repo_activity_prefs(repo, is_affiliated)
+            types = list(activity.get_activity_types())
             if not types:
                 log.info("No tracked activity configured for %s", repo)
                 continue
@@ -135,7 +136,7 @@ class RepoNews:
                 repo, types, self.state.get_cursors(repo)
             )
             events2: List[RepoActivity]
-            if not self.config.activity.my_activity:
+            if not activity.my_activity:
                 events2 = []
                 for ev in new_events:
                     if ev.is_mine:
@@ -148,7 +149,7 @@ class RepoNews:
             if (
                 ActivityType.RELEASE in types
                 and ActivityType.TAG in types
-                and not self.config.activity.released_tags
+                and not activity.released_tags
             ):
                 events2 = []
                 release_tags = set()
@@ -174,9 +175,9 @@ class RepoNews:
         events.sort(key=attrgetter("timestamp"))
         return events
 
-    def get_repositories(self) -> Iterator[Repository]:
+    def get_repositories(self) -> Iterator[Tuple[Repository, bool]]:
         seen: Set[str] = set()
-        for repo in self._get_repositories():
+        for repo, is_affiliated in self._get_repositories():
             if self.config.is_repo_excluded(repo):
                 log.info("Repo %s is excluded by config; skipping", repo)
             elif repo.id in seen:
@@ -185,18 +186,20 @@ class RepoNews:
                 )
             else:
                 seen.add(repo.id)
-                yield repo
+                yield (repo, is_affiliated)
 
-    def _get_repositories(self) -> Iterator[Repository]:
-        yield from self.client.get_affiliated_repos(self.config.repos.affiliations)
+    def _get_repositories(self) -> Iterator[Tuple[Repository, bool]]:
+        for repo in self.client.get_affiliated_repos(self.config.repos.affiliations):
+            yield (repo, True)
         for owner in self.config.get_included_repo_owners():
             try:
-                yield from self.client.get_owner_repos(owner)
+                for repo in self.client.get_owner_repos(owner):
+                    yield (repo, False)
             except NotFoundError:
                 log.warning("User %s does not exist!", owner)
         for (owner, name) in self.config.get_included_repos():
             try:
-                yield self.client.get_repo(owner, name)
+                yield (self.client.get_repo(owner, name), False)
             except NotFoundError:
                 log.warning("Repo %s/%s does not exist!", owner, name)
 
