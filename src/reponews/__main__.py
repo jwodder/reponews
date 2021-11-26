@@ -6,6 +6,7 @@ import click
 from click_loglevel import LogLevel
 from outgoing import Sender, from_config_file
 from platformdirs import user_config_path
+from . import __version__
 from .core import RepoNews
 from .util import UserError, log
 
@@ -13,6 +14,12 @@ DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
 
 
 @click.command()
+@click.version_option(
+    __version__,
+    "-V",
+    "--version",
+    message="%(prog)s %(version)s",
+)
 @click.option(
     "-c",
     "--config",
