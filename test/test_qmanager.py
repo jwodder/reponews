@@ -1617,11 +1617,15 @@ def test_activity_query_releases() -> None:
                                 "tagName": "v0.1.1",
                                 "author": None,
                                 "createdAt": "2021-11-17T16:12:34Z",
-                                "description": "* Fixed a bug in the thingy.",
+                                "description": (
+                                    "* Fixed a bug in the thingy.\r\n"
+                                    "* Hopefully didn't introduce any new bugs"
+                                ),
                                 "descriptionHTML": (
-                                    "<div>"
-                                    "<ul><li>Fixed a bug in the thingy.</li></ul>"
-                                    "</div>"
+                                    "<ul>\n"
+                                    "<li>Fixed a bug in the thingy.</li>\n"
+                                    "<li>Hopefully didn't introduce any new bugs</li>\n"
+                                    "</ul>"
                                 ),
                                 "isPrerelease": False,
                                 "isDraft": False,
@@ -1663,8 +1667,16 @@ def test_activity_query_releases() -> None:
             name="v0.1.0 — Bug fix",
             tagName="v0.1.1",
             author=None,
-            description="* Fixed a bug in the thingy.",
-            descriptionHTML="<div><ul><li>Fixed a bug in the thingy.</li></ul></div>",
+            description=(
+                "* Fixed a bug in the thingy.\n"
+                "* Hopefully didn't introduce any new bugs"
+            ),
+            descriptionHTML=(
+                "<ul>\n"
+                "<li>Fixed a bug in the thingy.</li>\n"
+                "<li>Hopefully didn't introduce any new bugs</li>\n"
+                "</ul>"
+            ),
             isPrerelease=False,
             isDraft=False,
             url="https://github.com/viewer/repo/releases/tag/v0.1.1",

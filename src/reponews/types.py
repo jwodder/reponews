@@ -7,7 +7,7 @@ from enum import Enum
 import json
 from typing import Any, ClassVar, Dict, Optional, Type
 from eletter import reply_quote
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from .qlobjs import (
     DISCUSSION_CONNECTION,
     DISCUSSION_LAST_CONNECTION,
@@ -25,7 +25,7 @@ from .qlobjs import (
     TAG_LAST_CONNECTION,
     Object,
 )
-from .util import BogusEventError, T, log
+from .util import BogusEventError, T, dos2unix, log
 
 
 class Affiliation(Enum):
@@ -147,6 +147,10 @@ class NewReleaseEvent(RepoActivity):
     isDraft: bool
     isPrerelease: bool
     url: str
+
+    @validator("description")
+    def _dos2unix(cls, v: Optional[str]) -> Optional[str]:  # noqa: B902, U100
+        return dos2unix(v) if v is not None else None
 
     @classmethod
     def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewReleaseEvent":
