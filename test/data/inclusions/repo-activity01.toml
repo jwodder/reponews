@@ -1,0 +1,11 @@
+[reponews.repos]
+include = ["owner/*", "owner/name", "my/repo"]
+
+[reponews.activity.repo."org/*"]
+forks = false
+
+[reponews.activity.repo."org/name"]
+forks = true
+
+[reponews.activity.repo."your/project"]
+my-activity = true

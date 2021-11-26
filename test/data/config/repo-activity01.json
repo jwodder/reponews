@@ -37,7 +37,8 @@
                 "released_tags": null,
                 "stars": null,
                 "forks": null,
-                "my_activity": true
+                "my_activity": true,
+                "include": true
             },
             "owner/repo": {
                 "issues": null,
@@ -48,7 +49,8 @@
                 "released_tags": null,
                 "stars": null,
                 "forks": null,
-                "my_activity": false
+                "my_activity": false,
+                "include": true
             }
         }
     },

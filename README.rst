@@ -215,7 +215,7 @@ result in an error.
     =======  =================================================================
 
 ``api-url`` : URL
-    The GraphQL endpoint to query; defaults to <https://api.github.com/graphql>
+    The GraphQL endpoint to query; defaults to "https://api.github.com/graphql"
 
 ``activity`` : table
     A subtable describing what types of repository activity to fetch & track.
@@ -271,6 +271,12 @@ result in an error.
         must be subtables with the same boolean keys as
         ``[reponews.activity]``.
 
+        By default, all repositories and repository owners listed as keys in
+        ``[reponews.activity.repo]`` will be tracked by ``reponews`` just as if
+        they were listed under ``reponews.repos.include`` (see below).  This
+        can be disabled for a single key by setting ``include = false`` in the
+        key's subtable.
+
     When determining the activity to fetch & track for a repository
     ``owner/name``, each setting is looked up in the relevant tables in the
     following order, from highest precedence to lowest precedence:
@@ -308,6 +314,55 @@ result in an error.
         ``affiliations`` and ``include`` settings.
 
 .. _discussions: https://docs.github.com/en/discussions
+
+
+Example Configuration
+---------------------
+
+.. code:: toml
+
+    [reponews]
+    recipient = "luser@example.com"
+
+    sender = "RepoNews Bot <reponews@example.net>"
+
+    # Fetch the GitHub OAuth token from the "token.txt" file next to the config
+    # file:
+    auth-token-file = "token.txt"
+
+    state-file = "~/.cache/reponews.json"
+
+    [reponews.activity]
+    # Don't report new issues or tags:
+    issues = false
+    tags = false
+
+    [reponews.activity.affiliated]
+    # Do report new issues for affiliated repositories:
+    issues = true
+
+    [reponews.activity.repo."pypa/*"]
+    # Don't report forks of pypa/* repositories:
+    forks = false
+    # Don't track all pypa/* repositories; only track those we're affiliated
+    # with and those listed under `reponews.repos.include`.
+    #
+    # Without this setting, the presence of `[reponews.activity.repo."pypa/*"]`
+    # would cause reponews to track all repositories belonging to the pypa
+    # organization.
+    include = false
+
+    [reponews.repos]
+    affiliations = ["OWNER", "ORGANIZATION_MEMBER"]
+    include = [
+        "pypa/packaging",
+        "pypa/pip",
+        "pypa/setuptools",
+        "some-user/*",
+    ]
+    exclude = [
+        "some-user/boring-repo",
+    ]
 
 
 Sending E-Mail

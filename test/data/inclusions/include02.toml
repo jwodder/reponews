@@ -1,0 +1,3 @@
+[reponews.repos]
+include = ["owner/*", "me/*"]
+exclude = ["owner/name", "me/*"]

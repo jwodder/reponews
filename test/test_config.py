@@ -3,8 +3,9 @@ from operator import attrgetter
 from os.path import expanduser
 from pathlib import Path
 from typing import List, Tuple
+from pydantic import BaseModel
 import pytest
-from reponews.config import ActivityPrefs, Configuration, ReposConfig
+from reponews.config import ActivityPrefs, Configuration
 from reponews.types import Repository, User
 from reponews.util import get_default_state_file
 
@@ -41,68 +42,31 @@ def test_parse_config(tomlfile: Path) -> None:
     assert config.for_json() == expected
 
 
+class InclusionCase(BaseModel):
+    included_owners: List[str]
+    included_repos: List[Tuple[str, str]]
+    not_excluded_repos: List[Tuple[str, str]]
+    excluded_repos: List[Tuple[str, str]]
+
+
 @pytest.mark.parametrize(
-    "repos_config,included_owners,included_repos,not_excluded_repos,excluded_repos",
-    [
-        (ReposConfig(), [], [], [mkrepo("owner", "name")], []),
-        (
-            ReposConfig(include=["owner/*", "owner/name", "my/repo"]),
-            ["owner"],
-            [("my", "repo")],
-            [
-                mkrepo("owner", "name"),
-                mkrepo("owner", "project"),
-                mkrepo("my", "repo"),
-                mkrepo("your", "project"),
-            ],
-            [],
-        ),
-        (
-            ReposConfig(include=["owner/*", "me/*"], exclude=["owner/name", "me/*"]),
-            ["owner"],
-            [],
-            [mkrepo("owner", "project"), mkrepo("your", "project")],
-            [mkrepo("owner", "name"), mkrepo("me", "repo")],
-        ),
-        (
-            ReposConfig(
-                include=["owner/*", "me/repo", "your/hobby"],
-                exclude=["owner/name", "me/*", "your/widget"],
-            ),
-            ["owner"],
-            [("your", "hobby")],
-            [
-                mkrepo("owner", "project"),
-                mkrepo("your", "hobby"),
-                mkrepo("your", "project"),
-            ],
-            [
-                mkrepo("owner", "name"),
-                mkrepo("me", "repo"),
-                mkrepo("me", "project"),
-                mkrepo("your", "widget"),
-            ],
-        ),
-    ],
+    "tomlfile",
+    sorted((DATA_DIR / "inclusions").glob("*.toml")),
+    ids=attrgetter("name"),
 )
-def test_inclusions(
-    repos_config: ReposConfig,
-    included_owners: List[str],
-    included_repos: List[Tuple[str, str]],
-    not_excluded_repos: List[Repository],
-    excluded_repos: List[Repository],
-) -> None:
-    config = Configuration(recipient="me@here.there", repos=repos_config)
-    assert config.get_included_repo_owners() == included_owners
-    assert config.get_included_repos() == included_repos
-    for repo in not_excluded_repos:
-        assert not config.is_repo_excluded(repo)
-    for repo in excluded_repos:
-        assert config.is_repo_excluded(repo)
+def test_inclusions(tomlfile: Path) -> None:
+    config = Configuration.from_toml_file(DATA_DIR / "inclusions" / tomlfile)
+    expected = InclusionCase.parse_file(tomlfile.with_suffix(".json"))
+    assert config.get_included_repo_owners() == expected.included_owners
+    assert config.get_included_repos() == expected.included_repos
+    for owner, name in expected.not_excluded_repos:
+        assert not config.is_repo_excluded(mkrepo(owner, name))
+    for owner, name in expected.excluded_repos:
+        assert config.is_repo_excluded(mkrepo(owner, name))
 
 
 @pytest.mark.parametrize(
-    "cfgname,repo,is_affiliated,prefs",
+    "tomlfile,repo,is_affiliated,prefs",
     [
         (
             "empty.toml",
@@ -363,7 +327,7 @@ def test_inclusions(
     ],
 )
 def test_get_repo_activity_prefs(
-    cfgname: str, repo: Repository, is_affiliated: bool, prefs: ActivityPrefs
+    tomlfile: str, repo: Repository, is_affiliated: bool, prefs: ActivityPrefs
 ) -> None:
-    config = Configuration.from_toml_file(DATA_DIR / "config" / cfgname)
+    config = Configuration.from_toml_file(DATA_DIR / "config" / tomlfile)
     assert config.get_repo_activity_prefs(repo, is_affiliated) == prefs

@@ -154,8 +154,7 @@ class ActivityPrefs(PartialActivityPrefs):
 
 
 class RepoActivityPrefs(PartialActivityPrefs):
-    # TODO: include: bool = True
-    pass
+    include: bool = True
 
 
 class ActivityConfig(PartialActivityPrefs):
@@ -180,9 +179,13 @@ class RepoInclusions(BaseModel):
     )
 
     @classmethod
-    def from_repos_config(cls, repos_config: ReposConfig) -> RepoInclusions:
+    def from_repos_config(
+        cls, repos_config: ReposConfig, preffed_repos: List[RepoSpecKey]
+    ) -> RepoInclusions:
         rinc = cls()
-        for rs in repos_config.include:
+        for rs in repos_config.include + [
+            RepoSpec(owner=r.owner, name=r.name) for r in preffed_repos
+        ]:
             if rs.name is None:
                 rinc.included_owners.add(rs.owner)
             else:
@@ -276,7 +279,9 @@ class Configuration(BaseConfig):
 
     @cached_property
     def inclusions(self) -> RepoInclusions:
-        return RepoInclusions.from_repos_config(self.repos)
+        return RepoInclusions.from_repos_config(
+            self.repos, [r for r, pref in self.activity.repo.items() if pref.include]
+        )
 
     def get_included_repo_owners(self) -> List[str]:
         return self.inclusions.get_included_repo_owners()

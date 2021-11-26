@@ -1,0 +1,12 @@
+{
+    "included_owners": ["owner"],
+    "included_repos": [],
+    "not_excluded_repos": [
+        ["owner", "project"],
+        ["your", "project"]
+    ],
+    "excluded_repos": [
+        ["owner", "name"],
+        ["me", "repo"]
+    ]
+}

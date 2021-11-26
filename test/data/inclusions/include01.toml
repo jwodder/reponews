@@ -1,0 +1,2 @@
+[reponews.repos]
+include = ["owner/*", "owner/name", "my/repo"]
