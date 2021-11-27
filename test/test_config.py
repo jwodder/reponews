@@ -362,6 +362,14 @@ def test_get_auth_token_file(monkeypatch: pytest.MonkeyPatch, tmp_home: Path) ->
     assert config.get_auth_token() == "abcdef"
 
 
+@pytest.mark.usefixtures("tmp_home")
+def test_get_auth_token_missing_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "QWERTY")
+    config = Configuration(auth_token_file="~/token.txt")
+    with pytest.raises(FileNotFoundError):
+        config.get_auth_token()
+
+
 def test_get_auth_token_envvar1(
     monkeypatch: pytest.MonkeyPatch, tmp_home: Path
 ) -> None:
