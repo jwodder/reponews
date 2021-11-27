@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import pytest
 from reponews.config import ActivityPrefs, Configuration
 from reponews.types import Repository, User
-from reponews.util import get_default_state_file
+from reponews.util import UserError, get_default_state_file
 
 DATA_DIR = Path(__file__).with_name("data")
 
@@ -331,3 +331,80 @@ def test_get_repo_activity_prefs(
 ) -> None:
     config = Configuration.from_toml_file(DATA_DIR / "config" / tomlfile)
     assert config.get_repo_activity_prefs(repo, is_affiliated) == prefs
+
+
+def test_get_auth_token_explicit(
+    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "QWERTY")
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration(
+        auth_token="123456",
+        auth_token_file="~/token.txt",
+    )
+    assert config.get_auth_token() == "123456"
+
+
+def test_get_auth_token_file(monkeypatch: pytest.MonkeyPatch, tmp_home: Path) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "QWERTY")
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration(auth_token_file="~/token.txt")
+    assert config.get_auth_token() == "abcdef"
+
+
+def test_get_auth_token_envvar1(
+    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "QWERTY")
+    monkeypatch.setenv("GH_TOKEN", "QR")
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration()
+    assert config.get_auth_token() == "QWERTY"
+
+
+def test_get_auth_token_envvar1_empty(
+    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "")
+    monkeypatch.setenv("GH_TOKEN", "QR")
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration()
+    assert config.get_auth_token() == "QR"
+
+
+def test_get_auth_token_envvar2(
+    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
+) -> None:
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.setenv("GH_TOKEN", "QR")
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration()
+    assert config.get_auth_token() == "QR"
+
+
+def test_get_auth_token_notset(monkeypatch: pytest.MonkeyPatch, tmp_home: Path) -> None:
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration()
+    with pytest.raises(UserError) as excinfo:
+        config.get_auth_token()
+    assert str(excinfo.value) == (
+        "GitHub OAuth token not set.  Specify in config file or via"
+        " GITHUB_TOKEN or GH_TOKEN environment variable."
+    )
+
+
+def test_get_auth_token_envvar2_empty(
+    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
+) -> None:
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.setenv("GH_TOKEN", "")
+    (tmp_home / "token.txt").write_text("abcdef\n")
+    config = Configuration()
+    with pytest.raises(UserError) as excinfo:
+        config.get_auth_token()
+    assert str(excinfo.value) == (
+        "GitHub OAuth token not set.  Specify in config file or via"
+        " GITHUB_TOKEN or GH_TOKEN environment variable."
+    )
