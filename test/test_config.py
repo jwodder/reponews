@@ -3,7 +3,7 @@ from operator import attrgetter
 from os.path import expanduser
 from pathlib import Path
 from typing import List, Tuple
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import pytest
 from reponews.config import ActivityPrefs, Configuration
 from reponews.types import Repository, User
@@ -40,6 +40,16 @@ def test_parse_config(tomlfile: Path) -> None:
         if expected[key] is not None:
             expected[key] = expanduser(expected[key]).format(config=tomlfile.parent)
     assert config.for_json() == expected
+
+
+@pytest.mark.parametrize(
+    "tomlfile",
+    sorted((DATA_DIR / "bad-config").glob("*.toml")),
+    ids=attrgetter("name"),
+)
+def test_parse_bad_config(tomlfile: Path) -> None:
+    with pytest.raises(ValidationError):
+        Configuration.from_toml_file(tomlfile)
 
 
 class InclusionCase(BaseModel):
