@@ -68,6 +68,10 @@ class Event(BaseModel):
     timestamp: datetime  # Used for sorting
     repo: Repository
 
+    @abstractmethod
+    def render(self) -> str:
+        ...
+
 
 class RepoActivity(Event):
     CONNECTION: ClassVar[Object]
@@ -76,11 +80,6 @@ class RepoActivity(Event):
     @classmethod
     @abstractmethod
     def from_node(cls: Type[T], _repo: Repository, node: Dict[str, Any]) -> T:
-        ...
-
-    @property
-    @abstractmethod
-    def logmsg(self) -> str:
         ...
 
     @property
@@ -103,19 +102,18 @@ class NewIssueoidEvent(RepoActivity):
         node["repo"] = repo
         return cls.parse_obj(node)
 
-    @property
-    def logmsg(self) -> str:
-        return f"{self.TYPE} #{self.number}: {self.title!r}"
+    def render(self) -> str:
+        return (
+            f"[{self.repo.nameWithOwner}] {self.TYPE.upper()} #{self.number}:"
+            f" {self.title} (@{self.author.login})\n<{self.url}>"
+        )
 
     @property
     def is_mine(self) -> bool:
         return self.author.isViewer
 
     def __str__(self) -> str:
-        return (
-            f"[{self.repo.nameWithOwner}] {self.TYPE.upper()} #{self.number}:"
-            f" {self.title} (@{self.author.login})\n<{self.url}>"
-        )
+        return f"{self.TYPE} #{self.number}: {self.title!r}"
 
 
 class NewIssueEvent(NewIssueoidEvent):
@@ -159,15 +157,7 @@ class NewReleaseEvent(RepoActivity):
         node["repo"] = repo
         return cls.parse_obj(node)
 
-    @property
-    def logmsg(self) -> str:
-        return f"release {self.tagName}: {self.name!r}"
-
-    @property
-    def is_mine(self) -> bool:
-        return self.author is not None and self.author.isViewer
-
-    def __str__(self) -> str:
+    def render(self) -> str:
         s = f"[{self.repo.nameWithOwner}] RELEASE {self.tagName}"
         if self.isDraft:
             s += " [draft]"
@@ -181,6 +171,13 @@ class NewReleaseEvent(RepoActivity):
         if self.description:
             s += "\n" + reply_quote(self.description).rstrip("\n")
         return s
+
+    @property
+    def is_mine(self) -> bool:
+        return self.author is not None and self.author.isViewer
+
+    def __str__(self) -> str:
+        return f"release {self.tagName}: {self.name!r}"
 
 
 class NewTagEvent(RepoActivity):
@@ -216,20 +213,19 @@ class NewTagEvent(RepoActivity):
         node["repo"] = repo
         return cls.parse_obj(node)
 
-    @property
-    def logmsg(self) -> str:
-        return f"tag {self.name}"
+    def render(self) -> str:
+        s = f"[{self.repo.nameWithOwner}] TAG {self.name}"
+        if self.user is not None:
+            s += f" (@{self.user.login})"
+        s += f"\n<{self.repo.url}/releases/tag/{self.name}>"
+        return s
 
     @property
     def is_mine(self) -> bool:
         return self.user is not None and self.user.isViewer
 
     def __str__(self) -> str:
-        s = f"[{self.repo.nameWithOwner}] TAG {self.name}"
-        if self.user is not None:
-            s += f" (@{self.user.login})"
-        s += f"\n<{self.repo.url}/releases/tag/{self.name}>"
-        return s
+        return f"tag {self.name}"
 
 
 class NewStarEvent(RepoActivity):
@@ -244,16 +240,15 @@ class NewStarEvent(RepoActivity):
         node["repo"] = repo
         return cls.parse_obj(node)
 
-    @property
-    def logmsg(self) -> str:
-        return f"star by @{self.user.login}"
+    def render(self) -> str:
+        return f"★ @{self.user.login} starred {self.repo.nameWithOwner}"
 
     @property
     def is_mine(self) -> bool:
         return self.user.isViewer
 
     def __str__(self) -> str:
-        return f"★ @{self.user.login} starred {self.repo.nameWithOwner}"
+        return f"star by @{self.user.login}"
 
 
 class NewForkEvent(RepoActivity):
@@ -267,23 +262,22 @@ class NewForkEvent(RepoActivity):
         timestamp = node.pop("createdAt")
         return cls(timestamp=timestamp, repo=repo, fork=node)
 
-    @property
-    def logmsg(self) -> str:
-        return f"fork by @{self.fork.owner.login}"
+    def render(self) -> str:
+        return (
+            f"@{self.fork.owner.login} forked {self.repo.nameWithOwner}\n"
+            f"<{self.fork.url}>"
+        )
 
     @property
     def is_mine(self) -> bool:
         return self.fork.owner.isViewer
 
     def __str__(self) -> str:
-        return (
-            f"@{self.fork.owner.login} forked {self.repo.nameWithOwner}\n"
-            f"<{self.fork.url}>"
-        )
+        return f"fork by @{self.fork.owner.login}"
 
 
 class RepoTrackedEvent(Event):
-    def __str__(self) -> str:
+    def render(self) -> str:
         s = f"Now tracking repository {self.repo.nameWithOwner}\n<{self.repo.url}>"
         if self.repo.description:
             s += "\n" + reply_quote(self.repo.description).rstrip("\n")
@@ -291,14 +285,14 @@ class RepoTrackedEvent(Event):
 
 
 class RepoUntrackedEvent(Event):
-    def __str__(self) -> str:
+    def render(self) -> str:
         return f"No longer tracking repository {self.repo.nameWithOwner}"
 
 
 class RepoRenamedEvent(Event):
     old_repo: Repository
 
-    def __str__(self) -> str:
+    def render(self) -> str:
         return (
             f"Repository renamed: {self.old_repo.nameWithOwner} →"
             f" {self.repo.nameWithOwner}"

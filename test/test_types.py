@@ -293,5 +293,5 @@ def test_activity_type(
         ),
     ],
 )
-def test_event_stringification(ev: Event, s: str) -> None:
-    assert str(ev) == s
+def test_event_render(ev: Event, s: str) -> None:
+    assert ev.render() == s

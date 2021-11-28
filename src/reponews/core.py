@@ -140,9 +140,7 @@ class RepoNews:
                 events2 = []
                 for ev in new_events:
                     if ev.is_mine:
-                        log.info(
-                            "%s was created by current user; not reporting", ev.logmsg
-                        )
+                        log.info("<%s> was created by current user; not reporting", ev)
                     else:
                         events2.append(ev)
                 new_events = events2
@@ -211,7 +209,7 @@ class RepoNews:
         return prefs
 
     def compose_email_body(self, events: List[Event]) -> str:
-        return "\n\n".join(map(str, events))
+        return "\n\n".join(ev.render() for ev in events)
 
     def compose_email(self, events: List[Event]) -> EmailMessage:
         if self.config.recipient is None:

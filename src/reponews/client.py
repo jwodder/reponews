@@ -98,7 +98,7 @@ class Client:
         manager = ActivityQuery(repo=repo, types=types, cursors=cursors)
         events: List[RepoActivity] = []
         for ev in self.do_managed_query(manager):
-            log.info("Found activity on %s: %s", repo, ev.logmsg)
+            log.info("Found activity on %s: %s", repo, ev)
             events.append(ev)
         return (events, manager.cursors)
 
