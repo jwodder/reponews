@@ -5,6 +5,7 @@ from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 import json
+import sys
 from typing import Any, ClassVar, Dict, Optional, Type
 from eletter import reply_quote
 from pydantic import BaseModel, validator
@@ -26,6 +27,11 @@ from .qlobjs import (
     Object,
 )
 from .util import BogusEventError, T, dos2unix, log
+
+if sys.version_info[:2] >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 
 class Affiliation(Enum):
@@ -65,6 +71,7 @@ class Repository(BaseModel):
 
 
 class Event(BaseModel):
+    event_type: str
     timestamp: datetime  # Used for sorting
     repo: Repository
 
@@ -89,7 +96,6 @@ class RepoActivity(Event):
 
 
 class NewIssueoidEvent(RepoActivity):
-    TYPE: ClassVar[str]
     number: int
     title: str
     author: User
@@ -104,7 +110,7 @@ class NewIssueoidEvent(RepoActivity):
 
     def render(self) -> str:
         return (
-            f"[{self.repo.nameWithOwner}] {self.TYPE.upper()} #{self.number}:"
+            f"[{self.repo.nameWithOwner}] {self.event_type.upper()} #{self.number}:"
             f" {self.title} (@{self.author.login})\n<{self.url}>"
         )
 
@@ -113,30 +119,31 @@ class NewIssueoidEvent(RepoActivity):
         return self.author.isViewer
 
     def __str__(self) -> str:
-        return f"{self.TYPE} #{self.number}: {self.title!r}"
+        return f"{self.event_type} #{self.number}: {self.title!r}"
 
 
 class NewIssueEvent(NewIssueoidEvent):
     CONNECTION = ISSUE_CONNECTION
     LAST_CONNECTION = ISSUE_LAST_CONNECTION
-    TYPE = "issue"
+    event_type: Literal["issue"] = "issue"
 
 
 class NewPREvent(NewIssueoidEvent):
     CONNECTION = PR_CONNECTION
     LAST_CONNECTION = PR_LAST_CONNECTION
-    TYPE = "pr"
+    event_type: Literal["pr"] = "pr"
 
 
 class NewDiscussionEvent(NewIssueoidEvent):
     CONNECTION = DISCUSSION_CONNECTION
     LAST_CONNECTION = DISCUSSION_LAST_CONNECTION
-    TYPE = "discussion"
+    event_type: Literal["discussion"] = "discussion"
 
 
 class NewReleaseEvent(RepoActivity):
     CONNECTION = RELEASE_CONNECTION
     LAST_CONNECTION = RELEASE_LAST_CONNECTION
+    event_type: Literal["release"] = "release"
     name: Optional[str]
     tagName: str
     author: Optional[User]
@@ -183,6 +190,7 @@ class NewReleaseEvent(RepoActivity):
 class NewTagEvent(RepoActivity):
     CONNECTION = TAG_CONNECTION
     LAST_CONNECTION = TAG_LAST_CONNECTION
+    event_type: Literal["tag"] = "tag"
     name: str
     user: Optional[User]
 
@@ -231,6 +239,7 @@ class NewTagEvent(RepoActivity):
 class NewStarEvent(RepoActivity):
     CONNECTION = STAR_CONNECTION
     LAST_CONNECTION = STAR_LAST_CONNECTION
+    event_type: Literal["star"] = "star"
     user: User
 
     @classmethod
@@ -254,6 +263,7 @@ class NewStarEvent(RepoActivity):
 class NewForkEvent(RepoActivity):
     CONNECTION = FORK_CONNECTION
     LAST_CONNECTION = FORK_LAST_CONNECTION
+    event_type: Literal["fork"] = "fork"
     fork: Repository
 
     @classmethod
@@ -277,6 +287,8 @@ class NewForkEvent(RepoActivity):
 
 
 class RepoTrackedEvent(Event):
+    event_type: Literal["tracked"] = "tracked"
+
     def render(self) -> str:
         s = f"Now tracking repository {self.repo.nameWithOwner}\n<{self.repo.url}>"
         if self.repo.description:
@@ -285,11 +297,14 @@ class RepoTrackedEvent(Event):
 
 
 class RepoUntrackedEvent(Event):
+    event_type: Literal["untracked"] = "untracked"
+
     def render(self) -> str:
         return f"No longer tracking repository {self.repo.nameWithOwner}"
 
 
 class RepoRenamedEvent(Event):
+    event_type: Literal["renamed"] = "renamed"
     old_repo: Repository
 
     def render(self) -> str:
