@@ -128,7 +128,7 @@ class RepoNews:
         events: List[Event] = []
         for repo, is_affiliated in self.get_repositories():
             activity = self.config.get_repo_activity_prefs(repo, is_affiliated)
-            types = list(activity.get_activity_types())
+            types = activity.get_activity_types()
             if not types:
                 log.info("No tracked activity configured for %s", repo)
                 continue

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
 from pydantic import AnyHttpUrl, BaseModel, Field, parse_obj_as, validator
@@ -128,21 +128,23 @@ class ActivityPrefs(PartialActivityPrefs):
     forks: bool = True
     my_activity: bool = False
 
-    def get_activity_types(self) -> Iterator[ActivityType]:
+    def get_activity_types(self) -> List[ActivityType]:
+        types: List[ActivityType] = []
         if self.issues:
-            yield ActivityType.ISSUE
+            types.append(ActivityType.ISSUE)
         if self.pull_requests:
-            yield ActivityType.PR
+            types.append(ActivityType.PR)
         if self.discussions:
-            yield ActivityType.DISCUSSION
+            types.append(ActivityType.DISCUSSION)
         if self.releases:
-            yield ActivityType.RELEASE
+            types.append(ActivityType.RELEASE)
         if self.tags:
-            yield ActivityType.TAG
+            types.append(ActivityType.TAG)
         if self.stars:
-            yield ActivityType.STAR
+            types.append(ActivityType.STAR)
         if self.forks:
-            yield ActivityType.FORK
+            types.append(ActivityType.FORK)
+        return types
 
     def update(self, prefs: PartialActivityPrefs) -> None:
         pd = dict(prefs)

@@ -6,7 +6,7 @@ from typing import List, Tuple
 from pydantic import BaseModel, ValidationError
 import pytest
 from reponews.config import ActivityPrefs, Configuration
-from reponews.types import Repository, User
+from reponews.types import ActivityType, Repository, User
 from reponews.util import UserError, get_default_state_file
 
 DATA_DIR = Path(__file__).with_name("data")
@@ -341,6 +341,70 @@ def test_get_repo_activity_prefs(
 ) -> None:
     config = Configuration.from_toml_file(DATA_DIR / "config" / tomlfile)
     assert config.get_repo_activity_prefs(repo, is_affiliated) == prefs
+
+
+@pytest.mark.parametrize(
+    "prefs,types",
+    [
+        (
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=True,
+                released_tags=False,
+                stars=True,
+                forks=True,
+                my_activity=False,
+            ),
+            [
+                ActivityType.ISSUE,
+                ActivityType.PR,
+                ActivityType.DISCUSSION,
+                ActivityType.RELEASE,
+                ActivityType.TAG,
+                ActivityType.STAR,
+                ActivityType.FORK,
+            ],
+        ),
+        (
+            ActivityPrefs(
+                issues=False,
+                pull_requests=False,
+                discussions=False,
+                releases=False,
+                tags=False,
+                released_tags=True,
+                stars=False,
+                forks=False,
+                my_activity=True,
+            ),
+            [],
+        ),
+        (
+            ActivityPrefs(
+                issues=True,
+                pull_requests=True,
+                discussions=True,
+                releases=True,
+                tags=False,
+                released_tags=True,
+                stars=False,
+                forks=False,
+                my_activity=True,
+            ),
+            [
+                ActivityType.ISSUE,
+                ActivityType.PR,
+                ActivityType.DISCUSSION,
+                ActivityType.RELEASE,
+            ],
+        ),
+    ],
+)
+def test_get_activity_types(prefs: ActivityPrefs, types: List[ActivityType]) -> None:
+    assert prefs.get_activity_types() == types
 
 
 def test_get_auth_token_explicit(
