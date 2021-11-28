@@ -265,6 +265,13 @@ def test_activity_type(
             "> My Very Special Repo(tm)",
         ),
         (
+            RepoTrackedEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=Repository(**{**dict(REPO), "description": None}),
+            ),
+            "Now tracking repository viewer/repo\n<https://github.com/viewer/repo>",
+        ),
+        (
             RepoUntrackedEvent(
                 timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
                 repo=REPO,

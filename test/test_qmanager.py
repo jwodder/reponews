@@ -1824,6 +1824,14 @@ def test_activity_query_tags() -> None:
                                 },
                             },
                             {
+                                "name": "v0.0.0a0",
+                                "target": {
+                                    "__typename": "Commit",
+                                    "committedDate": "2021-11-17T15:56:50Z",
+                                    "author": None,
+                                },
+                            },
+                            {
                                 "name": "v0.1.0",
                                 "target": {
                                     "__typename": "Tag",
@@ -1885,6 +1893,12 @@ def test_activity_query_tags() -> None:
                 name="Vid Ewer",
                 isViewer=True,
             ),
+        ),
+        NewTagEvent(
+            timestamp=datetime(2021, 11, 17, 15, 56, 50, tzinfo=timezone.utc),
+            repo=repo,
+            name="v0.0.0a0",
+            user=None,
         ),
         NewTagEvent(
             timestamp=datetime(2021, 11, 17, 16, 4, 31, tzinfo=timezone.utc),
