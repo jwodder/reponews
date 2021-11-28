@@ -10,6 +10,7 @@ from reponews.types import (
     NewReleaseEvent,
     NewStarEvent,
     NewTagEvent,
+    RepoActivity,
     RepoRenamedEvent,
     Repository,
     RepoTrackedEvent,
@@ -295,3 +296,170 @@ def test_activity_type(
 )
 def test_event_render(ev: Event, s: str) -> None:
     assert ev.render() == s
+
+
+@pytest.mark.parametrize(
+    "ev,mine",
+    [
+        (
+            NewIssueEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                number=42,
+                title="I found a bug!",
+                author=USER,
+                url="https://github.com/viewer/repo/issues/42",
+            ),
+            False,
+        ),
+        (
+            NewPREvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                number=43,
+                title="I fixed the bug",
+                author=REPO.owner,
+                url="https://github.com/viewer/repo/pull/43",
+            ),
+            True,
+        ),
+        (
+            NewReleaseEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                name="v1.0 — Initial release",
+                tagName="v1.0.0",
+                author=USER,
+                description=(
+                    "Our first full release!  New in this version:\n"
+                    "\n"
+                    "- Added a feature\n"
+                    "- Fixed a bug"
+                ),
+                descriptionHTML=(
+                    "<p>Our first full release!  New in this version:</p>\n"
+                    "<ul>\n"
+                    "<li>Added a feature</li>\n"
+                    "<li>Fixed a bug</li>\n"
+                    "</ul>"
+                ),
+                isDraft=False,
+                isPrerelease=False,
+                url="https://github.com/viewer/repo/releases/tag/v1.0.0",
+            ),
+            False,
+        ),
+        (
+            NewReleaseEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                name=None,
+                tagName="v1.0.0a1",
+                author=None,
+                description=None,
+                descriptionHTML=None,
+                isDraft=True,
+                isPrerelease=True,
+                url="https://github.com/viewer/repo/releases/tag/v1.0.0a1",
+            ),
+            False,
+        ),
+        (
+            NewReleaseEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                name="Empty description",
+                tagName="v1.0.1",
+                author=REPO.owner,
+                description="",
+                descriptionHTML="",
+                isDraft=False,
+                isPrerelease=False,
+                url="https://github.com/viewer/repo/releases/tag/v1.0.1",
+            ),
+            True,
+        ),
+        (
+            NewTagEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                name="v1.2.3",
+                user=USER,
+            ),
+            False,
+        ),
+        (
+            NewTagEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                name="v1.2.3",
+                user=None,
+            ),
+            False,
+        ),
+        (
+            NewTagEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                name="v1.2.3",
+                user=REPO.owner,
+            ),
+            True,
+        ),
+        (
+            NewStarEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                user=USER,
+            ),
+            False,
+        ),
+        (
+            NewStarEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                user=REPO.owner,
+            ),
+            True,
+        ),
+        (
+            NewForkEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                fork=Repository(
+                    id="id:forker/repo",
+                    nameWithOwner="forker/repo",
+                    owner=User(
+                        login="forker",
+                        url="https://github.com/forker",
+                        name="Fabian Orker",
+                        isViewer=False,
+                    ),
+                    name="repo",
+                    url="https://github.com/forker/repo",
+                    description="My Very Special Repo(tm)",
+                    descriptionHTML="<div>My Very Special Repo(tm)</div>",
+                ),
+            ),
+            False,
+        ),
+        (
+            NewForkEvent(
+                timestamp=datetime(2021, 11, 18, 15, 28, 2, tzinfo=timezone.utc),
+                repo=REPO,
+                fork=Repository(
+                    id="id:forker/repo",
+                    nameWithOwner="forker/repo",
+                    owner=REPO.owner,
+                    name="repo",
+                    url="https://github.com/forker/repo",
+                    description="My Very Special Repo(tm)",
+                    descriptionHTML="<div>My Very Special Repo(tm)</div>",
+                ),
+            ),
+            True,
+        ),
+    ],
+)
+def test_repo_activity_is_mine(ev: RepoActivity, mine: bool) -> None:
+    assert ev.is_mine is mine
