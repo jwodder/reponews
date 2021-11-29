@@ -113,8 +113,8 @@ class RepoNews:
     def __enter__(self) -> RepoNews:
         return self
 
-    def __exit__(self, *_exc: Any) -> None:
-        self.client.close()
+    def __exit__(self, exc_type: Any, exc_value: Any, exc_tb: Any) -> None:
+        self.client.__exit__(exc_type, exc_value, exc_tb)
 
     @classmethod
     def from_config(cls, config: Configuration) -> RepoNews:

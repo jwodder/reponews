@@ -34,7 +34,10 @@ class Client:
         # <https://github.blog/2021-11-16-graphql-global-id-migration-update/>
         self.s.headers["X-Github-Next-Global-ID"] = "1"
 
-    def close(self) -> None:
+    def __enter__(self) -> Client:
+        return self
+
+    def __exit__(self, _exc_type: Any, _exc_value: Any, _exc_tb: Any) -> None:
         self.s.close()
 
     def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
