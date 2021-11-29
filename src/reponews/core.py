@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Set, Tuple
 from eletter import compose
 from pydantic import BaseModel, Field
-from .client import Client
+from . import client
 from .config import Configuration
 from .types import (
     ActivityType,
@@ -102,10 +102,10 @@ class State(BaseModel):
 class RepoNews:
     config: Configuration
     state: State
-    client: Client = field(init=False)
+    client: client.Client = field(init=False)
 
     def __post_init__(self) -> None:
-        self.client = Client(
+        self.client = client.Client(
             api_url=self.config.api_url,
             token=self.config.get_auth_token(),
         )
@@ -199,7 +199,7 @@ class RepoNews:
             try:
                 yield (self.client.get_repo(owner, name), False)
             except NotFoundError:
-                log.warning("Repo %s/%s does not exist!", owner, name)
+                log.warning("Repository %s/%s does not exist!", owner, name)
 
     def dump_repo_prefs(self) -> Dict[str, dict]:
         prefs: Dict[str, dict] = {}
