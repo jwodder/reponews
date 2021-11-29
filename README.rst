@@ -1,7 +1,7 @@
-.. image:: http://www.repostatus.org/badges/latest/wip.svg
-    :target: http://www.repostatus.org/#wip
-    :alt: Project Status: WIP — Initial development is in progress, but there
-          has not yet been a stable, usable release suitable for the public.
+.. image:: http://www.repostatus.org/badges/latest/active.svg
+    :target: http://www.repostatus.org/#active
+    :alt: Project Status: Active — The project has reached a stable, usable
+          state and is being actively developed.
 
 .. image:: https://github.com/jwodder/reponews/workflows/Test/badge.svg?branch=master
     :target: https://github.com/jwodder/reponews/actions?workflow=Test
@@ -10,11 +10,15 @@
 .. image:: https://codecov.io/gh/jwodder/reponews/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/jwodder/reponews
 
+.. image:: https://img.shields.io/pypi/pyversions/reponews.svg
+    :target: https://pypi.org/project/reponews/
+
 .. image:: https://img.shields.io/github/license/jwodder/reponews.svg
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
 `GitHub <https://github.com/jwodder/reponews>`_
+| `PyPI <https://pypi.org/project/reponews/>`_
 | `Issues <https://github.com/jwodder/reponews/issues>`_
 
 Do you want to receive e-mail notifications about new issues, pull requests,
@@ -33,7 +37,7 @@ Installation & Setup
 <https://pip.pypa.io>`_ for Python 3 (You have pip, right?) to install
 ``reponews`` and its dependencies::
 
-    python3 -m pip install git+https://github.com/jwodder/reponews.git
+    python3 -m pip install reponews
 
 Before running ``reponews`` for the first time, you need to `acquire a GitHub
 personal access token`__ for fetching details about your repositories via the
