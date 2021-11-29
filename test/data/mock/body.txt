@@ -1,0 +1,41 @@
+[viewer/repo] ISSUE #42: I found a bug (@bug.finder)
+<https://github.com/viewer/repo/issues/42>
+
+[org/big-project] TAG 0.42.13rc1 (@tagger)
+<https://github.com/org/big-project/releases/tag/0.42.13rc1>
+
+@bug.fixer forked viewer/repo
+<https://github.com/bug.fixer/repo>
+
+[viewer/repo] PR #43: I fixed that bug (@bug.fixer)
+<https://github.com/viewer/repo/pull/43>
+
+[org/workspace] ISSUE #123: Emergency bug! (@concerned-user)
+<https://github.com/org/workspace/issues/123>
+
+[org/workspace] PR #124: Quick fix (@viewer)
+<https://github.com/org/workspace/issues/124>
+
+[org/workspace] RELEASE v1.2.3: v1.2.3 — Quick fix (@org-releaser[bot])
+<https://github.com/org/workspace/releases/tag/v1.2.3>
+> Bugfix release
+> 
+> * Quick fix
+
+★ @repo.fan starred viewer/project
+
+[luser/my-repo] TAG 2.0.1 (@luser)
+<https://github.com/luser/my-repo/releases/tag/2.0.1>
+
+[luser/my-repo] RELEASE 2.0.1: v2.0.1 (2021-11-29) (@luser)
+<https://github.com/luser/my-repo/releases/tag/2.0.1>
+> * Fix a bug
+> * Patch another bug
+
+Now tracking repository viewer/new-repo
+<https://github.com/viewer/new-repo>
+> A fresh programming start
+
+Repository renamed: team-member/new-project → theteam/new-project
+
+No longer tracking repository org/deleted

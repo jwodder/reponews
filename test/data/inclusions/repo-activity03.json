@@ -1,0 +1,10 @@
+{
+    "included_owners": ["org"],
+    "included_repos": [],
+    "not_excluded_repos": [
+        ["org", "name"],
+        ["org", "project"],
+        ["owner", "irrelevant"]
+    ],
+    "excluded_repos": [["org", "irrelevant"]]
+}

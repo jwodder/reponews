@@ -1,0 +1,176 @@
+{
+  "id:viewer/repo": {
+    "repo": {
+      "id": "id:viewer/repo",
+      "owner": {
+        "login": "viewer",
+        "name": "Vid Ewer",
+        "url": "https://github.com/viewer",
+        "isViewer": true
+      },
+      "name": "repo",
+      "nameWithOwner": "viewer/repo",
+      "url": "https://github.com/viewer/repo",
+      "description": "My Very Special Repo(tm)",
+      "descriptionHTML": "<div>My Very Special Repo(tm)</div>"
+    },
+    "cursors": {
+      "issue": "issues:viewer/repo:02",
+      "pr": "prs:viewer/repo:02",
+      "discussion": "discussions:viewer/repo:01",
+      "release": "releases:viewer/repo:01",
+      "tag": "tags:viewer/repo:01",
+      "star": "stargazers:viewer/repo:01",
+      "fork": "forks:viewer/repo:02"
+    }
+  },
+  "id:viewer/project": {
+    "repo": {
+      "id": "id:viewer/project",
+      "nameWithOwner": "viewer/project",
+      "owner": {
+        "login": "viewer",
+        "url": "https://github.com/viewer",
+        "name": "Vid Ewer",
+        "isViewer": true
+      },
+      "name": "project",
+      "url": "https://github.com/viewer/project",
+      "description": "My big ol' project",
+      "descriptionHTML": "<div>My big ol' project</div>"
+    },
+    "cursors": {
+      "issue": "issues:viewer/project:01",
+      "pr": "prs:viewer/project:01",
+      "discussion": "discussions:viewer/project:02",
+      "release": "releases:viewer/project:01",
+      "tag": "tags:viewer/project:01",
+      "star": "stargazers:viewer/project:02",
+      "fork": "forks:viewer/project:01"
+    }
+  },
+  "id:viewer/new-repo": {
+    "repo": {
+      "id": "id:viewer/new-repo",
+      "nameWithOwner": "viewer/new-repo",
+      "owner": {
+        "login": "viewer",
+        "url": "https://github.com/viewer",
+        "name": "Vid Ewer",
+        "isViewer": true
+      },
+      "name": "new-repo",
+      "url": "https://github.com/viewer/new-repo",
+      "description": "A fresh programming start",
+      "descriptionHTML": "<div>A fresh programming start</div>"
+    },
+    "cursors": {
+      "issue": "issues:viewer/new-repo:01",
+      "pr": "prs:viewer/new-repo:01",
+      "discussion": "discussions:viewer/new-repo:01",
+      "release": "releases:viewer/new-repo:01",
+      "tag": "tags:viewer/new-repo:01",
+      "star": "stargazers:viewer/new-repo:01",
+      "fork": "forks:viewer/new-repo:01"
+    }
+  },
+  "id:org/workspace": {
+    "repo": {
+      "id": "id:org/workspace",
+      "nameWithOwner": "org/workspace",
+      "owner": {
+        "login": "org",
+        "url": "https://github.com/org",
+        "name": "The Org Corp",
+        "isViewer": false
+      },
+      "name": "workspace",
+      "url": "https://github.com/org/workspace",
+      "description": "Where we all work",
+      "descriptionHTML": "<div>Where we all work</div>"
+    },
+    "cursors": {
+      "issue": "issues:org/workspace:02",
+      "pr": "prs:org/workspace:02",
+      "discussion": "discussions:org/workspace:01",
+      "release": "releases:org/workspace:02",
+      "tag": "tags:org/workspace:02",
+      "star": "stargazers:org/workspace:01",
+      "fork": "forks:org/workspace:01"
+    }
+  },
+  "id:org/big-project": {
+    "repo": {
+      "id": "id:org/big-project",
+      "nameWithOwner": "org/big-project",
+      "owner": {
+        "login": "org",
+        "url": "https://github.com/org",
+        "name": "The Org Corp",
+        "isViewer": false
+      },
+      "name": "big-project",
+      "url": "https://github.com/org/big-project",
+      "description": "The project to end all projects",
+      "descriptionHTML": "<div>The project to end all projects</div>"
+    },
+    "cursors": {
+      "issue": "issues:org/big-project:01",
+      "pr": "prs:org/big-project:01",
+      "discussion": "discussions:org/big-project:01",
+      "tag": "tags:org/big-project:02",
+      "star": "stargazers:org/big-project:01",
+      "fork": "forks:org/big-project:01"
+    }
+  },
+  "id:luser/my-repo": {
+    "repo": {
+      "id": "id:luser/my-repo",
+      "nameWithOwner": "luser/my-repo",
+      "owner": {
+        "login": "luser",
+        "url": "https://github.com/luser",
+        "name": null,
+        "isViewer": false
+      },
+      "name": "my-repo",
+      "url": "https://github.com/luser/my-repo",
+      "description": "The Official Project",
+      "descriptionHTML": "<div>The Official Project</div>"
+    },
+    "cursors": {
+      "issue": "issues:luser/my-repo:01",
+      "pr": "prs:luser/my-repo:01",
+      "discussion": "discussions:luser/my-repo:01",
+      "release": "releases:luser/my-repo:02",
+      "tag": "tags:luser/my-repo:02",
+      "star": "stargazers:luser/my-repo:01",
+      "fork": "forks:luser/my-repo:01"
+    }
+  },
+  "id:team-member/new-project": {
+    "repo": {
+      "id": "id:team-member/new-project",
+      "nameWithOwner": "theteam/new-project",
+      "owner": {
+        "login": "theteam",
+        "url": "https://github.com/theteam",
+        "name": "Team The",
+        "isViewer": false
+      },
+      "name": "new-project",
+      "url": "https://github.com/theteam/new-project",
+      "description": "The Latest Hotness!",
+      "descriptionHTML": "<div>The Latest Hotness!</div>"
+    },
+    "cursors": {
+      "issue": "issues:team-member/new-project:01",
+      "pr": "prs:team-member/new-project:01",
+      "discussion": "discussions:team-member/new-project:01",
+      "release": "releases:team-member/new-project:01",
+      "tag": "tags:team-member/new-project:01",
+      "star": "stargazers:team-member/new-project:01",
+      "fork": "forks:team-member/new-project:01"
+    }
+  }
+}

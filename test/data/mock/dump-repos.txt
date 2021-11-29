@@ -1,0 +1,79 @@
+{
+    "luser/my-repo": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": false,
+        "pull_requests": true,
+        "released_tags": true,
+        "releases": true,
+        "stars": true,
+        "tags": true
+    },
+    "org/big-project": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": true,
+        "pull_requests": true,
+        "released_tags": false,
+        "releases": false,
+        "stars": true,
+        "tags": true
+    },
+    "org/workspace": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": true,
+        "pull_requests": true,
+        "released_tags": false,
+        "releases": true,
+        "stars": true,
+        "tags": true
+    },
+    "theteam/new-project": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": false,
+        "pull_requests": true,
+        "released_tags": false,
+        "releases": true,
+        "stars": true,
+        "tags": true
+    },
+    "viewer/new-repo": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": false,
+        "pull_requests": true,
+        "released_tags": false,
+        "releases": true,
+        "stars": true,
+        "tags": true
+    },
+    "viewer/project": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": false,
+        "pull_requests": true,
+        "released_tags": false,
+        "releases": true,
+        "stars": true,
+        "tags": true
+    },
+    "viewer/repo": {
+        "discussions": true,
+        "forks": true,
+        "issues": true,
+        "my_activity": false,
+        "pull_requests": true,
+        "released_tags": false,
+        "releases": true,
+        "stars": true,
+        "tags": true
+    }
+}

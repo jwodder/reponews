@@ -1,0 +1,5 @@
+[reponews.activity.repo."org/*"]
+my-activity = true
+
+[reponews.repos]
+exclude = ["org/irrelevant"]

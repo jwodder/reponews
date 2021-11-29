@@ -1,0 +1,28 @@
+[reponews]
+recipient = "viewer@example.org"
+sender = "RepoNews <reponews@example.com>"
+subject = "Your Repo News is here!"
+auth-token = "1234567890"
+api-url = "https://test.nil/api"
+state-file = "state.json"
+
+[reponews.activity.repo."org/*"]
+my-activity = true
+
+[reponews.activity.repo."org/big-project"]
+releases = false
+
+[reponews.activity.repo."luser/my-repo"]
+released-tags = true
+
+[reponews.repos]
+affiliations = ["OWNER", "COLLABORATOR"]
+include = [
+    "user-not-found/*",
+    "luser/repo-not-found",
+    "team-member/new-project",
+]
+exclude = ["org/irrelevant"]
+
+[outgoing]
+method = "null"

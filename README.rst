@@ -67,22 +67,22 @@ Example
 
 An example of the sort of e-mail that ``reponews`` might send you::
 
-    [luser/my-repo] ISSUE #42: I found a bug (@bug.finder)
+    [luser/my-repo] ISSUE #42: I found a bug (@bug-finder)
     <https://github.com/luser/my-repo/issues/42>
 
-    @bug.fixer forked luser/my-repo
+    @bug-fixer forked luser/my-repo
     <https://github.com/bug.fixer/my-repo>
 
-    [luser/my-repo] PR #43: I fixed that bug (@bug.fixer)
+    [luser/my-repo] PR #43: I fixed that bug (@bug-fixer)
     <https://github.com/luser/my-repo/pull/43>
 
-    ★ @repo.fan starred orgcorp/bigrepo
+    ★ @repo-fan starred orgcorp/bigrepo
 
-    [orgcorp/bigrepo] DISCUSSION #123: How do I use this? (@confused.user)
+    [orgcorp/bigrepo] DISCUSSION #123: How do I use this? (@confused-user)
     <https://github.com/orgcorp/bigrepo/discussions/123>
 
     [theteam/theproject] RELEASE v1.0a1 [prerelease]: v1 Preview (@github-actions[bot])
-    <https://github.com/theteam/theproject/releases/tag/v1.0a1/>
+    <https://github.com/theteam/theproject/releases/tag/v1.0a1>
     > We're gearing up for the first full release!  Here are some changes you'll find:
     >
     > * Added a feature
@@ -94,7 +94,7 @@ An example of the sort of e-mail that ``reponews`` might send you::
 
     No longer tracking repository tmprepos/deleted-repo
 
-    Repository renamed: team.member/new-project → theteam/new-project
+    Repository renamed: team-member/new-project → theteam/new-project
 
 
 Usage
