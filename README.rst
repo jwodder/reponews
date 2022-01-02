@@ -20,6 +20,7 @@
 `GitHub <https://github.com/jwodder/reponews>`_
 | `PyPI <https://pypi.org/project/reponews/>`_
 | `Issues <https://github.com/jwodder/reponews/issues>`_
+| `Changelog <https://github.com/jwodder/reponews/blob/master/CHANGELOG.md>`_
 
 Do you want to receive e-mail notifications about new issues, pull requests,
 discussions, releases, tags, stargazers, & forks on your GitHub repositories?
