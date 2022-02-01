@@ -29,7 +29,8 @@ repositories you're watching will mean you get an e-mail for every comment on
 every issue, which is a bit too much.  ``reponews`` aims for a happy medium:
 only e-mailing you about new issues and similar activity — not about comments —
 and only on repositories of your choice.  Simply set it up to run under cron or
-another job scheduler (sold separately) and you'll get periodic e-mails listing
+another job scheduler (sold separately), point it at a compatible e-mail
+sending service (also sold separately), and you'll get periodic e-mails listing
 new events.
 
 Installation & Setup
