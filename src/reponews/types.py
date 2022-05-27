@@ -1,6 +1,4 @@
-# We can't use `from __future__ import annotations` here yet due to a bug in
-# pydantic under Python 3.9.8:
-# <https://github.com/samuelcolvin/pydantic/issues/3401>
+from __future__ import annotations
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
@@ -62,7 +60,7 @@ class Repository(BaseModel):
     descriptionHTML: str
 
     @classmethod
-    def from_node(cls, node: Dict[str, Any]) -> "Repository":
+    def from_node(cls, node: Dict[str, Any]) -> Repository:
         log.debug("Constructing Repository from node: %s", json.dumps(node))
         return cls.parse_obj(node)
 
@@ -102,7 +100,7 @@ class NewIssueoidEvent(RepoActivity):
     url: str
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewIssueoidEvent":
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewIssueoidEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("createdAt")
         node["repo"] = repo
@@ -158,7 +156,7 @@ class NewReleaseEvent(RepoActivity):
         return dos2unix(v) if v is not None else None
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewReleaseEvent":
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewReleaseEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("createdAt")
         node["repo"] = repo
@@ -195,7 +193,7 @@ class NewTagEvent(RepoActivity):
     user: Optional[User]
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewTagEvent":
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewTagEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         target = node.pop("target")
         if target["__typename"] == "Commit":
@@ -243,7 +241,7 @@ class NewStarEvent(RepoActivity):
     user: User
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewStarEvent":
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewStarEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("starredAt")
         node["repo"] = repo
@@ -267,7 +265,7 @@ class NewForkEvent(RepoActivity):
     fork: Repository
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> "NewForkEvent":
+    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewForkEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         timestamp = node.pop("createdAt")
         return cls(timestamp=timestamp, repo=repo, fork=node)
@@ -323,7 +321,7 @@ class ActivityType(Enum):
     STAR = ("star", "stargazers", NewStarEvent)
     FORK = ("fork", "forks", NewForkEvent)
 
-    def __new__(cls, value: str, _api_name: str, _event_cls: type) -> "ActivityType":
+    def __new__(cls, value: str, _api_name: str, _event_cls: type) -> ActivityType:
         obj = object.__new__(cls)
         obj._value_ = value
         return obj  # type: ignore[no-any-return]
