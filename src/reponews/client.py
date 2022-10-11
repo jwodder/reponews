@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 import platform
+from time import sleep
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from . import __url__, __version__
@@ -24,6 +25,11 @@ USER_AGENT = "reponews/{} ({}) requests/{} {}/{}".format(
     platform.python_version(),
 )
 
+MAX_RETRIES = 10
+RETRY_STATUSES = (500, 502, 503, 504)
+BACKOFF_FACTOR = 1.25
+MAX_BACKOFF = 120
+
 
 class Client:
     def __init__(self, api_url: str, token: str) -> None:
@@ -41,12 +47,26 @@ class Client:
         self.s.close()
 
     def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
-        r = self.s.post(
-            self.api_url,
-            json={"query": query, "variables": variables or {}},
-        )
-        if not r.ok:
-            raise APIException(r)
+        i = 0
+        while True:
+            r = self.s.post(
+                self.api_url,
+                json={"query": query, "variables": variables or {}},
+            )
+            if r.status_code in RETRY_STATUSES and i + 1 < MAX_RETRIES:
+                delay = min(1.25 * 2**i, MAX_BACKOFF)
+                log.warning(
+                    "GraphQL request returned %d; waiting %f seconds and retrying",
+                    r.status_code,
+                    delay,
+                )
+                sleep(delay)
+                i += 1
+                continue
+            elif not r.ok:
+                raise APIException(r)
+            else:
+                break
         data = r.json()
         if data.get("errors"):
             try:
