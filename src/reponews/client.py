@@ -53,16 +53,22 @@ class Client:
                 self.api_url,
                 json={"query": query, "variables": variables or {}},
             )
-            if r.status_code in RETRY_STATUSES and i + 1 < MAX_RETRIES:
-                delay = min(1.25 * 2**i, MAX_BACKOFF)
-                log.warning(
-                    "GraphQL request returned %d; waiting %f seconds and retrying",
-                    r.status_code,
-                    delay,
-                )
-                sleep(delay)
-                i += 1
-                continue
+            if r.status_code in RETRY_STATUSES:
+                if i + 1 < MAX_RETRIES:
+                    delay = min(1.25 * 2**i, MAX_BACKOFF)
+                    log.warning(
+                        "GraphQL request returned %d; waiting %f seconds and retrying",
+                        r.status_code,
+                        delay,
+                    )
+                    sleep(delay)
+                    i += 1
+                    continue
+                else:
+                    log.error(
+                        "GraphQL request returned %d; out of retries", r.status_code
+                    )
+                    raise APIException(r)
             elif not r.ok:
                 raise APIException(r)
             else:
