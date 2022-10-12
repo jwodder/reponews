@@ -25,7 +25,7 @@ USER_AGENT = "reponews/{} ({}) requests/{} {}/{}".format(
     platform.python_version(),
 )
 
-MAX_RETRIES = 10
+MAX_RETRIES = 5
 RETRY_STATUSES = (500, 502, 503, 504)
 BACKOFF_FACTOR = 1.25
 MAX_BACKOFF = 120
