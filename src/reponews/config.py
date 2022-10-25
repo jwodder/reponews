@@ -11,9 +11,13 @@ from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
 from pydantic import AnyHttpUrl, BaseModel, Field, parse_obj_as, validator
 from pydantic.validators import str_validator
-import tomli
 from .types import ActivityType, Affiliation, Repository
 from .util import UserError, get_default_state_file, mkalias
+
+if sys.version_info[:2] >= (3, 11):
+    from tomllib import load as toml_load
+else:
+    from tomli import load as toml_load
 
 if sys.version_info[:2] >= (3, 8):
     from functools import cached_property
@@ -54,7 +58,7 @@ class RepoSpec(BaseModel):
     @classmethod
     def _parse(cls, value: str) -> RepoSpec:
         m = re.fullmatch(
-            fr"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
+            rf"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
         )
         if m:
             return cls(owner=m["owner"], name=m["name"])
@@ -83,7 +87,7 @@ class RepoSpecKey(str):
     @classmethod
     def _validate(cls, value: str) -> str:
         if re.fullmatch(
-            fr"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
+            rf"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
         ):
             return value
         else:
@@ -240,7 +244,7 @@ class Configuration(BaseConfig):
     @classmethod
     def from_toml_file(cls, filepath: Union[str, Path]) -> Configuration:
         with open(filepath, "rb") as fp:
-            data = tomli.load(fp).get("reponews", {})
+            data = toml_load(fp).get("reponews", {})
         basedir = Path(filepath).parent
         config = cls.parse_obj(data)
         if config.auth_token_file is not None:
