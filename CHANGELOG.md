@@ -1,5 +1,5 @@
-v0.2.0 (in development)
------------------------
+v0.2.0 (2022-10-25)
+-------------------
 - Update minimum pydantic version to 1.9
 - Retry GraphQL requests that fail with 5xx errors
 - Support Python 3.11
