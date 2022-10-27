@@ -55,7 +55,7 @@ class Client:
             )
             if r.status_code in RETRY_STATUSES:
                 if i + 1 < MAX_RETRIES:
-                    delay = min(1.25 * 2**i, MAX_BACKOFF)
+                    delay = min(BACKOFF_FACTOR * 2**i, MAX_BACKOFF)
                     log.warning(
                         "GraphQL request returned %d; waiting %f seconds and retrying",
                         r.status_code,
