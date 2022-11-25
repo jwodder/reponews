@@ -51,7 +51,7 @@ class User(BaseModel):
 
 
 class Repository(BaseModel):
-    id: str
+    id: str  # noqa: A003
     owner: User
     name: str
     nameWithOwner: str
