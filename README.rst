@@ -172,7 +172,7 @@ location depends on your OS:
 =======  ==================================================================
 Linux    ``~/.local/share/reponews/config.toml``
          or ``$XDG_DATA_HOME/reponews/config.toml``
-macOS    ``~/Library/Preferences/reponews/config.toml``
+macOS    ``~/Library/Application Support/reponews/config.toml``
 Windows  ``C:\Users\<username>\AppData\Local\jwodder\reponews\config.toml``
 =======  ==================================================================
 

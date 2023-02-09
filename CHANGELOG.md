@@ -1,3 +1,10 @@
+v0.3.0 (in development)
+-----------------------
+- Update `platformdirs` dependency to v3.  This is a **breaking** change on
+  macOS, where the default configuration path changes from
+  `~/Library/Preferences/reponews/config.toml` to `~/Library/Application
+  Support/reponews/config.toml`.
+
 v0.2.0 (2022-10-25)
 -------------------
 - Update minimum pydantic version to 1.9
