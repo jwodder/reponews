@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Iterator
 from email import message_from_string, policy
 from email.message import EmailMessage
 from functools import partial
@@ -7,7 +8,7 @@ import logging
 from pathlib import Path
 from shutil import copytree
 from traceback import format_exception
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 from unittest.mock import ANY
 from click.testing import CliRunner, Result
 from mailbits import email2dict
@@ -75,7 +76,7 @@ class MockClient:
             assert not self.data.activity, "Not all activity queried"
 
     def get_affiliated_repos(
-        self, affiliations: List[Affiliation]
+        self, affiliations: list[Affiliation]
     ) -> Iterator[Repository]:
         assert affiliations == [Affiliation.OWNER, Affiliation.COLLABORATOR]
         return iter(self.data.affiliated)
@@ -96,8 +97,8 @@ class MockClient:
         return r
 
     def get_new_repo_activity(
-        self, repo: Repository, types: List[ActivityType], cursors: CursorDict
-    ) -> Tuple[List[RepoActivity], CursorDict]:
+        self, repo: Repository, types: list[ActivityType], cursors: CursorDict
+    ) -> tuple[list[RepoActivity], CursorDict]:
         fullname = repo.nameWithOwner
         assert fullname in self.data.activity
         aq = self.data.activity.pop(fullname)

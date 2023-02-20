@@ -1,8 +1,9 @@
 from __future__ import annotations
+from collections.abc import Iterator
 import json
 import platform
 from time import sleep
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Optional
 import requests
 from . import __url__, __version__
 from .qmanager import (
@@ -46,7 +47,7 @@ class Client:
     def __exit__(self, _exc_type: Any, _exc_value: Any, _exc_tb: Any) -> None:
         self.s.close()
 
-    def query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Any:
+    def query(self, query: str, variables: Optional[dict[str, Any]] = None) -> Any:
         i = 0
         while True:
             r = self.s.post(
@@ -92,7 +93,7 @@ class Client:
             yield from manager.parse_response(data)
 
     def get_affiliated_repos(
-        self, affiliations: List[Affiliation]
+        self, affiliations: list[Affiliation]
     ) -> Iterator[Repository]:
         if not affiliations:
             log.info("No affiliations set; not fetching any affiliated repositories")
@@ -119,13 +120,13 @@ class Client:
         return next(self.do_managed_query(manager))
 
     def get_new_repo_activity(
-        self, repo: Repository, types: List[ActivityType], cursors: CursorDict
-    ) -> Tuple[List[RepoActivity], CursorDict]:
+        self, repo: Repository, types: list[ActivityType], cursors: CursorDict
+    ) -> tuple[list[RepoActivity], CursorDict]:
         log.info(
             "Fetching new %s activity for %s", ", ".join(it.value for it in types), repo
         )
         manager = ActivityQuery(repo=repo, types=types, cursors=cursors)
-        events: List[RepoActivity] = []
+        events: list[RepoActivity] = []
         for ev in self.do_managed_query(manager):
             log.info("Found activity on %s: %s", repo, ev)
             events.append(ev)

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 from mailbits import parse_address
 from pydantic import AnyHttpUrl, BaseModel, Field, parse_obj_as, validator
@@ -133,7 +133,7 @@ class ActivityPrefs(PartialActivityPrefs):
     my_activity: bool = False
 
     def get_activity_types(self) -> List[ActivityType]:
-        types: List[ActivityType] = []
+        types: list[ActivityType] = []
         if self.issues:
             types.append(ActivityType.ISSUE)
         if self.pull_requests:
@@ -186,7 +186,7 @@ class RepoInclusions(BaseModel):
 
     @classmethod
     def from_repos_config(
-        cls, repos_config: ReposConfig, preffed_repos: List[RepoSpecKey]
+        cls, repos_config: ReposConfig, preffed_repos: list[RepoSpecKey]
     ) -> RepoInclusions:
         rinc = cls()
         for rs in repos_config.include + [
@@ -206,10 +206,10 @@ class RepoInclusions(BaseModel):
                 rinc.included_repos[rs.owner].discard(rs.name)
         return rinc
 
-    def get_included_repo_owners(self) -> List[str]:
+    def get_included_repo_owners(self) -> list[str]:
         return sorted(self.included_owners)
 
-    def get_included_repos(self) -> List[Tuple[str, str]]:
+    def get_included_repos(self) -> list[tuple[str, str]]:
         return [
             (owner, n)
             for owner, names in sorted(self.included_repos.items())
@@ -242,7 +242,7 @@ class Configuration(BaseConfig):
         return v.expanduser() if v is not None else v
 
     @classmethod
-    def from_toml_file(cls, filepath: Union[str, Path]) -> Configuration:
+    def from_toml_file(cls, filepath: str | Path) -> Configuration:
         with open(filepath, "rb") as fp:
             data = toml_load(fp).get("reponews", {})
         basedir = Path(filepath).parent
@@ -289,10 +289,10 @@ class Configuration(BaseConfig):
             self.repos, [r for r, pref in self.activity.repo.items() if pref.include]
         )
 
-    def get_included_repo_owners(self) -> List[str]:
+    def get_included_repo_owners(self) -> list[str]:
         return self.inclusions.get_included_repo_owners()
 
-    def get_included_repos(self) -> List[Tuple[str, str]]:
+    def get_included_repos(self) -> list[tuple[str, str]]:
         return self.inclusions.get_included_repos()
 
     def is_repo_excluded(self, repo: Repository) -> bool:

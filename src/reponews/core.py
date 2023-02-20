@@ -1,11 +1,12 @@
 from __future__ import annotations
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from email.message import EmailMessage
 import json
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Set, Tuple
+from typing import Any, Dict, List
 from eletter import compose
 from pydantic import BaseModel, Field
 from . import client
@@ -124,8 +125,8 @@ class RepoNews:
     def from_config_file(cls, path: Path) -> RepoNews:
         return cls.from_config(Configuration.from_toml_file(path))
 
-    def get_new_activity(self) -> List[Event]:
-        events: List[Event] = []
+    def get_new_activity(self) -> list[Event]:
+        events: list[Event] = []
         for repo, is_affiliated in self.get_repositories():
             activity = self.config.get_repo_activity_prefs(repo, is_affiliated)
             types = activity.get_activity_types()
@@ -135,7 +136,7 @@ class RepoNews:
             new_events, cursors = self.client.get_new_repo_activity(
                 repo, types, self.state.get_cursors(repo)
             )
-            events2: List[RepoActivity]
+            events2: list[RepoActivity]
             if not activity.my_activity:
                 events2 = []
                 for ev in new_events:
@@ -151,7 +152,7 @@ class RepoNews:
             ):
                 events2 = []
                 release_tags = set()
-                tag_events: List[NewTagEvent] = []
+                tag_events: list[NewTagEvent] = []
                 for ev in new_events:
                     if isinstance(ev, NewTagEvent):
                         tag_events.append(ev)
@@ -173,8 +174,8 @@ class RepoNews:
         events.sort(key=attrgetter("timestamp"))
         return events
 
-    def get_repositories(self) -> Iterator[Tuple[Repository, bool]]:
-        seen: Set[str] = set()
+    def get_repositories(self) -> Iterator[tuple[Repository, bool]]:
+        seen: set[str] = set()
         for repo, is_affiliated in self._get_repositories():
             if self.config.is_repo_excluded(repo):
                 log.info("Repo %s is excluded by config; skipping", repo)
@@ -186,7 +187,7 @@ class RepoNews:
                 seen.add(repo.id)
                 yield (repo, is_affiliated)
 
-    def _get_repositories(self) -> Iterator[Tuple[Repository, bool]]:
+    def _get_repositories(self) -> Iterator[tuple[Repository, bool]]:
         for repo in self.client.get_affiliated_repos(self.config.repos.affiliations):
             yield (repo, True)
         for owner in self.config.get_included_repo_owners():
@@ -195,23 +196,23 @@ class RepoNews:
                     yield (repo, False)
             except NotFoundError:
                 log.warning("User %s does not exist!", owner)
-        for (owner, name) in self.config.get_included_repos():
+        for owner, name in self.config.get_included_repos():
             try:
                 yield (self.client.get_repo(owner, name), False)
             except NotFoundError:
                 log.warning("Repository %s/%s does not exist!", owner, name)
 
-    def dump_repo_prefs(self) -> Dict[str, dict]:
-        prefs: Dict[str, dict] = {}
+    def dump_repo_prefs(self) -> dict[str, dict]:
+        prefs: dict[str, dict] = {}
         for repo, is_affiliated in self.get_repositories():
             activity = self.config.get_repo_activity_prefs(repo, is_affiliated)
             prefs[str(repo)] = activity.dict()
         return prefs
 
-    def compose_email_body(self, events: List[Event]) -> str:
+    def compose_email_body(self, events: list[Event]) -> str:
         return "\n\n".join(ev.render() for ev in events)
 
-    def compose_email(self, events: List[Event]) -> EmailMessage:
+    def compose_email(self, events: list[Event]) -> EmailMessage:
         if self.config.recipient is None:
             raise UserError(
                 "reponews.recipient must be set when constructing an e-mail"

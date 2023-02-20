@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 from operator import attrgetter
 from os.path import expanduser
@@ -403,7 +404,7 @@ def test_get_repo_activity_prefs(
         ),
     ],
 )
-def test_get_activity_types(prefs: ActivityPrefs, types: List[ActivityType]) -> None:
+def test_get_activity_types(prefs: ActivityPrefs, types: list[ActivityType]) -> None:
     assert prefs.get_activity_types() == types
 
 

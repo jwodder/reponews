@@ -1,5 +1,6 @@
+from __future__ import annotations
 from abc import abstractmethod
-from typing import Any, ClassVar, Dict, Generic, List, Optional, Tuple
+from typing import Any, ClassVar, Generic, List, Optional, Tuple
 from pydantic import BaseModel
 from .qlobjs import REPO_FIELDS, Object
 from .types import ActivityType, Affiliation, CursorDict, RepoActivity, Repository
@@ -12,11 +13,11 @@ class QueryManager(BaseModel, Generic[T]):
     has_next_page: bool = True
 
     @abstractmethod
-    def make_query(self) -> Tuple[str, Dict[str, Any]]:
+    def make_query(self) -> tuple[str, dict[str, Any]]:
         ...
 
     @abstractmethod
-    def parse_response(self, data: Any) -> List[T]:
+    def parse_response(self, data: Any) -> list[T]:
         ...
 
 
@@ -24,7 +25,7 @@ class ReposQuery(QueryManager[Repository]):
     PATH: ClassVar[Tuple[str, ...]]
     cursor: Optional[str] = None
 
-    def parse_response(self, data: Any) -> List[Repository]:
+    def parse_response(self, data: Any) -> list[Repository]:
         root = data["data"]
         for p in self.PATH:
             root = root[p]
@@ -40,7 +41,7 @@ class ViewersReposQuery(ReposQuery):
     PATH = ("viewer", "repositories")
     affiliations: List[Affiliation]
 
-    def make_query(self) -> Tuple[str, Dict[str, Any]]:
+    def make_query(self) -> tuple[str, dict[str, Any]]:
         q = str(
             Object(
                 "query",
@@ -78,7 +79,7 @@ class OwnersReposQuery(ReposQuery):
     PATH = ("repositoryOwner", "repositories")
     owner: str
 
-    def make_query(self) -> Tuple[str, Dict[str, Any]]:
+    def make_query(self) -> tuple[str, dict[str, Any]]:
         q = str(
             Object(
                 "query",
@@ -106,7 +107,7 @@ class OwnersReposQuery(ReposQuery):
         }
         return (q, variables)
 
-    def parse_response(self, data: Any) -> List[Repository]:
+    def parse_response(self, data: Any) -> list[Repository]:
         if data["data"]["repositoryOwner"] is None:
             # For some reason, as of 2021-11-01, GitHub handles requests for a
             # nonexistent repositoryOwner by returning `null` instead of
@@ -120,7 +121,7 @@ class SingleRepoQuery(QueryManager[Repository]):
     owner: str
     name: str
 
-    def make_query(self) -> Tuple[str, Dict[str, Any]]:
+    def make_query(self) -> tuple[str, dict[str, Any]]:
         q = str(
             Object(
                 "query",
@@ -132,7 +133,7 @@ class SingleRepoQuery(QueryManager[Repository]):
         )
         return (q, {"owner": self.owner, "name": self.name})
 
-    def parse_response(self, data: Any) -> List[Repository]:
+    def parse_response(self, data: Any) -> list[Repository]:
         self.has_next_page = False
         return [Repository.from_node(data["data"]["repository"])]
 
@@ -142,10 +143,10 @@ class ActivityQuery(QueryManager[RepoActivity]):
     types: List[ActivityType]
     cursors: CursorDict
 
-    def make_query(self) -> Tuple[str, Dict[str, Any]]:
-        variables: Dict[str, Any] = {"repo_id": self.repo.id}
+    def make_query(self) -> tuple[str, dict[str, Any]]:
+        variables: dict[str, Any] = {"repo_id": self.repo.id}
         variable_defs = {"$repo_id": "ID!"}
-        connections: List[Object] = []
+        connections: list[Object] = []
         for it in self.types:
             if it in self.cursors:
                 connections.append(it.event_cls.CONNECTION)
@@ -166,7 +167,7 @@ class ActivityQuery(QueryManager[RepoActivity]):
         )
         return (str(query), variables)
 
-    def parse_response(self, data: Any) -> List[RepoActivity]:
+    def parse_response(self, data: Any) -> list[RepoActivity]:
         events = []
         self.has_next_page = False
         for it in self.types:
@@ -177,7 +178,7 @@ class ActivityQuery(QueryManager[RepoActivity]):
                 if pageInfo["hasNextPage"]:
                     self.has_next_page = True
                 assert len(root) <= 1
-                nodes: List[dict] = next(iter(root.values()), [])
+                nodes: list[dict] = next(iter(root.values()), [])
                 for node in nodes:
                     try:
                         events.append(it.event_cls.from_node(self.repo, node))

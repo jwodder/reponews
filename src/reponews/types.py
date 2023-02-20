@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 import json
 import sys
-from typing import Any, ClassVar, Dict, Optional, Type
+from typing import Any, ClassVar, Dict, Optional
 from eletter import reply_quote
 from pydantic import BaseModel, validator
 from .qlobjs import (
@@ -60,7 +60,7 @@ class Repository(BaseModel):
     descriptionHTML: str
 
     @classmethod
-    def from_node(cls, node: Dict[str, Any]) -> Repository:
+    def from_node(cls, node: dict[str, Any]) -> Repository:
         log.debug("Constructing Repository from node: %s", json.dumps(node))
         return cls.parse_obj(node)
 
@@ -84,7 +84,7 @@ class RepoActivity(Event):
 
     @classmethod
     @abstractmethod
-    def from_node(cls: Type[T], _repo: Repository, node: Dict[str, Any]) -> T:
+    def from_node(cls: type[T], _repo: Repository, node: dict[str, Any]) -> T:
         ...
 
     @property
@@ -100,7 +100,7 @@ class NewIssueoidEvent(RepoActivity):
     url: str
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewIssueoidEvent:
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> NewIssueoidEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("createdAt")
         node["repo"] = repo
@@ -156,7 +156,7 @@ class NewReleaseEvent(RepoActivity):
         return dos2unix(v) if v is not None else None
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewReleaseEvent:
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> NewReleaseEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("createdAt")
         node["repo"] = repo
@@ -193,7 +193,7 @@ class NewTagEvent(RepoActivity):
     user: Optional[User]
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewTagEvent:
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> NewTagEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         target = node.pop("target")
         if target["__typename"] == "Commit":
@@ -241,7 +241,7 @@ class NewStarEvent(RepoActivity):
     user: User
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewStarEvent:
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> NewStarEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("starredAt")
         node["repo"] = repo
@@ -265,7 +265,7 @@ class NewForkEvent(RepoActivity):
     fork: Repository
 
     @classmethod
-    def from_node(cls, repo: Repository, node: Dict[str, Any]) -> NewForkEvent:
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> NewForkEvent:
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         timestamp = node.pop("createdAt")
         return cls(timestamp=timestamp, repo=repo, fork=node)
@@ -327,7 +327,7 @@ class ActivityType(Enum):
         return obj  # type: ignore[no-any-return]
 
     def __init__(
-        self, _value: str, api_name: str, event_cls: Type[RepoActivity]
+        self, _value: str, api_name: str, event_cls: type[RepoActivity]
     ) -> None:
         self.api_name = api_name
         self.event_cls = event_cls

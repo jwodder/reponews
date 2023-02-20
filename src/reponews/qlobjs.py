@@ -1,15 +1,12 @@
 from __future__ import annotations
 from textwrap import indent
-from typing import Dict, List, Union
 
 INDENT = " " * 4
 SINGLE_LINE_CUTOFF = 40
 
 
 class Object:
-    def __init__(
-        self, name: str, args: Dict[str, str], *fields: Union[str, Object]
-    ) -> None:
+    def __init__(self, name: str, args: dict[str, str], *fields: str | Object) -> None:
         self.name = name
         self.args = args
         self.fields = fields
@@ -61,13 +58,13 @@ def mklastconn(name: str) -> Object:
     )
 
 
-ACTOR_FIELDS: List[Union[str, Object]] = [
+ACTOR_FIELDS: list[str | Object] = [
     "login",
     "url",
     Object("... on User", {}, "name", "isViewer"),
 ]
 
-OWNER_FIELDS: List[Union[str, Object]] = [
+OWNER_FIELDS: list[str | Object] = [
     "login",
     "url",
     Object("... on User", {}, "name", "isViewer"),
@@ -76,7 +73,7 @@ OWNER_FIELDS: List[Union[str, Object]] = [
 
 USER_FIELDS = ["login", "url", "name", "isViewer"]
 
-REPO_FIELDS: List[Union[str, Object]] = [
+REPO_FIELDS: list[str | Object] = [
     "id",
     "nameWithOwner",
     Object("owner", {}, *OWNER_FIELDS),
