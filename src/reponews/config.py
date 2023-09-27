@@ -263,7 +263,7 @@ class Configuration(BaseConfig):
             return os.environ["GH_TOKEN"]
         else:
             raise UserError(
-                "GitHub OAuth token not set.  Specify in config file or via"
+                "GitHub access token not set.  Specify in config file or via"
                 " GITHUB_TOKEN or GH_TOKEN environment variable."
             )
 

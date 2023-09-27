@@ -473,7 +473,7 @@ def test_get_auth_token_notset(monkeypatch: pytest.MonkeyPatch, tmp_home: Path) 
     with pytest.raises(UserError) as excinfo:
         config.get_auth_token()
     assert str(excinfo.value) == (
-        "GitHub OAuth token not set.  Specify in config file or via"
+        "GitHub access token not set.  Specify in config file or via"
         " GITHUB_TOKEN or GH_TOKEN environment variable."
     )
 
@@ -488,6 +488,6 @@ def test_get_auth_token_envvar2_empty(
     with pytest.raises(UserError) as excinfo:
         config.get_auth_token()
     assert str(excinfo.value) == (
-        "GitHub OAuth token not set.  Specify in config file or via"
+        "GitHub access token not set.  Specify in config file or via"
         " GITHUB_TOKEN or GH_TOKEN environment variable."
     )

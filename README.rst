@@ -200,18 +200,18 @@ result in an error.
     activity on your GitHub repositories".
 
 ``auth-token`` : string
-    The GitHub OAuth token/personal access token to use for interacting with
-    the GitHub API.  If ``auth-token`` is not set, the token will be read from
-    the file specified by ``auth-token-file``; if that is also not set, the
-    environment variables ``GITHUB_TOKEN`` and ``GH_TOKEN`` will be consulted
-    for the token, in that order.  Environment variables can be either set
-    directly in the environment or else read from a ``.env`` file (See the
-    ``--env`` option under "Options_" above).
+    The GitHub access token to use for interacting with the GitHub API.  If
+    ``auth-token`` is not set, the token will be read from the file specified
+    by ``auth-token-file``; if that is also not set, the environment variables
+    ``GITHUB_TOKEN`` and ``GH_TOKEN`` will be consulted for the token, in that
+    order.  Environment variables can be either set directly in the environment
+    or else read from a ``.env`` file (See the ``--env`` option under
+    "Options_" above).
 
 ``auth-token-file`` : path
-    The path to a file containing the GitHub OAuth token/personal access token
-    to use for interacting with the GitHub API.  The file must contain only the
-    token and possibly leading and/or trailing whitespace.
+    The path to a file containing the GitHub access token to use for
+    interacting with the GitHub API.  The file must contain only the token and
+    possibly leading and/or trailing whitespace.
 
     The path may start with a tilde (``~``) to indicate a file in the user's
     home directory.  A relative path will be resolved relative to the directory
@@ -345,8 +345,8 @@ Example Configuration
 
     sender = "RepoNews Bot <reponews@example.net>"
 
-    # Fetch the GitHub OAuth token from the "token.txt" file next to the config
-    # file:
+    # Fetch the GitHub access token from the "token.txt" file next to the
+    # config file:
     auth-token-file = "token.txt"
 
     state-file = "~/.cache/reponews.json"
