@@ -256,7 +256,7 @@ class Configuration(BaseConfig):
         if self.auth_token is not None:
             return self.auth_token
         elif self.auth_token_file is not None:
-            return self.auth_token_file.read_text().strip()
+            return self.auth_token_file.read_text(encoding="utf-8").strip()
         else:
             try:
                 return ghtoken.get_ghtoken(dotenv=False)

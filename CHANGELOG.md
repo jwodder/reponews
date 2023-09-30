@@ -4,6 +4,7 @@ v0.4.0 (in development)
 - Use [`ghtoken`](https://github.com/jwodder/ghtoken) for looking up GitHub
   tokens
 - Ensure that the state file is always read & written using UTF-8 encoding
+- Always read the auth-token-file using UTF-8 encoding
 
 v0.3.0 (2023-02-09)
 -------------------
