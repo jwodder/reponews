@@ -46,7 +46,7 @@ class State(BaseModel):
     @classmethod
     def from_file(cls, path: Path) -> State:
         try:
-            with path.open() as fp:
+            with path.open(encoding="utf-8") as fp:
                 state = json.load(fp)
         except FileNotFoundError:
             log.info("State file not found; treating as empty")
@@ -95,7 +95,8 @@ class State(BaseModel):
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
-            json.dumps({k: v.for_json() for k, v in self.new_state.items()})
+            json.dumps({k: v.for_json() for k, v in self.new_state.items()}),
+            encoding="utf-8",
         )
 
 
