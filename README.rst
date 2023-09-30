@@ -202,11 +202,20 @@ result in an error.
 ``auth-token`` : string
     The GitHub access token to use for interacting with the GitHub API.  If
     ``auth-token`` is not set, the token will be read from the file specified
-    by ``auth-token-file``; if that is also not set, the environment variables
-    ``GITHUB_TOKEN`` and ``GH_TOKEN`` will be consulted for the token, in that
-    order.  Environment variables can be either set directly in the environment
-    or else read from a ``.env`` file (See the ``--env`` option under
-    "Options_" above).
+    by ``auth-token-file``.  If neither key is set, the GitHub token is looked
+    up via the following sources, in order:
+
+    - The ``GH_TOKEN`` and ``GITHUB_TOKEN`` environment variables (possibly set
+      via the ``.env`` file; see the ``--env`` option under "Options_" above)
+
+    - The gh_ command, if installed
+
+    - The hub_ command's configuration file
+
+    - The ``hub.oauthtoken`` Git config option
+
+    .. _gh: https://github.com/cli/cli
+    .. _hub: https://github.com/mislav/hub
 
 ``auth-token-file`` : path
     The path to a file containing the GitHub access token to use for

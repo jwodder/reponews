@@ -1,6 +1,8 @@
 v0.4.0 (in development)
 -----------------------
 - Support python-dotenv v1.0
+- Use [`ghtoken`](https://github.com/jwodder/ghtoken) for looking up GitHub
+  tokens
 
 v0.3.0 (2023-02-09)
 -------------------

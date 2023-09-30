@@ -2,12 +2,12 @@ from __future__ import annotations
 from collections import defaultdict
 from email.headerregistry import Address as PyAddress
 import json
-import os
 from pathlib import Path
 import re
 import sys
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
+import ghtoken  # Module import for mocking purposes
 from mailbits import parse_address
 from pydantic import AnyHttpUrl, BaseModel, Field, parse_obj_as, validator
 from pydantic.validators import str_validator
@@ -257,15 +257,14 @@ class Configuration(BaseConfig):
             return self.auth_token
         elif self.auth_token_file is not None:
             return self.auth_token_file.read_text().strip()
-        elif os.environ.get("GITHUB_TOKEN"):
-            return os.environ["GITHUB_TOKEN"]
-        elif os.environ.get("GH_TOKEN"):
-            return os.environ["GH_TOKEN"]
         else:
-            raise UserError(
-                "GitHub access token not set.  Specify in config file or via"
-                " GITHUB_TOKEN or GH_TOKEN environment variable."
-            )
+            try:
+                return ghtoken.get_ghtoken(dotenv=False)
+            except ghtoken.GHTokenNotFound:
+                raise UserError(
+                    "GitHub access token not found.  Set via config file,"
+                    " GH_TOKEN, GITHUB_TOKEN, gh, hub, or hub.oauthtoken."
+                )
 
     def get_repo_activity_prefs(
         self, repo: Repository, is_affiliated: bool

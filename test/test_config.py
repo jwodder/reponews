@@ -4,8 +4,10 @@ from operator import attrgetter
 from os.path import expanduser
 from pathlib import Path
 from typing import List, Tuple
+import ghtoken
 from pydantic import BaseModel, ValidationError
 import pytest
+from pytest_mock import MockerFixture
 from reponews.config import ActivityPrefs, Configuration
 from reponews.types import ActivityType, Repository, User
 from reponews.util import UserError, get_default_state_file
@@ -435,59 +437,22 @@ def test_get_auth_token_missing_file(monkeypatch: pytest.MonkeyPatch) -> None:
         config.get_auth_token()
 
 
-def test_get_auth_token_envvar1(
-    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
-) -> None:
-    monkeypatch.setenv("GITHUB_TOKEN", "QWERTY")
-    monkeypatch.setenv("GH_TOKEN", "QR")
+def test_get_auth_token_ghtoken(mocker: MockerFixture, tmp_home: Path) -> None:
+    m = mocker.patch("ghtoken.get_ghtoken", return_value="gh_token")
     (tmp_home / "token.txt").write_text("abcdef\n")
     config = Configuration()
-    assert config.get_auth_token() == "QWERTY"
+    assert config.get_auth_token() == "gh_token"
+    m.assert_called_once_with(dotenv=False)
 
 
-def test_get_auth_token_envvar1_empty(
-    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
-) -> None:
-    monkeypatch.setenv("GITHUB_TOKEN", "")
-    monkeypatch.setenv("GH_TOKEN", "QR")
-    (tmp_home / "token.txt").write_text("abcdef\n")
-    config = Configuration()
-    assert config.get_auth_token() == "QR"
-
-
-def test_get_auth_token_envvar2(
-    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
-) -> None:
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.setenv("GH_TOKEN", "QR")
-    (tmp_home / "token.txt").write_text("abcdef\n")
-    config = Configuration()
-    assert config.get_auth_token() == "QR"
-
-
-def test_get_auth_token_notset(monkeypatch: pytest.MonkeyPatch, tmp_home: Path) -> None:
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.delenv("GH_TOKEN", raising=False)
+def test_get_auth_token_notset(mocker: MockerFixture, tmp_home: Path) -> None:
+    m = mocker.patch("ghtoken.get_ghtoken", side_effect=ghtoken.GHTokenNotFound())
     (tmp_home / "token.txt").write_text("abcdef\n")
     config = Configuration()
     with pytest.raises(UserError) as excinfo:
         config.get_auth_token()
     assert str(excinfo.value) == (
-        "GitHub access token not set.  Specify in config file or via"
-        " GITHUB_TOKEN or GH_TOKEN environment variable."
+        "GitHub access token not found.  Set via config file, GH_TOKEN,"
+        " GITHUB_TOKEN, gh, hub, or hub.oauthtoken."
     )
-
-
-def test_get_auth_token_envvar2_empty(
-    monkeypatch: pytest.MonkeyPatch, tmp_home: Path
-) -> None:
-    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
-    monkeypatch.setenv("GH_TOKEN", "")
-    (tmp_home / "token.txt").write_text("abcdef\n")
-    config = Configuration()
-    with pytest.raises(UserError) as excinfo:
-        config.get_auth_token()
-    assert str(excinfo.value) == (
-        "GitHub access token not set.  Specify in config file or via"
-        " GITHUB_TOKEN or GH_TOKEN environment variable."
-    )
+    m.assert_called_once_with(dotenv=False)
