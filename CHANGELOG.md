@@ -6,6 +6,7 @@ v0.4.0 (in development)
 - Ensure that the state file is always read & written using UTF-8 encoding
 - Always read the auth-token-file using UTF-8 encoding
 - Explicitly depend on `click-loglevel`
+- Support Python 3.12
 
 v0.3.0 (2023-02-09)
 -------------------
