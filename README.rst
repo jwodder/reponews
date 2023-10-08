@@ -170,10 +170,10 @@ Configuration
 location depends on your OS:
 
 =======  ==================================================================
-Linux    ``~/.local/share/reponews/config.toml``
-         or ``$XDG_DATA_HOME/reponews/config.toml``
+Linux    ``~/.config/reponews/config.toml``
+         or ``$XDG_CONFIG_HOME/reponews/config.toml``
 macOS    ``~/Library/Application Support/reponews/config.toml``
-Windows  ``C:\Users\<username>\AppData\Local\jwodder\reponews\config.toml``
+Windows  ``%USERPROFILE%\AppData\Local\jwodder\reponews\config.toml``
 =======  ==================================================================
 
 This TOML file must contain a ``[reponews]`` table with the following keys &
@@ -239,7 +239,7 @@ result in an error.
     Linux    ``~/.local/state/reponews/state.json``
              or ``$XDG_STATE_HOME/reponews/state.json``
     macOS    ``~/Library/Application Support/reponews/state.json``
-    Windows  ``C:\Users\<username>\AppData\Local\jwodder\reponews\state.json``
+    Windows  ``%USERPROFILE%\AppData\Local\jwodder\reponews\state.json``
     =======  =================================================================
 
 ``api-url`` : URL
