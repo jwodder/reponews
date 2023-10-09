@@ -1,11 +1,9 @@
 from __future__ import annotations
 from collections.abc import Iterator
 import json
-import platform
 from time import sleep
 from typing import Any, Optional
 import requests
-from . import __url__, __version__
 from .qmanager import (
     ActivityQuery,
     OwnersReposQuery,
@@ -14,17 +12,9 @@ from .qmanager import (
     ViewersReposQuery,
 )
 from .types import ActivityType, Affiliation, CursorDict, RepoActivity, Repository
-from .util import NotFoundError, T, log
+from .util import HTTP_USER_AGENT, NotFoundError, T, log
 
 PAGE_SIZE = 50
-
-USER_AGENT = "reponews/{} ({}) requests/{} {}/{}".format(
-    __version__,
-    __url__,
-    requests.__version__,
-    platform.python_implementation(),
-    platform.python_version(),
-)
 
 MAX_RETRIES = 5
 RETRY_STATUSES = (500, 502, 503, 504)
@@ -37,7 +27,7 @@ class Client:
         self.api_url = api_url
         self.s = requests.Session()
         self.s.headers["Authorization"] = f"bearer {token}"
-        self.s.headers["User-Agent"] = USER_AGENT
+        self.s.headers["User-Agent"] = HTTP_USER_AGENT
         # <https://github.blog/2021-11-16-graphql-global-id-migration-update/>
         self.s.headers["X-Github-Next-Global-ID"] = "1"
 

@@ -30,7 +30,7 @@ from reponews.types import (
     RepoActivity,
     Repository,
 )
-from reponews.util import NotFoundError
+from reponews.util import MAIL_USER_AGENT, NotFoundError
 
 MOCK_DIR = Path(__file__).with_name("data") / "mock"
 
@@ -127,6 +127,7 @@ MSG_SPEC = {
             "content_type": "text/plain",
             "params": {},
         },
+        "user-agent": [MAIL_USER_AGENT],
     },
     "preamble": ANY,
     "content": (MOCK_DIR / "body.txt").read_text(),

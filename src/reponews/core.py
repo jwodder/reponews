@@ -23,7 +23,7 @@ from .types import (
     RepoTrackedEvent,
     RepoUntrackedEvent,
 )
-from .util import NotFoundError, UserError, log
+from .util import MAIL_USER_AGENT, NotFoundError, UserError, log
 
 
 class RepoState(BaseModel):
@@ -225,6 +225,7 @@ class RepoNews:
             else None,
             to=[self.config.recipient.as_py_address()],
             text=self.compose_email_body(events),
+            headers={"User-Agent": MAIL_USER_AGENT},
         )
 
     def save_state(self) -> None:
