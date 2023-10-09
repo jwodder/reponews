@@ -50,8 +50,9 @@ Mode = Enum("Mode", "PRINT PRINT_BODY DUMP_REPOS")
     "-l",
     "--log-level",
     type=LogLevel(),
-    default=logging.WARNING,
-    help="Set logging level  [default: WARNING]",
+    default="WARNING",
+    help="Set logging level",
+    show_default=True,
 )
 @click.option(
     "--print",
