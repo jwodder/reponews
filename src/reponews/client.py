@@ -2,6 +2,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 import json
 from time import sleep
+from types import TracebackType
 from typing import Any, Optional
 import requests
 from .qmanager import (
@@ -34,7 +35,12 @@ class Client:
     def __enter__(self) -> Client:
         return self
 
-    def __exit__(self, _exc_type: Any, _exc_value: Any, _exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> None:
         self.s.close()
 
     def query(self, query: str, variables: Optional[dict[str, Any]] = None) -> Any:

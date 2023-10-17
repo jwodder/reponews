@@ -8,7 +8,8 @@ import logging
 from pathlib import Path
 from shutil import copytree
 from traceback import format_exception
-from typing import Any, Dict, List, Optional, Union, cast
+from types import TracebackType
+from typing import Dict, List, Optional, Union, cast
 from unittest.mock import ANY
 from click.testing import CliRunner, Result
 from mailbits import email2dict
@@ -69,7 +70,12 @@ class MockClient:
     def __enter__(self) -> MockClient:
         return self
 
-    def __exit__(self, exc_type: Any, _exc_value: Any, _exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> None:
         if exc_type is None and self.querying:
             assert not self.data.owners, "Not all owners queried"
             assert not self.data.repos, "Not all repositories queried"

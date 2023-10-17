@@ -6,6 +6,7 @@ from email.message import EmailMessage
 import json
 from operator import attrgetter
 from pathlib import Path
+from types import TracebackType
 from typing import Any, Dict, List
 from eletter import compose
 from pydantic import BaseModel, Field
@@ -115,8 +116,13 @@ class RepoNews:
     def __enter__(self) -> RepoNews:
         return self
 
-    def __exit__(self, exc_type: Any, exc_value: Any, exc_tb: Any) -> None:
-        self.client.__exit__(exc_type, exc_value, exc_tb)
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.client.__exit__(exc_type, exc_val, exc_tb)
 
     @classmethod
     def from_config(cls, config: Configuration) -> RepoNews:
