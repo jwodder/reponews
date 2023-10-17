@@ -18,7 +18,7 @@ DEFAULT_CONFIG_FILE = user_config_path("reponews", "jwodder") / "config.toml"
 Mode = Enum("Mode", "PRINT PRINT_BODY DUMP_REPOS")
 
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(
     __version__,
     "-V",
