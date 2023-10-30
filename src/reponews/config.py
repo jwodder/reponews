@@ -11,6 +11,7 @@ from ghrepo import GH_REPO_RGX, GH_USER_RGX
 import ghtoken  # Module import for mocking purposes
 from mailbits import parse_address
 from pydantic import AnyHttpUrl, BaseModel, Field, GetCoreSchemaHandler, field_validator
+from pydantic.functional_serializers import PlainSerializer
 from pydantic_core import CoreSchema, core_schema
 from .types import ActivityType, Affiliation, Repository
 from .util import UserError, default_api_url, get_default_state_file, mkalias
@@ -19,6 +20,11 @@ if sys.version_info[:2] >= (3, 11):
     from tomllib import load as toml_load
 else:
     from tomli import load as toml_load
+
+if sys.version_info >= (3, 9):
+    from typing import Annotated
+else:
+    from typing_extensions import Annotated
 
 
 @dataclass
@@ -45,7 +51,7 @@ class Address:
         return PyAddress(self.name or "", addr_spec=self.address)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RepoSpec:
     owner: str
     name: Optional[str]
@@ -55,13 +61,13 @@ class RepoSpec:
         cls, _source_type: Any, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
         return core_schema.no_info_after_validator_function(
-            cls._parse,
+            cls.parse,
             handler(str),
             serialization=core_schema.plain_serializer_function_ser_schema(asdict),
         )
 
     @classmethod
-    def _parse(cls, value: str) -> RepoSpec:
+    def parse(cls, value: str) -> RepoSpec:
         m = re.fullmatch(
             rf"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
         )
@@ -70,28 +76,8 @@ class RepoSpec:
         else:
             raise ValueError(f"Invalid repo spec: {value!r}")
 
-
-class RepoSpecKey(str):
-    # Like RepoSpec, but usable as a key in a dict that can be JSONified by
-    # pydantic.  (We're not using RepoSpec itself as such a key because we want
-    # RepoSpecs to be expanded into dicts when JSONified.)
-    owner: str
-    name: Optional[str]
-
-    def __init__(self, s: str) -> None:
-        if m := re.fullmatch(
-            rf"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", s
-        ):
-            self.owner = m["owner"]
-            self.name = None if m["name"] == "*" else m["name"]
-        else:
-            raise ValueError(f"Invalid repo spec: {s!r}")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, _source_type: Any, handler: GetCoreSchemaHandler
-    ) -> CoreSchema:
-        return core_schema.no_info_after_validator_function(cls, handler(str))
+    def __str__(self) -> str:
+        return f"{self.owner}/{self.name or '*'}"
 
 
 class BaseConfig(BaseModel):
@@ -158,7 +144,9 @@ class RepoActivityPrefs(PartialActivityPrefs):
 
 class ActivityConfig(PartialActivityPrefs):
     affiliated: PartialActivityPrefs = Field(default_factory=PartialActivityPrefs)
-    repo: Dict[RepoSpecKey, RepoActivityPrefs] = Field(default_factory=dict)
+    repo: Dict[
+        Annotated[RepoSpec, PlainSerializer(lambda s: str(s))], RepoActivityPrefs
+    ] = Field(default_factory=dict)
 
 
 class ReposConfig(BaseConfig):
@@ -180,7 +168,7 @@ class RepoInclusions:
 
     @classmethod
     def from_repos_config(
-        cls, repos_config: ReposConfig, preffed_repos: list[RepoSpecKey]
+        cls, repos_config: ReposConfig, preffed_repos: list[RepoSpec]
     ) -> RepoInclusions:
         rinc = cls()
         for rs in repos_config.include + [
@@ -270,7 +258,7 @@ class Configuration(BaseConfig):
             prefs.update(self.activity.affiliated)
         for spec in [f"{repo.owner}/*", str(repo)]:
             try:
-                p = self.activity.repo[RepoSpecKey(spec)]
+                p = self.activity.repo[RepoSpec.parse(spec)]
             except KeyError:
                 pass
             else:
