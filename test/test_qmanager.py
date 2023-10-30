@@ -472,7 +472,7 @@ def test_owners_repos_query_no_repos() -> None:
         == []
     )
     assert manager.cursor is None
-    assert not manager.has_next_page  # type: ignore[unreachable]
+    assert not manager.has_next_page
 
 
 def test_single_repo_query() -> None:

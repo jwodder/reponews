@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Any, ClassVar, Generic, List, Optional, Tuple
-from pydantic import BaseModel
+from dataclasses import dataclass, field
+from typing import Any, ClassVar, Generic
 from .qlobjs import REPO_FIELDS, Object
 from .types import ActivityType, Affiliation, CursorDict, RepoActivity, Repository
 from .util import BogusEventError, NotFoundError, T, log
@@ -9,8 +9,9 @@ from .util import BogusEventError, NotFoundError, T, log
 PAGE_SIZE = 50
 
 
-class QueryManager(BaseModel, Generic[T]):
-    has_next_page: bool = True
+@dataclass
+class QueryManager(Generic[T]):
+    has_next_page: bool = field(init=False, default=True)
 
     @abstractmethod
     def make_query(self) -> tuple[str, dict[str, Any]]:
@@ -21,9 +22,10 @@ class QueryManager(BaseModel, Generic[T]):
         ...
 
 
+@dataclass
 class ReposQuery(QueryManager[Repository]):
-    PATH: ClassVar[Tuple[str, ...]]
-    cursor: Optional[str] = None
+    PATH: ClassVar[tuple[str, ...]]
+    cursor: str | None = field(init=False, default=None)
 
     def parse_response(self, data: Any) -> list[Repository]:
         root = data["data"]
@@ -37,9 +39,10 @@ class ReposQuery(QueryManager[Repository]):
         return [Repository.from_node(node) for node in root["nodes"]]
 
 
+@dataclass
 class ViewersReposQuery(ReposQuery):
-    PATH: ClassVar[Tuple[str, ...]] = ("viewer", "repositories")
-    affiliations: List[Affiliation]
+    PATH: ClassVar[tuple[str, ...]] = ("viewer", "repositories")
+    affiliations: list[Affiliation]
 
     def make_query(self) -> tuple[str, dict[str, Any]]:
         q = str(
@@ -75,8 +78,9 @@ class ViewersReposQuery(ReposQuery):
         return (q, variables)
 
 
+@dataclass
 class OwnersReposQuery(ReposQuery):
-    PATH: ClassVar[Tuple[str, ...]] = ("repositoryOwner", "repositories")
+    PATH: ClassVar[tuple[str, ...]] = ("repositoryOwner", "repositories")
     owner: str
 
     def make_query(self) -> tuple[str, dict[str, Any]]:
@@ -117,6 +121,7 @@ class OwnersReposQuery(ReposQuery):
         return super().parse_response(data)
 
 
+@dataclass
 class SingleRepoQuery(QueryManager[Repository]):
     owner: str
     name: str
@@ -138,9 +143,10 @@ class SingleRepoQuery(QueryManager[Repository]):
         return [Repository.from_node(data["data"]["repository"])]
 
 
+@dataclass
 class ActivityQuery(QueryManager[RepoActivity]):
     repo: Repository
-    types: List[ActivityType]
+    types: list[ActivityType]
     cursors: CursorDict
 
     def make_query(self) -> tuple[str, dict[str, Any]]:

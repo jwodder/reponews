@@ -1,12 +1,12 @@
 from __future__ import annotations
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from email.headerregistry import Address as PyAddress
 from functools import cached_property
 from pathlib import Path
 import re
 import sys
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 import ghtoken  # Module import for mocking purposes
 from mailbits import parse_address
@@ -167,13 +167,14 @@ class ReposConfig(BaseConfig):
     exclude: List[RepoSpec] = Field(default_factory=list)
 
 
-class RepoInclusions(BaseModel):
-    included_owners: Set[str] = Field(default_factory=set)
-    excluded_owners: Set[str] = Field(default_factory=set)
-    included_repos: Dict[str, Set[str]] = Field(
+@dataclass
+class RepoInclusions:
+    included_owners: set[str] = field(default_factory=set)
+    excluded_owners: set[str] = field(default_factory=set)
+    included_repos: dict[str, set[str]] = field(
         default_factory=lambda: defaultdict(set)
     )
-    excluded_repos: Dict[str, Set[str]] = Field(
+    excluded_repos: dict[str, set[str]] = field(
         default_factory=lambda: defaultdict(set)
     )
 
