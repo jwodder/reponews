@@ -99,9 +99,6 @@ class BaseConfig(BaseModel):
         "alias_generator": mkalias,
         "populate_by_name": True,
         "extra": "forbid",
-        # <https://github.com/samuelcolvin/pydantic/issues/1241>
-        "arbitrary_types_allowed": True,
-        "ignored_types": (cached_property,),
     }
 
 
