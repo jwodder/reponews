@@ -42,7 +42,7 @@ def test_parse_config(tomlfile: Path) -> None:
     for key in ("auth_token_file", "state_file"):
         if expected[key] is not None:
             expected[key] = expanduser(expected[key]).format(config=tomlfile.parent)
-    assert config.for_json() == expected
+    assert config.model_dump(mode="json") == expected
 
 
 @pytest.mark.parametrize(

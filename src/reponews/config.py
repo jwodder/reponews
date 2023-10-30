@@ -290,6 +290,3 @@ class Configuration(BaseConfig):
 
     def is_repo_excluded(self, repo: Repository) -> bool:
         return self.inclusions.is_repo_excluded(repo)
-
-    def for_json(self) -> Any:
-        return self.model_dump(mode="json")
