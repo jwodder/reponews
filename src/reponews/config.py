@@ -131,9 +131,8 @@ class ActivityPrefs(PartialActivityPrefs):
 
     def update(self, prefs: PartialActivityPrefs) -> None:
         pd = dict(prefs)
-        for field_name in self.__fields__.keys():
-            v = pd[field_name]
-            if v is not None:
+        for field_name in self.model_fields:
+            if (v := pd[field_name]) is not None:
                 assert isinstance(v, bool)
                 setattr(self, field_name, v)
 
