@@ -2,6 +2,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from email.headerregistry import Address as PyAddress
+from functools import cached_property
 from pathlib import Path
 import re
 import sys
@@ -18,11 +19,6 @@ if sys.version_info[:2] >= (3, 11):
     from tomllib import load as toml_load
 else:
     from tomli import load as toml_load
-
-if sys.version_info[:2] >= (3, 8):
-    from functools import cached_property
-else:
-    from backports.cached_property import cached_property
 
 
 @dataclass
