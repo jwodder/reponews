@@ -3,9 +3,11 @@ from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 import json
+import sys
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, Literal, Optional
 from eletter import reply_quote
 from pydantic import BaseModel, field_validator
+from pydantic.functional_serializers import PlainSerializer
 from .qlobjs import (
     DISCUSSION_CONNECTION,
     DISCUSSION_LAST_CONNECTION,
@@ -24,6 +26,12 @@ from .qlobjs import (
     Object,
 )
 from .util import BogusEventError, dos2unix, log
+
+if sys.version_info >= (3, 9):
+    from typing import Annotated
+else:
+    from typing_extensions import Annotated
+
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -331,4 +339,6 @@ class ActivityType(Enum):
         self.event_cls = event_cls
 
 
-CursorDict = Dict[ActivityType, Optional[str]]
+CursorDict = Dict[
+    Annotated[ActivityType, PlainSerializer(lambda t: t.value)], Optional[str]
+]

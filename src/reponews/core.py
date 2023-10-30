@@ -3,13 +3,12 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from email.message import EmailMessage
-import json
 from operator import attrgetter
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, List
+from typing import Dict
 from eletter import compose
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 from . import client
 from .config import Configuration
 from .types import (
@@ -31,24 +30,22 @@ class RepoState(BaseModel):
     repo: Repository
     cursors: CursorDict = Field(default_factory=dict)
 
-    def for_json(self) -> Any:
-        return {
-            "repo": self.repo.model_dump(mode="json"),
-            "cursors": {k.value: v for k, v in self.cursors.items()},
-        }
+
+state_adapter = TypeAdapter(Dict[str, RepoState])
 
 
-class State(BaseModel):
+@dataclass
+class State:
     path: Path
-    old_state: Dict[str, RepoState]
-    new_state: Dict[str, RepoState] = Field(default_factory=dict)
-    state_events: List[Event] = Field(default_factory=list)
+    old_state: dict[str, RepoState]
+    new_state: dict[str, RepoState] = field(init=False, default_factory=dict)
+    state_events: list[Event] = field(init=False, default_factory=list)
 
     @classmethod
     def from_file(cls, path: Path) -> State:
         try:
             with path.open(encoding="utf-8") as fp:
-                state = json.load(fp)
+                state = state_adapter.validate_json(fp.read())
         except FileNotFoundError:
             log.info("State file not found; treating as empty")
             state = {}
@@ -95,10 +92,7 @@ class State(BaseModel):
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps({k: v.for_json() for k, v in self.new_state.items()}),
-            encoding="utf-8",
-        )
+        self.path.write_bytes(state_adapter.dump_json(self.new_state))
 
 
 @dataclass
