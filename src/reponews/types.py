@@ -4,9 +4,9 @@ from datetime import datetime
 from enum import Enum
 import json
 import sys
-from typing import Any, ClassVar, Dict, Optional
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional
 from eletter import reply_quote
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from .qlobjs import (
     DISCUSSION_CONNECTION,
     DISCUSSION_LAST_CONNECTION,
@@ -24,12 +24,15 @@ from .qlobjs import (
     TAG_LAST_CONNECTION,
     Object,
 )
-from .util import BogusEventError, T, dos2unix, log
+from .util import BogusEventError, dos2unix, log
 
 if sys.version_info[:2] >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class Affiliation(Enum):
@@ -56,13 +59,13 @@ class Repository(BaseModel):
     name: str
     nameWithOwner: str
     url: str
-    description: Optional[str]
+    description: Optional[str] = None
     descriptionHTML: str
 
     @classmethod
     def from_node(cls, node: dict[str, Any]) -> Repository:
         log.debug("Constructing Repository from node: %s", json.dumps(node))
-        return cls.parse_obj(node)
+        return cls.model_validate(node)
 
     def __str__(self) -> str:
         return self.nameWithOwner
@@ -84,7 +87,7 @@ class RepoActivity(Event):
 
     @classmethod
     @abstractmethod
-    def from_node(cls: type[T], _repo: Repository, node: dict[str, Any]) -> T:
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> Self:
         ...
 
     @property
@@ -104,7 +107,7 @@ class NewIssueoidEvent(RepoActivity):
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("createdAt")
         node["repo"] = repo
-        return cls.parse_obj(node)
+        return cls.model_validate(node)
 
     def render(self) -> str:
         return (
@@ -121,38 +124,39 @@ class NewIssueoidEvent(RepoActivity):
 
 
 class NewIssueEvent(NewIssueoidEvent):
-    CONNECTION = ISSUE_CONNECTION
-    LAST_CONNECTION = ISSUE_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = ISSUE_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = ISSUE_LAST_CONNECTION
     event_type: Literal["issue"] = "issue"
 
 
 class NewPREvent(NewIssueoidEvent):
-    CONNECTION = PR_CONNECTION
-    LAST_CONNECTION = PR_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = PR_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = PR_LAST_CONNECTION
     event_type: Literal["pr"] = "pr"
 
 
 class NewDiscussionEvent(NewIssueoidEvent):
-    CONNECTION = DISCUSSION_CONNECTION
-    LAST_CONNECTION = DISCUSSION_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = DISCUSSION_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = DISCUSSION_LAST_CONNECTION
     event_type: Literal["discussion"] = "discussion"
 
 
 class NewReleaseEvent(RepoActivity):
-    CONNECTION = RELEASE_CONNECTION
-    LAST_CONNECTION = RELEASE_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = RELEASE_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = RELEASE_LAST_CONNECTION
     event_type: Literal["release"] = "release"
-    name: Optional[str]
+    name: Optional[str] = None
     tagName: str
-    author: Optional[User]
-    description: Optional[str]
-    descriptionHTML: Optional[str]
+    author: Optional[User] = None
+    description: Optional[str] = None
+    descriptionHTML: Optional[str] = None
     isDraft: bool
     isPrerelease: bool
     url: str
 
-    @validator("description")
-    def _dos2unix(cls, v: Optional[str]) -> Optional[str]:  # noqa: B902, U100
+    @field_validator("description")
+    @classmethod
+    def _dos2unix(cls, v: Optional[str]) -> Optional[str]:
         return dos2unix(v) if v is not None else None
 
     @classmethod
@@ -160,7 +164,7 @@ class NewReleaseEvent(RepoActivity):
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("createdAt")
         node["repo"] = repo
-        return cls.parse_obj(node)
+        return cls.model_validate(node)
 
     def render(self) -> str:
         s = f"[{self.repo.nameWithOwner}] RELEASE {self.tagName}"
@@ -186,8 +190,8 @@ class NewReleaseEvent(RepoActivity):
 
 
 class NewTagEvent(RepoActivity):
-    CONNECTION = TAG_CONNECTION
-    LAST_CONNECTION = TAG_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = TAG_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = TAG_LAST_CONNECTION
     event_type: Literal["tag"] = "tag"
     name: str
     user: Optional[User]
@@ -217,7 +221,7 @@ class NewTagEvent(RepoActivity):
                 " to a commit"
             )
         node["repo"] = repo
-        return cls.parse_obj(node)
+        return cls.model_validate(node)
 
     def render(self) -> str:
         s = f"[{self.repo.nameWithOwner}] TAG {self.name}"
@@ -235,8 +239,8 @@ class NewTagEvent(RepoActivity):
 
 
 class NewStarEvent(RepoActivity):
-    CONNECTION = STAR_CONNECTION
-    LAST_CONNECTION = STAR_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = STAR_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = STAR_LAST_CONNECTION
     event_type: Literal["star"] = "star"
     user: User
 
@@ -245,7 +249,7 @@ class NewStarEvent(RepoActivity):
         log.debug("Constructing %s from node: %s", cls.__name__, json.dumps(node))
         node["timestamp"] = node.pop("starredAt")
         node["repo"] = repo
-        return cls.parse_obj(node)
+        return cls.model_validate(node)
 
     def render(self) -> str:
         return f"★ @{self.user.login} starred {self.repo.nameWithOwner}"
@@ -259,8 +263,8 @@ class NewStarEvent(RepoActivity):
 
 
 class NewForkEvent(RepoActivity):
-    CONNECTION = FORK_CONNECTION
-    LAST_CONNECTION = FORK_LAST_CONNECTION
+    CONNECTION: ClassVar[Object] = FORK_CONNECTION
+    LAST_CONNECTION: ClassVar[Object] = FORK_LAST_CONNECTION
     event_type: Literal["fork"] = "fork"
     fork: Repository
 

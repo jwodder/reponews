@@ -64,7 +64,8 @@ class MockClient:
     def __init__(self, api_url: str, token: str, querying: bool = True) -> None:
         assert api_url == "https://test.nil/api"
         assert token == "1234567890"
-        self.data = SessionData.parse_file(MOCK_DIR / "session-data.json")
+        with (MOCK_DIR / "session-data.json").open() as fp:
+            self.data = SessionData.model_validate(json.load(fp))
         self.querying = querying
 
     def __enter__(self) -> MockClient:

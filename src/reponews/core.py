@@ -33,7 +33,7 @@ class RepoState(BaseModel):
 
     def for_json(self) -> Any:
         return {
-            "repo": self.repo.dict(),
+            "repo": self.repo.model_dump(mode="json"),
             "cursors": {k.value: v for k, v in self.cursors.items()},
         }
 
@@ -109,7 +109,7 @@ class RepoNews:
 
     def __post_init__(self) -> None:
         self.client = client.Client(
-            api_url=self.config.api_url,
+            api_url=str(self.config.api_url),
             token=self.config.get_auth_token(),
         )
 
@@ -213,7 +213,7 @@ class RepoNews:
         prefs: dict[str, dict] = {}
         for repo, is_affiliated in self.get_repositories():
             activity = self.config.get_repo_activity_prefs(repo, is_affiliated)
-            prefs[str(repo)] = activity.dict()
+            prefs[str(repo)] = activity.model_dump(mode="json")
         return prefs
 
     def compose_email_body(self, events: list[Event]) -> str:

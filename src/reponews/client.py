@@ -80,7 +80,7 @@ class Client:
             except (AttributeError, LookupError, TypeError, ValueError):
                 pass
             raise APIException(r)
-        return r.json()
+        return data
 
     def do_managed_query(self, manager: QueryManager[T]) -> Iterator[T]:
         while manager.has_next_page:

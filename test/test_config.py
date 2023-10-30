@@ -69,7 +69,8 @@ class InclusionCase(BaseModel):
 )
 def test_inclusions(tomlfile: Path) -> None:
     config = Configuration.from_toml_file(DATA_DIR / "inclusions" / tomlfile)
-    expected = InclusionCase.parse_file(tomlfile.with_suffix(".json"))
+    with tomlfile.with_suffix(".json").open() as fp:
+        expected = InclusionCase.model_validate(json.load(fp))
     assert config.get_included_repo_owners() == expected.included_owners
     assert config.get_included_repos() == expected.included_repos
     for owner, name in expected.not_excluded_repos:

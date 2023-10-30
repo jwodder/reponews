@@ -38,7 +38,7 @@ class ReposQuery(QueryManager[Repository]):
 
 
 class ViewersReposQuery(ReposQuery):
-    PATH = ("viewer", "repositories")
+    PATH: ClassVar[Tuple[str, ...]] = ("viewer", "repositories")
     affiliations: List[Affiliation]
 
     def make_query(self) -> tuple[str, dict[str, Any]]:
@@ -76,7 +76,7 @@ class ViewersReposQuery(ReposQuery):
 
 
 class OwnersReposQuery(ReposQuery):
-    PATH = ("repositoryOwner", "repositories")
+    PATH: ClassVar[Tuple[str, ...]] = ("repositoryOwner", "repositories")
     owner: str
 
     def make_query(self) -> tuple[str, dict[str, Any]]:
