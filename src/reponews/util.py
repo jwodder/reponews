@@ -5,6 +5,7 @@ import platform
 import re
 from typing import TypeVar
 from platformdirs import user_state_path
+from pydantic import AnyHttpUrl, TypeAdapter
 import requests
 from . import __url__, __version__
 
@@ -34,6 +35,11 @@ def get_default_state_file() -> Path:
 
 def dos2unix(s: str) -> str:
     return re.sub(r"\r\n?", "\n", s)
+
+
+def default_api_url() -> AnyHttpUrl:
+    adapter = TypeAdapter(AnyHttpUrl)
+    return adapter.validate_python("https://api.github.com/graphql")
 
 
 class NotFoundError(Exception):

@@ -1,41 +1,46 @@
 from __future__ import annotations
 from collections import defaultdict
+from dataclasses import asdict, dataclass, field
 from email.headerregistry import Address as PyAddress
-import json
+from functools import cached_property
 from pathlib import Path
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 import ghtoken  # Module import for mocking purposes
 from mailbits import parse_address
-from pydantic import AnyHttpUrl, BaseModel, Field, parse_obj_as, validator
-from pydantic.validators import str_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, GetCoreSchemaHandler, field_validator
+from pydantic.functional_serializers import PlainSerializer
+from pydantic_core import CoreSchema, core_schema
 from .types import ActivityType, Affiliation, Repository
-from .util import UserError, get_default_state_file, mkalias
+from .util import UserError, default_api_url, get_default_state_file, mkalias
 
 if sys.version_info[:2] >= (3, 11):
     from tomllib import load as toml_load
 else:
     from tomli import load as toml_load
 
-if sys.version_info[:2] >= (3, 8):
-    from functools import cached_property
+if sys.version_info >= (3, 9):
+    from typing import Annotated
 else:
-    from backports.cached_property import cached_property
-
-if TYPE_CHECKING:
-    from pydantic.typing import CallableGenerator
+    from typing_extensions import Annotated
 
 
-class Address(BaseModel):
+@dataclass
+class Address:
     name: Optional[str]
     address: str
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield str_validator
-        yield cls._parse
+    def __get_pydantic_core_schema__(
+        cls, _source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls._parse,
+            handler(str),
+            serialization=core_schema.plain_serializer_function_ser_schema(asdict),
+        )
 
     @classmethod
     def _parse(cls, value: str) -> Address:
@@ -46,17 +51,23 @@ class Address(BaseModel):
         return PyAddress(self.name or "", addr_spec=self.address)
 
 
-class RepoSpec(BaseModel):
+@dataclass(frozen=True)
+class RepoSpec:
     owner: str
     name: Optional[str]
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield str_validator
-        yield cls._parse
+    def __get_pydantic_core_schema__(
+        cls, _source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.parse,
+            handler(str),
+            serialization=core_schema.plain_serializer_function_ser_schema(asdict),
+        )
 
     @classmethod
-    def _parse(cls, value: str) -> RepoSpec:
+    def parse(cls, value: str) -> RepoSpec:
         m = re.fullmatch(
             rf"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
         )
@@ -65,48 +76,16 @@ class RepoSpec(BaseModel):
         else:
             raise ValueError(f"Invalid repo spec: {value!r}")
 
-
-class RepoSpecKey(str):
-    # Like RepoSpec, but usable as a key in a dict that can be JSONified by
-    # pydantic.  (We're not using RepoSpec itself as such a key because we want
-    # RepoSpecs to be expanded into dicts when JSONified.)
-    owner: str
-    name: Optional[str]
-
-    def __init__(self, s: str) -> None:
-        owner, name = s.split("/")
-        self.owner = owner
-        self.name = None if name == "*" else name
-
-    @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield str_validator
-        yield cls._validate
-        yield cls
-
-    @classmethod
-    def _validate(cls, value: str) -> str:
-        if re.fullmatch(
-            rf"(?P<owner>{GH_USER_RGX})/(?:\*|(?P<name>{GH_REPO_RGX}))", value
-        ):
-            return value
-        else:
-            raise ValueError(f"Invalid repo spec: {value!r}")
-
-    @classmethod
-    def parse(cls, s: str) -> RepoSpecKey:
-        return parse_obj_as(cls, s)
+    def __str__(self) -> str:
+        return f"{self.owner}/{self.name or '*'}"
 
 
 class BaseConfig(BaseModel):
-    class Config:
-        alias_generator = mkalias
-        allow_population_by_field_name = True
-        extra = "forbid"
-
-        # <https://github.com/samuelcolvin/pydantic/issues/1241>
-        arbitrary_types_allowed = True
-        keep_untouched = (cached_property,)
+    model_config = {
+        "alias_generator": mkalias,
+        "populate_by_name": True,
+        "extra": "forbid",
+    }
 
 
 class PartialActivityPrefs(BaseConfig):
@@ -132,7 +111,7 @@ class ActivityPrefs(PartialActivityPrefs):
     forks: bool = True
     my_activity: bool = False
 
-    def get_activity_types(self) -> List[ActivityType]:
+    def get_activity_types(self) -> list[ActivityType]:
         types: list[ActivityType] = []
         if self.issues:
             types.append(ActivityType.ISSUE)
@@ -152,9 +131,8 @@ class ActivityPrefs(PartialActivityPrefs):
 
     def update(self, prefs: PartialActivityPrefs) -> None:
         pd = dict(prefs)
-        for field_name in self.__fields__.keys():
-            v = pd[field_name]
-            if v is not None:
+        for field_name in self.model_fields:
+            if (v := pd[field_name]) is not None:
                 assert isinstance(v, bool)
                 setattr(self, field_name, v)
 
@@ -165,7 +143,9 @@ class RepoActivityPrefs(PartialActivityPrefs):
 
 class ActivityConfig(PartialActivityPrefs):
     affiliated: PartialActivityPrefs = Field(default_factory=PartialActivityPrefs)
-    repo: Dict[RepoSpecKey, RepoActivityPrefs] = Field(default_factory=dict)
+    repo: Dict[
+        Annotated[RepoSpec, PlainSerializer(lambda s: str(s))], RepoActivityPrefs
+    ] = Field(default_factory=dict)
 
 
 class ReposConfig(BaseConfig):
@@ -174,19 +154,20 @@ class ReposConfig(BaseConfig):
     exclude: List[RepoSpec] = Field(default_factory=list)
 
 
-class RepoInclusions(BaseModel):
-    included_owners: Set[str] = Field(default_factory=set)
-    excluded_owners: Set[str] = Field(default_factory=set)
-    included_repos: Dict[str, Set[str]] = Field(
+@dataclass
+class RepoInclusions:
+    included_owners: set[str] = field(default_factory=set)
+    excluded_owners: set[str] = field(default_factory=set)
+    included_repos: dict[str, set[str]] = field(
         default_factory=lambda: defaultdict(set)
     )
-    excluded_repos: Dict[str, Set[str]] = Field(
+    excluded_repos: dict[str, set[str]] = field(
         default_factory=lambda: defaultdict(set)
     )
 
     @classmethod
     def from_repos_config(
-        cls, repos_config: ReposConfig, preffed_repos: list[RepoSpecKey]
+        cls, repos_config: ReposConfig, preffed_repos: list[RepoSpec]
     ) -> RepoInclusions:
         rinc = cls()
         for rs in repos_config.include + [
@@ -233,12 +214,13 @@ class Configuration(BaseConfig):
     # The default is implemented as a factory in order to make it easy to test
     # with a fake $HOME:
     state_file: Path = Field(default_factory=get_default_state_file)
-    api_url: AnyHttpUrl = parse_obj_as(AnyHttpUrl, "https://api.github.com/graphql")
+    api_url: AnyHttpUrl = Field(default_factory=default_api_url)
     activity: ActivityConfig = Field(default_factory=ActivityConfig)
     repos: ReposConfig = Field(default_factory=ReposConfig)
 
-    @validator("auth_token_file", "state_file")
-    def _expand_path(cls, v: Optional[Path]) -> Optional[Path]:  # noqa: B902, U100
+    @field_validator("auth_token_file", "state_file")
+    @classmethod
+    def _expand_path(cls, v: Optional[Path]) -> Optional[Path]:
         return v.expanduser() if v is not None else v
 
     @classmethod
@@ -246,7 +228,7 @@ class Configuration(BaseConfig):
         with open(filepath, "rb") as fp:
             data = toml_load(fp).get("reponews", {})
         basedir = Path(filepath).parent
-        config = cls.parse_obj(data)
+        config = cls.model_validate(data)
         if config.auth_token_file is not None:
             config.auth_token_file = basedir / config.auth_token_file
         config.state_file = basedir / config.state_file
@@ -275,7 +257,7 @@ class Configuration(BaseConfig):
             prefs.update(self.activity.affiliated)
         for spec in [f"{repo.owner}/*", str(repo)]:
             try:
-                p = self.activity.repo[RepoSpecKey.parse(spec)]
+                p = self.activity.repo[RepoSpec.parse(spec)]
             except KeyError:
                 pass
             else:
@@ -296,6 +278,3 @@ class Configuration(BaseConfig):
 
     def is_repo_excluded(self, repo: Repository) -> bool:
         return self.inclusions.is_repo_excluded(repo)
-
-    def for_json(self) -> Any:
-        return json.loads(self.json())
