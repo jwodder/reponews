@@ -1,6 +1,7 @@
 v0.4.1 (in development)
 -----------------------
 - Support platformdirs v4.0
+- Migrated from setuptools to hatch
 
 v0.4.0 (2023-10-31)
 -------------------
