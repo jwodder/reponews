@@ -220,9 +220,11 @@ class RepoNews:
             )
         return compose(
             subject=self.config.subject,
-            from_=self.config.sender.as_py_address()
-            if self.config.sender is not None
-            else None,
+            from_=(
+                self.config.sender.as_py_address()
+                if self.config.sender is not None
+                else None
+            ),
             to=[self.config.recipient.as_py_address()],
             text=self.compose_email_body(events),
             headers={"User-Agent": MAIL_USER_AGENT},

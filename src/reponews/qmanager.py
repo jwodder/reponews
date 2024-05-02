@@ -14,12 +14,10 @@ class QueryManager(Generic[T]):
     has_next_page: bool = field(init=False, default=True)
 
     @abstractmethod
-    def make_query(self) -> tuple[str, dict[str, Any]]:
-        ...
+    def make_query(self) -> tuple[str, dict[str, Any]]: ...
 
     @abstractmethod
-    def parse_response(self, data: Any) -> list[T]:
-        ...
+    def parse_response(self, data: Any) -> list[T]: ...
 
 
 @dataclass

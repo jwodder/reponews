@@ -79,8 +79,7 @@ class Event(BaseModel):
     repo: Repository
 
     @abstractmethod
-    def render(self) -> str:
-        ...
+    def render(self) -> str: ...
 
 
 class RepoActivity(Event):
@@ -89,13 +88,11 @@ class RepoActivity(Event):
 
     @classmethod
     @abstractmethod
-    def from_node(cls, repo: Repository, node: dict[str, Any]) -> Self:
-        ...
+    def from_node(cls, repo: Repository, node: dict[str, Any]) -> Self: ...
 
     @property
     @abstractmethod
-    def is_mine(self) -> bool:
-        ...
+    def is_mine(self) -> bool: ...
 
 
 class NewIssueoidEvent(RepoActivity):
