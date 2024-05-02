@@ -11,6 +11,7 @@ issues = false
 pull-requests = false
 discussions = true
 my-activity = true
+drafts = false
 
 [reponews.repos]
 affiliations = ["OWNER"]

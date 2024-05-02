@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field, TypeAdapter
 from . import client
 from .config import Configuration
 from .types import (
-    ActivityType,
     CursorDict,
     Event,
     NewReleaseEvent,
@@ -146,11 +145,20 @@ class RepoNews:
                     else:
                         events2.append(ev)
                 new_events = events2
-            if (
-                ActivityType.RELEASE in types
-                and ActivityType.TAG in types
-                and not activity.released_tags
-            ):
+            if activity.releases and (not activity.prereleases or not activity.drafts):
+                events2 = []
+                for ev in new_events:
+                    if isinstance(ev, NewReleaseEvent):
+                        if not activity.prereleases and ev.isPrerelease:
+                            log.info("<%s> is prerelease; not reporting", ev)
+                        elif not activity.drafts and ev.isDraft:
+                            log.info("<%s> is draft release; not reporting", ev)
+                        else:
+                            events2.append(ev)
+                    else:
+                        events2.append(ev)
+                new_events = events2
+            if activity.releases and activity.tags and not activity.released_tags:
                 events2 = []
                 release_tags = set()
                 tag_events: list[NewTagEvent] = []

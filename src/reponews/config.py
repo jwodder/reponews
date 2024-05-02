@@ -93,6 +93,8 @@ class PartialActivityPrefs(BaseConfig):
     pull_requests: Optional[bool] = None
     discussions: Optional[bool] = None
     releases: Optional[bool] = None
+    prereleases: Optional[bool] = None
+    drafts: Optional[bool] = None
     tags: Optional[bool] = None
     released_tags: Optional[bool] = None
     stars: Optional[bool] = None
@@ -105,6 +107,8 @@ class ActivityPrefs(PartialActivityPrefs):
     pull_requests: bool = True
     discussions: bool = True
     releases: bool = True
+    prereleases: bool = True
+    drafts: bool = True
     tags: bool = True
     released_tags: bool = False
     stars: bool = True

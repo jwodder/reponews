@@ -495,9 +495,9 @@
     },
     "org/big-project": {
       "activity_types": [
-        "issue",
         "pr",
         "discussion",
+        "release",
         "tag",
         "star",
         "fork"
