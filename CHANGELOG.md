@@ -1,5 +1,5 @@
-v0.5.0 (in development)
------------------------
+v0.5.0 (2024-05-02)
+-------------------
 - Support platformdirs v4.0
 - Migrated from setuptools to hatch
 - Support configuring whether to report prereleases and/or draft releases
