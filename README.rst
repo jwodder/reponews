@@ -266,6 +266,19 @@ result in an error.
         Whether to report new releases in tracked repositories; defaults to
         true
 
+    ``prereleases`` : boolean
+        Whether to report new prereleases in tracked repositories; defaults to
+        true.  This setting only has an effect when ``releases`` is true.
+
+     ``drafts`` : boolean
+        Whether to report new draft releases in tracked repositories; defaults
+        to true.  This setting only has an effect when ``releases`` is true.
+
+        Note that, if ``reponews`` sees a release while it's in a draft state
+        (even if the draft is not reported), and then, on a later run, the
+        release has been published, the release will not be reported on the
+        later run, regardless of the value of ``drafts``.
+
     ``tags`` : boolean
         Whether to report new tags in tracked repositories; defaults to true
 

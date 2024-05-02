@@ -8,9 +8,12 @@ state-file = "state.json"
 
 [reponews.activity.repo."org/*"]
 my-activity = true
+drafts = false
+prereleases = true
 
 [reponews.activity.repo."org/big-project"]
-releases = false
+issues = false
+prereleases = false
 
 [reponews.activity.repo."luser/my-repo"]
 released-tags = true
