@@ -270,7 +270,7 @@ result in an error.
         Whether to report new prereleases in tracked repositories; defaults to
         true.  This setting only has an effect when ``releases`` is true.
 
-     ``drafts`` : boolean
+    ``drafts`` : boolean
         Whether to report new draft releases in tracked repositories; defaults
         to true.  This setting only has an effect when ``releases`` is true.
 
