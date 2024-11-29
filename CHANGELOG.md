@@ -1,3 +1,7 @@
+v0.6.0 (in development)
+-----------------------
+- Support Python 3.13
+
 v0.5.0 (2024-05-02)
 -------------------
 - Support platformdirs v4.0
