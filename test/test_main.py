@@ -226,7 +226,8 @@ def test_print(
         args.append("--no-save")
     r = CliRunner().invoke(main, args, standalone_mode=False)
     assert r.exit_code == 0, show_result(r)
-    msg = message_from_string(r.output, policy=policy.default)
+    # <https://github.com/python/typeshed/issues/13273>
+    msg = message_from_string(r.output, policy=policy.default)  # type: ignore[arg-type]
     assert email2dict(msg) == MSG_SPEC
     assert (
         "reponews",
