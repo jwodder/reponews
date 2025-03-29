@@ -1,5 +1,5 @@
-v0.5.1 (in development)
------------------------
+v0.5.1 (2025-03-29)
+-------------------
 - Support Python 3.13
 - Fix a deprecation warning in Pydantic 2.11
 
