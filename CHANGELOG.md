@@ -1,3 +1,7 @@
+v0.6.0 (in development)
+-----------------------
+- Retry requests that fail due to connection, read, etc. errors
+
 v0.5.1 (2025-03-29)
 -------------------
 - Support Python 3.13

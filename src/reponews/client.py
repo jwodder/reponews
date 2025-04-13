@@ -44,22 +44,38 @@ class Client:
         self.s.close()
 
     def query(self, query: str, variables: Optional[dict[str, Any]] = None) -> Any:
-        i = 0
+        sleeps = retry_sleeps()
         while True:
-            r = self.s.post(
-                self.api_url,
-                json={"query": query, "variables": variables or {}},
-            )
+            try:
+                r = self.s.post(
+                    self.api_url,
+                    json={"query": query, "variables": variables or {}},
+                )
+            except ValueError:
+                # The errors that requests raises when the user supplies bad
+                # parameters all inherit ValueError
+                raise
+            except requests.RequestException as e:
+                if (delay := next(sleeps, None)) is not None:
+                    log.warning(
+                        "GraphQL request failed: %s: %s; waiting %f seconds and"
+                        " retrying",
+                        type(e).__name__,
+                        str(e),
+                        delay,
+                    )
+                    sleep(delay)
+                    continue
+                else:
+                    raise
             if r.status_code in RETRY_STATUSES:
-                if i + 1 < MAX_RETRIES:
-                    delay = min(BACKOFF_FACTOR * 2**i, MAX_BACKOFF)
+                if (delay := next(sleeps, None)) is not None:
                     log.warning(
                         "GraphQL request returned %d; waiting %f seconds and retrying",
                         r.status_code,
                         delay,
                     )
                     sleep(delay)
-                    i += 1
                     continue
                 else:
                     log.error(
@@ -150,3 +166,8 @@ class APIException(Exception):
         else:
             msg += json.dumps(resp, sort_keys=True, indent=4)
         return msg
+
+
+def retry_sleeps() -> Iterator[float]:
+    for i in range(1, MAX_RETRIES + 1):
+        yield min(BACKOFF_FACTOR * 2**i, MAX_BACKOFF)
