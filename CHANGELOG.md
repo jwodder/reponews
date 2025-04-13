@@ -1,5 +1,5 @@
-v0.6.0 (in development)
------------------------
+v0.6.0 (2025-04-13)
+-------------------
 - Retry requests that fail due to connection, read, etc. errors
 
 v0.5.1 (2025-03-29)
