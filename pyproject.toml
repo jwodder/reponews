@@ -42,7 +42,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "click         >= 8.0",
+    "click         >= 8.0, != 8.2.2",
     "click-loglevel ~= 0.5",
     "eletter       ~= 0.2",
     "ghrepo        ~= 0.1",

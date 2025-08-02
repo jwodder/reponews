@@ -1,3 +1,8 @@
+v0.6.1 (in development)
+-----------------------
+- Exclude click v8.2.2 from dependencies due to breakage caused by
+  https://github.com/pallets/click/issues/3024
+
 v0.6.0 (2025-04-13)
 -------------------
 - Retry requests that fail due to connection, read, etc. errors
