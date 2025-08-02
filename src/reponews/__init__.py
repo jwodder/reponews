@@ -15,7 +15,7 @@ new events.
 Visit <https://github.com/jwodder/reponews> for more information.
 """
 
-__version__ = "0.6.1.dev1"
+__version__ = "0.6.1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "reponews@varonathe.org"
 __license__ = "MIT"
