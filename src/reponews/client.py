@@ -148,6 +148,7 @@ class Client:
 class APIException(Exception):
     def __init__(self, response: requests.Response):
         self.response = response
+        super().__init__(response)
 
     def __str__(self) -> str:
         if self.response.ok:
