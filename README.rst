@@ -37,7 +37,7 @@ new events.
 
 Installation & Setup
 ====================
-``reponews`` requires Python 3.8 or higher.  Just use `pip
+``reponews`` requires Python 3.10 or higher.  Just use `pip
 <https://pip.pypa.io>`_ for Python 3 (You have pip, right?) to install
 ``reponews`` and its dependencies::
 

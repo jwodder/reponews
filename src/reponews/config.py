@@ -6,7 +6,7 @@ from functools import cached_property
 from pathlib import Path
 import re
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 import ghtoken  # Module import for mocking purposes
 from mailbits import parse_address
@@ -21,15 +21,10 @@ if sys.version_info[:2] >= (3, 11):
 else:
     from tomli import load as toml_load
 
-if sys.version_info >= (3, 9):
-    from typing import Annotated
-else:
-    from typing_extensions import Annotated
-
 
 @dataclass
 class Address:
-    name: Optional[str]
+    name: str | None
     address: str
 
     @classmethod
@@ -54,7 +49,7 @@ class Address:
 @dataclass(frozen=True)
 class RepoSpec:
     owner: str
-    name: Optional[str]
+    name: str | None
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -89,17 +84,17 @@ class BaseConfig(BaseModel):
 
 
 class PartialActivityPrefs(BaseConfig):
-    issues: Optional[bool] = None
-    pull_requests: Optional[bool] = None
-    discussions: Optional[bool] = None
-    releases: Optional[bool] = None
-    prereleases: Optional[bool] = None
-    drafts: Optional[bool] = None
-    tags: Optional[bool] = None
-    released_tags: Optional[bool] = None
-    stars: Optional[bool] = None
-    forks: Optional[bool] = None
-    my_activity: Optional[bool] = None
+    issues: bool | None = None
+    pull_requests: bool | None = None
+    discussions: bool | None = None
+    releases: bool | None = None
+    prereleases: bool | None = None
+    drafts: bool | None = None
+    tags: bool | None = None
+    released_tags: bool | None = None
+    stars: bool | None = None
+    forks: bool | None = None
+    my_activity: bool | None = None
 
 
 class ActivityPrefs(PartialActivityPrefs):
@@ -147,15 +142,15 @@ class RepoActivityPrefs(PartialActivityPrefs):
 
 class ActivityConfig(PartialActivityPrefs):
     affiliated: PartialActivityPrefs = Field(default_factory=PartialActivityPrefs)
-    repo: Dict[
+    repo: dict[
         Annotated[RepoSpec, PlainSerializer(lambda s: str(s))], RepoActivityPrefs
     ] = Field(default_factory=dict)
 
 
 class ReposConfig(BaseConfig):
-    affiliations: List[Affiliation] = Field(default_factory=lambda: list(Affiliation))
-    include: List[RepoSpec] = Field(default_factory=list)
-    exclude: List[RepoSpec] = Field(default_factory=list)
+    affiliations: list[Affiliation] = Field(default_factory=lambda: list(Affiliation))
+    include: list[RepoSpec] = Field(default_factory=list)
+    exclude: list[RepoSpec] = Field(default_factory=list)
 
 
 @dataclass
@@ -210,11 +205,11 @@ class RepoInclusions:
 
 
 class Configuration(BaseConfig):
-    recipient: Optional[Address] = None
-    sender: Optional[Address] = None
+    recipient: Address | None = None
+    sender: Address | None = None
     subject: str = "[reponews] New activity on your GitHub repositories"
-    auth_token: Optional[str] = None
-    auth_token_file: Optional[Path] = None
+    auth_token: str | None = None
+    auth_token_file: Path | None = None
     # The default is implemented as a factory in order to make it easy to test
     # with a fake $HOME:
     state_file: Path = Field(default_factory=get_default_state_file)
@@ -224,7 +219,7 @@ class Configuration(BaseConfig):
 
     @field_validator("auth_token_file", "state_file")
     @classmethod
-    def _expand_path(cls, v: Optional[Path]) -> Optional[Path]:
+    def _expand_path(cls, v: Path | None) -> Path | None:
         return v.expanduser() if v is not None else v
 
     @classmethod

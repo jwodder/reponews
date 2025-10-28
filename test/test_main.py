@@ -9,7 +9,7 @@ from pathlib import Path
 from shutil import copytree
 from traceback import format_exception
 from types import TracebackType
-from typing import Dict, List, Optional, Union, cast
+from typing import cast
 from unittest.mock import ANY
 from click.testing import CliRunner, Result
 from mailbits import email2dict
@@ -37,27 +37,27 @@ MOCK_DIR = Path(__file__).with_name("data") / "mock"
 
 
 class ActivityQuery(BaseModel):
-    activity_types: List[ActivityType]
+    activity_types: list[ActivityType]
     cursors_in: CursorDict
-    events: List[
-        Union[
-            NewDiscussionEvent,
-            NewForkEvent,
-            NewIssueEvent,
-            NewPREvent,
-            NewReleaseEvent,
-            NewStarEvent,
-            NewTagEvent,
-        ]
+    events: list[
+        (
+            NewDiscussionEvent
+            | NewForkEvent
+            | NewIssueEvent
+            | NewPREvent
+            | NewReleaseEvent
+            | NewStarEvent
+            | NewTagEvent
+        )
     ]
     cursors_out: CursorDict
 
 
 class SessionData(BaseModel):
-    affiliated: List[Repository]
-    owners: Dict[str, Optional[List[Repository]]]
-    repos: Dict[str, Optional[Repository]]
-    activity: Dict[str, ActivityQuery]
+    affiliated: list[Repository]
+    owners: dict[str, list[Repository] | None]
+    repos: dict[str, Repository | None]
+    activity: dict[str, ActivityQuery]
 
 
 class MockClient:
@@ -111,7 +111,7 @@ class MockClient:
         aq = self.data.activity.pop(fullname)
         assert aq.activity_types == types
         assert aq.cursors_in == cursors
-        return (cast(List[RepoActivity], aq.events), aq.cursors_out)
+        return (cast(list[RepoActivity], aq.events), aq.cursors_out)
 
 
 MSG_SPEC = {

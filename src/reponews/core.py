@@ -6,7 +6,6 @@ from email.message import EmailMessage
 from operator import attrgetter
 from pathlib import Path
 from types import TracebackType
-from typing import Dict
 from eletter import compose
 from pydantic import BaseModel, Field, TypeAdapter
 from . import client
@@ -30,7 +29,7 @@ class RepoState(BaseModel):
     cursors: CursorDict = Field(default_factory=dict)
 
 
-state_adapter = TypeAdapter(Dict[str, RepoState])
+state_adapter = TypeAdapter(dict[str, RepoState])
 
 
 @dataclass

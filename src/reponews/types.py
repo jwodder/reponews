@@ -3,8 +3,7 @@ from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 import json
-import sys
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, Literal, Optional
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, TypeAlias
 from eletter import reply_quote
 from pydantic import BaseModel, field_validator
 from pydantic.functional_serializers import PlainSerializer
@@ -27,12 +26,6 @@ from .qlobjs import (
 )
 from .util import BogusEventError, dos2unix, log
 
-if sys.version_info >= (3, 9):
-    from typing import Annotated
-else:
-    from typing_extensions import Annotated
-
-
 if TYPE_CHECKING:
     from typing_extensions import Self
 
@@ -46,7 +39,7 @@ class Affiliation(Enum):
 class User(BaseModel):
     # `name` is None/unset when the user is a bot or they never set their
     # display name
-    name: Optional[str] = None
+    name: str | None = None
     login: str
     url: str
     isViewer: bool = False
@@ -61,7 +54,7 @@ class Repository(BaseModel):
     name: str
     nameWithOwner: str
     url: str
-    description: Optional[str] = None
+    description: str | None = None
     descriptionHTML: str
 
     @classmethod
@@ -144,18 +137,18 @@ class NewReleaseEvent(RepoActivity):
     CONNECTION: ClassVar[Object] = RELEASE_CONNECTION
     LAST_CONNECTION: ClassVar[Object] = RELEASE_LAST_CONNECTION
     event_type: Literal["release"] = "release"
-    name: Optional[str] = None
+    name: str | None = None
     tagName: str
-    author: Optional[User] = None
-    description: Optional[str] = None
-    descriptionHTML: Optional[str] = None
+    author: User | None = None
+    description: str | None = None
+    descriptionHTML: str | None = None
     isDraft: bool
     isPrerelease: bool
     url: str
 
     @field_validator("description")
     @classmethod
-    def _dos2unix(cls, v: Optional[str]) -> Optional[str]:
+    def _dos2unix(cls, v: str | None) -> str | None:
         return dos2unix(v) if v is not None else None
 
     @classmethod
@@ -193,7 +186,7 @@ class NewTagEvent(RepoActivity):
     LAST_CONNECTION: ClassVar[Object] = TAG_LAST_CONNECTION
     event_type: Literal["tag"] = "tag"
     name: str
-    user: Optional[User]
+    user: User | None
 
     @classmethod
     def from_node(cls, repo: Repository, node: dict[str, Any]) -> NewTagEvent:
@@ -336,6 +329,6 @@ class ActivityType(Enum):
         self.event_cls = event_cls
 
 
-CursorDict = Dict[
-    Annotated[ActivityType, PlainSerializer(lambda t: t.value)], Optional[str]
+CursorDict: TypeAlias = dict[
+    Annotated[ActivityType, PlainSerializer(lambda t: t.value)], str | None
 ]

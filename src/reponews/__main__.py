@@ -3,7 +3,6 @@ from enum import Enum
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 import click
 from click_loglevel import LogLevel
 from dotenv import find_dotenv, load_dotenv
@@ -74,7 +73,7 @@ Mode = Enum("Mode", "PRINT PRINT_BODY DUMP_REPOS")
     help="Whether to update the state file  [default: --save]",
 )
 def main(
-    config: Path, log_level: int, mode: Optional[Mode], save: bool, env: Optional[str]
+    config: Path, log_level: int, mode: Mode | None, save: bool, env: str | None
 ) -> None:
     """
     Send e-mails about new events on your GitHub repositories.
@@ -98,7 +97,7 @@ def main(
                 raise click.UsageError(
                     "reponews.recipient must be set when constructing an e-mail"
                 )
-            sender: Optional[Sender]
+            sender: Sender | None
             if mode is None:
                 # Fail early if the outgoing config is invalid or missing:
                 sender = from_config_file(config, fallback=True)
