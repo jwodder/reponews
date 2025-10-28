@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Optional
 import pytest
 from reponews.qmanager import (
     PAGE_SIZE,
@@ -922,7 +921,7 @@ def test_activity_query_null_cursor_some_events() -> None:
 
 
 @pytest.mark.parametrize("new_cursor", [None, "cursor:0001"])
-def test_activity_query_no_cursor(new_cursor: Optional[str]) -> None:
+def test_activity_query_no_cursor(new_cursor: str | None) -> None:
     q = (
         "query($repo_id: ID!) {\n"
         "    node(id: $repo_id) {\n"
@@ -1242,7 +1241,7 @@ def test_activity_query_multiple_types() -> None:
 
 @pytest.mark.parametrize("new_cursor", [None, "cursor:d001"])
 def test_activity_query_multiple_types_one_unset_cursor(
-    new_cursor: Optional[str],
+    new_cursor: str | None,
 ) -> None:
     q1 = (
         "query(\n"

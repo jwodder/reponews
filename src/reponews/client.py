@@ -3,7 +3,7 @@ from collections.abc import Iterator
 import json
 from time import sleep
 from types import TracebackType
-from typing import Any, Optional
+from typing import Any
 import requests
 from .qmanager import (
     ActivityQuery,
@@ -43,7 +43,7 @@ class Client:
     ) -> None:
         self.s.close()
 
-    def query(self, query: str, variables: Optional[dict[str, Any]] = None) -> Any:
+    def query(self, query: str, variables: dict[str, Any] | None = None) -> Any:
         sleeps = retry_sleeps()
         while True:
             try:

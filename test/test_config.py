@@ -3,7 +3,6 @@ import json
 from operator import attrgetter
 from os.path import expanduser
 from pathlib import Path
-from typing import List, Tuple
 import ghtoken
 from pydantic import BaseModel, ValidationError
 import pytest
@@ -56,10 +55,10 @@ def test_parse_bad_config(tomlfile: Path) -> None:
 
 
 class InclusionCase(BaseModel):
-    included_owners: List[str]
-    included_repos: List[Tuple[str, str]]
-    not_excluded_repos: List[Tuple[str, str]]
-    excluded_repos: List[Tuple[str, str]]
+    included_owners: list[str]
+    included_repos: list[tuple[str, str]]
+    not_excluded_repos: list[tuple[str, str]]
+    excluded_repos: list[tuple[str, str]]
 
 
 @pytest.mark.parametrize(
