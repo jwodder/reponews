@@ -6,7 +6,7 @@ from functools import cached_property
 from pathlib import Path
 import re
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 from ghrepo import GH_REPO_RGX, GH_USER_RGX
 import ghtoken  # Module import for mocking purposes
 from mailbits import parse_address
@@ -20,11 +20,6 @@ if sys.version_info[:2] >= (3, 11):
     from tomllib import load as toml_load
 else:
     from tomli import load as toml_load
-
-if sys.version_info >= (3, 9):
-    from typing import Annotated
-else:
-    from typing_extensions import Annotated
 
 
 @dataclass
