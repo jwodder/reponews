@@ -45,6 +45,7 @@ dependencies = [
     "click-loglevel ~= 0.5",
     "eletter       ~= 0.2",
     "ghrepo        ~= 0.1",
+    "ghreq         ~= 0.7",
     "ghtoken       ~= 0.1",
     "mailbits      ~= 0.2",
     "outgoing      ~= 0.6",
