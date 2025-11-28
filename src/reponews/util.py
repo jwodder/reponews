@@ -4,6 +4,7 @@ from pathlib import Path
 import platform
 import re
 from typing import TypeVar
+import ghreq
 from platformdirs import user_state_path
 from pydantic import AnyHttpUrl, TypeAdapter
 import requests
@@ -16,9 +17,10 @@ log = logging.getLogger(__package__)
 
 MAIL_USER_AGENT = f"reponews/{__version__} ({__url__})"
 
-HTTP_USER_AGENT = "reponews/{} ({}) requests/{} {}/{}".format(
+HTTP_USER_AGENT = "reponews/{} ({}) ghreq/{} requests/{} {}/{}".format(
     __version__,
     __url__,
+    ghreq.__version__,
     requests.__version__,
     platform.python_implementation(),
     platform.python_version(),

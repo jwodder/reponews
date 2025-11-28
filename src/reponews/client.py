@@ -1,10 +1,8 @@
 from __future__ import annotations
 from collections.abc import Iterator
 import json
-from time import sleep
-from types import TracebackType
 from typing import Any
-import requests
+import ghreq
 from .qmanager import (
     ActivityQuery,
     OwnersReposQuery,
@@ -17,85 +15,22 @@ from .util import HTTP_USER_AGENT, NotFoundError, T, log
 
 PAGE_SIZE = 50
 
-MAX_RETRIES = 5
-RETRY_STATUSES = (500, 502, 503, 504)
-BACKOFF_FACTOR = 1.25
-MAX_BACKOFF = 120
 
-
-class Client:
+class Client(ghreq.Client):
     def __init__(self, api_url: str, token: str) -> None:
-        self.api_url = api_url
-        self.s = requests.Session()
-        self.s.headers["Authorization"] = f"bearer {token}"
-        self.s.headers["User-Agent"] = HTTP_USER_AGENT
-        # <https://github.blog/2021-11-16-graphql-global-id-migration-update/>
-        self.s.headers["X-Github-Next-Global-ID"] = "1"
-
-    def __enter__(self) -> Client:
-        return self
-
-    def __exit__(
-        self,
-        _exc_type: type[BaseException] | None,
-        _exc_val: BaseException | None,
-        _exc_tb: TracebackType | None,
-    ) -> None:
-        self.s.close()
+        super().__init__(graphql_url=api_url, token=token, user_agent=HTTP_USER_AGENT)
 
     def query(self, query: str, variables: dict[str, Any] | None = None) -> Any:
-        sleeps = retry_sleeps()
-        while True:
-            try:
-                r = self.s.post(
-                    self.api_url,
-                    json={"query": query, "variables": variables or {}},
-                )
-            except ValueError:
-                # The errors that requests raises when the user supplies bad
-                # parameters all inherit ValueError
-                raise
-            except requests.RequestException as e:
-                if (delay := next(sleeps, None)) is not None:
-                    log.warning(
-                        "GraphQL request failed: %s: %s; waiting %f seconds and"
-                        " retrying",
-                        type(e).__name__,
-                        str(e),
-                        delay,
-                    )
-                    sleep(delay)
-                    continue
-                else:
-                    raise
-            if r.status_code in RETRY_STATUSES:
-                if (delay := next(sleeps, None)) is not None:
-                    log.warning(
-                        "GraphQL request returned %d; waiting %f seconds and retrying",
-                        r.status_code,
-                        delay,
-                    )
-                    sleep(delay)
-                    continue
-                else:
-                    log.error(
-                        "GraphQL request returned %d; out of retries", r.status_code
-                    )
-                    raise APIException(r)
-            elif not r.ok:
-                raise APIException(r)
-            else:
-                break
-        data = r.json()
-        if data.get("errors"):
+        data = self.graphql(query=query, variables=variables)
+        if err := data.get("errors"):
             try:
                 # TODO: Figure out how to handle multi-errors where some of the
                 # errors are NOT_FOUND
-                if data["errors"][0]["type"] == "NOT_FOUND":
-                    raise NotFoundError(data["errors"][0]["message"])
+                if err[0]["type"] == "NOT_FOUND":
+                    raise NotFoundError(err[0]["message"])
             except (AttributeError, LookupError, TypeError, ValueError):
                 pass
-            raise APIException(r)
+            raise GraphQLError(err)
         return data
 
     def do_managed_query(self, manager: QueryManager[T]) -> Iterator[T]:
@@ -145,30 +80,32 @@ class Client:
         return (events, manager.cursors)
 
 
-class APIException(Exception):
-    def __init__(self, response: requests.Response):
-        self.response = response
-        super().__init__(response)
+class GraphQLError(Exception):
+    def __init__(self, errors: list[dict[str, Any]]) -> None:
+        self.errors = errors
+        super().__init__(errors)
 
     def __str__(self) -> str:
-        if self.response.ok:
-            msg = "GraphQL API error for URL: {0.url}\n"
-        elif 400 <= self.response.status_code < 500:
-            msg = "{0.status_code} Client Error: {0.reason} for URL: {0.url}\n"
-        elif 500 <= self.response.status_code < 600:
-            msg = "{0.status_code} Server Error: {0.reason} for URL: {0.url}\n"
-        else:
-            msg = "{0.status_code} Unknown Error: {0.reason} for URL: {0.url}\n"
-        msg = msg.format(self.response)
         try:
-            resp = self.response.json()
-        except ValueError:
-            msg += self.response.text
-        else:
-            msg += json.dumps(resp, sort_keys=True, indent=4)
-        return msg
-
-
-def retry_sleeps() -> Iterator[float]:
-    for i in range(1, MAX_RETRIES + 1):
-        yield min(BACKOFF_FACTOR * 2**i, MAX_BACKOFF)
+            lines = []
+            if len(self.errors) == 1:
+                lines.append("GraphQL API error:")
+            else:
+                lines.append("GraphQL API errors:")
+            first = True
+            for e in self.errors:
+                if first:
+                    first = False
+                else:
+                    lines.append("---")
+                for k, v in e.items():
+                    k = k.title()
+                    if isinstance(v, str | int | bool):
+                        lines.append(f"{k}: {v}")
+                    else:
+                        lines.append(k + ": " + json.dumps(v, sort_keys=True))
+            return "\n".join(lines)
+        except Exception:
+            return "MALFORMED GRAPHQL ERROR:\n" + json.dumps(
+                self.errors, sort_keys=True, indent=True
+            )
