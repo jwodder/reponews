@@ -1,5 +1,5 @@
-v0.7.0 (in development)
------------------------
+v0.6.2 (2025-11-28)
+-------------------
 - Support Python 3.14
 - Drop support for Python 3.8 and 3.9
 - Use [`ghreq`](https://github.com/jwodder/ghreq) internally
